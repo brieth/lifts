@@ -43,15 +43,17 @@ export function repsFor(exerciseId: string, emphasis: Emphasis): number {
   return REPS[categoryFor(exerciseId)][emphasis];
 }
 
-// Rough starting weights (lb) used only until there's logged history to learn from.
-const DEFAULT_WEIGHT: Record<Category, number> = {
-  compound: 95,
-  pull: 80,
-  isolation: 20,
+// Rough 1RM-equivalents (lb) used only until there's logged history. These run
+// through the same inverse-Epley as real history, so the no-history suggestion
+// also scales with the target rep count. Tuned so Mid emphasis ~= sensible loads.
+const DEFAULT_1RM: Record<Category, number> = {
+  compound: 120,
+  pull: 105,
+  isolation: 28,
 };
 
-export function defaultWeightFor(exerciseId: string): number {
-  return DEFAULT_WEIGHT[categoryFor(exerciseId)];
+export function defaultOneRMFor(exerciseId: string): number {
+  return DEFAULT_1RM[categoryFor(exerciseId)];
 }
 
 export const EMPHASES: { id: Emphasis; label: string; hint: string }[] = [

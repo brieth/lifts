@@ -8,7 +8,7 @@ import {
   recentEstimated1RM,
   weightForReps,
 } from '../lib/stats';
-import { defaultWeightFor, EMPHASES, emphasisLabel, repsFor } from '../lib/reps';
+import { defaultOneRMFor, EMPHASES, emphasisLabel, repsFor } from '../lib/reps';
 
 export function WorkoutView() {
   const { data, startSession } = useStore();
@@ -132,10 +132,11 @@ function ActiveSession() {
       <div className="exercise-list">
         {session.exercises.map((ex, exIdx) => {
           const targetReps = repsFor(ex.exerciseId, emphasis);
-          const recent1RM = recentEstimated1RM(data.sessions, ex.exerciseId);
-          const suggestedWeight = recent1RM
-            ? round5(weightForReps(recent1RM, targetReps))
-            : defaultWeightFor(ex.exerciseId);
+          // Use the most recent est. 1RM, or a category default 1RM with no history.
+          // Either way, derive the weight for the target reps via inverse-Epley.
+          const base1RM =
+            recentEstimated1RM(data.sessions, ex.exerciseId) ?? defaultOneRMFor(ex.exerciseId);
+          const suggestedWeight = round5(weightForReps(base1RM, targetReps));
           return (
             <ExerciseCard
               key={`${ex.exerciseId}-${exIdx}`}
