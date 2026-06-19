@@ -52,8 +52,8 @@ const ROUTINE_DEFS: RoutineDef[] = [
       ['barbell-bench-press', 'Barbell Bench Press'],
       ['lat-pulldown', 'Lat Pulldown'],
       ['machine-leg-press', 'Machine Leg Press'],
-      ['cable-upright-row-straight-bar', 'Cable Upright Row (Straight Bar)'],
-      ['cable-bicep-curl-straight-bar', 'Cable Bicep Curl (Straight Bar)'],
+      ['cable-upright-row', 'Cable Upright Row'],
+      ['cable-bicep-curl', 'Cable Bicep Curl'],
     ],
   },
   {
