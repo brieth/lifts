@@ -246,6 +246,9 @@ body {
   align-items: center;
   flex-wrap: wrap;
   gap: 6px;
+  /* keep the same vertical footprint as a line of text */
+  min-height: 1.4em;
+  min-height: 1lh;
 }
 .meta-dot {
   color: var(--muted);
