@@ -320,10 +320,10 @@ body {
   outline: none;
   border-color: var(--accent);
 }
-/* Done sets light up to show the values were used. */
+/* Done sets light up to the bright text color to show the values were used. */
 .set-row.done input {
   border-color: var(--accent);
-  color: var(--accent);
+  color: var(--text);
   font-weight: 600;
 }
 .check {
