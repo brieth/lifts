@@ -35,12 +35,15 @@ function drawIcon(size) {
   const px = new Uint8Array(size * size * 4);
   rect(px, size, 0, 0, 1, 1, TEAL); // background
 
-  // top bun — wide base (height 2 = 0.10) + narrow top (height 1 = 0.05)
-  rect(px, size, 0.2, 0.25, 0.8, 0.35, INK); // wide base
-  rect(px, size, 0.3, 0.2, 0.7, 0.25, INK); // narrow top
-  // bottom bun — mirror
-  rect(px, size, 0.2, 0.65, 0.8, 0.75, INK); // wide base
-  rect(px, size, 0.3, 0.75, 0.7, 0.8, INK); // narrow top
+  // Bun built from square blocks (1 unit = 0.05 wide AND tall). Base step is
+  // height 2, narrow top step is height 1, inset by 1 unit per side. The gap to
+  // the dumbbell (top plate at 0.36) is exactly 1 unit (0.05).
+  // top bun
+  rect(px, size, 0.2, 0.21, 0.8, 0.31, INK); // base (height 2)
+  rect(px, size, 0.25, 0.16, 0.75, 0.21, INK); // top (height 1)
+  // bottom bun — mirror (bottom plate at 0.64, gap 0.05)
+  rect(px, size, 0.2, 0.69, 0.8, 0.79, INK); // base (height 2)
+  rect(px, size, 0.25, 0.79, 0.75, 0.84, INK); // top (height 1)
 
   // the original dumbbell, exact
   rect(px, size, 0.3, 0.46, 0.7, 0.54, INK); // bar
