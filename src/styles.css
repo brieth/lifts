@@ -241,6 +241,15 @@ body {
   letter-spacing: 0.04em;
   color: var(--muted);
 }
+.session-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.meta-dot {
+  color: var(--muted);
+}
 .range-chip {
   display: inline-block;
   vertical-align: middle;
