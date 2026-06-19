@@ -166,25 +166,18 @@ function ActiveSession() {
     });
   }
 
-  const completed = session.exercises.reduce(
-    (n, e) => n + e.sets.filter((s) => s.done).length,
-    0,
-  );
-
   return (
     <div className="view">
       <div className="session-head">
         <div>
           <h1>{session.name}</h1>
           <p className="muted subtitle session-meta">
-            <span>{completed} sets logged</span>
             {gymName && (
               <>
-                <span className="meta-dot">·</span>
                 <span className="range-chip">{gymName}</span>
+                <span className="meta-dot">·</span>
               </>
             )}
-            <span className="meta-dot">·</span>
             <span className="range-chip">{emphasisLabel(emphasis)} reps</span>
           </p>
         </div>
