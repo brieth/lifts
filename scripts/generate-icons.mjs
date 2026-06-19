@@ -46,16 +46,22 @@ function ellipse(px, size, cx, cy, rx, ry, color, half = 0) {
   }
 }
 
-// The original dumbbell, with a bun added above and below. Monochrome.
+// The original dumbbell (untouched) with a stepped, pixel-style bun above and
+// below built from blocks. Monochrome.
 function drawIcon(size) {
   const px = new Uint8Array(size * size * 4);
   rect(px, size, 0, 0, 1, 1, TEAL); // full-bleed teal background
 
-  // top + bottom buns (domes), with a small gap from the dumbbell
-  ellipse(px, size, 0.5, 0.34, 0.34, 0.15, INK, -1);
-  ellipse(px, size, 0.5, 0.66, 0.34, 0.15, INK, 1);
+  // top bun — stepped dome (each step a block)
+  rect(px, size, 0.17, 0.3, 0.83, 0.35, INK);
+  rect(px, size, 0.23, 0.25, 0.77, 0.3, INK);
+  rect(px, size, 0.31, 0.2, 0.69, 0.25, INK);
+  // bottom bun — mirror
+  rect(px, size, 0.17, 0.65, 0.83, 0.7, INK);
+  rect(px, size, 0.23, 0.7, 0.77, 0.75, INK);
+  rect(px, size, 0.31, 0.75, 0.69, 0.8, INK);
 
-  // the original dumbbell, unchanged
+  // the original dumbbell, EXACTLY as before
   rect(px, size, 0.3, 0.46, 0.7, 0.54, INK); // bar
   rect(px, size, 0.2, 0.36, 0.28, 0.64, INK); // left outer plate
   rect(px, size, 0.28, 0.41, 0.33, 0.59, INK); // left inner plate
@@ -106,34 +112,12 @@ function encodePng(size, px) {
   ]);
 }
 
-// Nearest-neighbor upscale a GRID x GRID design buffer to a target size, so the
-// whole icon shares one chunky pixel size (the bun steps match the dumbbell).
-function upscale(grid, gridSize, size) {
-  const px = new Uint8Array(size * size * 4);
-  for (let y = 0; y < size; y++) {
-    const gy = Math.floor((y * gridSize) / size);
-    for (let x = 0; x < size; x++) {
-      const gx = Math.floor((x * gridSize) / size);
-      const si = (gy * gridSize + gx) * 4;
-      const di = (y * size + x) * 4;
-      px[di] = grid[si];
-      px[di + 1] = grid[si + 1];
-      px[di + 2] = grid[si + 2];
-      px[di + 3] = 255;
-    }
-  }
-  return px;
-}
-
-const GRID = 32; // design resolution -> the "pixel" size
-const design = drawIcon(GRID);
-
 for (const [name, size] of [
   ['icon-192.png', 192],
   ['icon-512.png', 512],
   ['apple-touch-icon.png', 180],
   ['favicon.png', 64],
 ]) {
-  writeFileSync(join(outDir, name), encodePng(size, upscale(design, GRID, size)));
+  writeFileSync(join(outDir, name), encodePng(size, drawIcon(size)));
   console.log('wrote', name);
 }
