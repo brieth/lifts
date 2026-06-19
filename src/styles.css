@@ -287,7 +287,6 @@ body {
   letter-spacing: 0.05em;
   color: var(--muted);
   margin-bottom: 6px;
-  padding: 0 2px;
 }
 .set-header span {
   text-align: center;
