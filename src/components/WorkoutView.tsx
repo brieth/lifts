@@ -178,13 +178,13 @@ function ActiveSession() {
           <h1>{session.name}</h1>
           <p className="muted subtitle">
             {completed} sets logged{' · '}
-            <span className="range-chip">{emphasisLabel(emphasis)} reps</span>
             {gymName && (
               <>
-                {' · '}
                 <span className="range-chip">{gymName}</span>
+                {' · '}
               </>
             )}
+            <span className="range-chip">{emphasisLabel(emphasis)} reps</span>
           </p>
         </div>
         <button className="btn ghost small" onClick={cancelSession}>
