@@ -35,12 +35,12 @@ function drawIcon(size) {
   const px = new Uint8Array(size * size * 4);
   rect(px, size, 0, 0, 1, 1, TEAL); // background
 
-  // top bun — 2 steps
-  rect(px, size, 0.2, 0.3, 0.8, 0.35, INK); // step 1 (wide)
-  rect(px, size, 0.3, 0.25, 0.7, 0.3, INK); // step 2 (narrow)
+  // top bun — wide base (height 2 = 0.10) + narrow top (height 1 = 0.05)
+  rect(px, size, 0.2, 0.25, 0.8, 0.35, INK); // wide base
+  rect(px, size, 0.3, 0.2, 0.7, 0.25, INK); // narrow top
   // bottom bun — mirror
-  rect(px, size, 0.2, 0.65, 0.8, 0.7, INK);
-  rect(px, size, 0.3, 0.7, 0.7, 0.75, INK);
+  rect(px, size, 0.2, 0.65, 0.8, 0.75, INK); // wide base
+  rect(px, size, 0.3, 0.75, 0.7, 0.8, INK); // narrow top
 
   // the original dumbbell, exact
   rect(px, size, 0.3, 0.46, 0.7, 0.54, INK); // bar
