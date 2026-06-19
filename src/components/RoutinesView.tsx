@@ -41,7 +41,6 @@ export function RoutinesView() {
               {r.exercises.map((re, i) => (
                 <li key={`${re.exerciseId}-${i}`}>
                   <span className="re-name">{exerciseName(re.exerciseId)}</span>
-                  <span className="re-target">{re.targetSets} sets</span>
                 </li>
               ))}
             </ol>
