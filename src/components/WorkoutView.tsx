@@ -167,10 +167,36 @@ function ActiveSession() {
   }
 
   function changeExercise(exIdx: number, exerciseId: string) {
-    updateActive((s) => ({
-      ...s,
-      exercises: s.exercises.map((e, i) => (i === exIdx ? { ...e, exerciseId } : e)),
-    }));
+    updateActive((s) => {
+      const slot = s.exercises[exIdx];
+      let exercises = s.exercises.map((e, i) => (i === exIdx ? { ...e, exerciseId } : e));
+      if (slot.options) {
+        if (exerciseId) {
+          // Selected a leg exercise: ensure an empty leg slot follows it.
+          const next = exercises[exIdx + 1];
+          const hasTrailingEmpty = next && next.options && !next.exerciseId;
+          if (!hasTrailingEmpty) {
+            const empty: LoggedExercise = {
+              exerciseId: '',
+              options: slot.options,
+              sets: [
+                { weight: 0, reps: 0, done: false },
+                { weight: 0, reps: 0, done: false },
+                { weight: 0, reps: 0, done: false },
+              ],
+            };
+            exercises = [...exercises.slice(0, exIdx + 1), empty, ...exercises.slice(exIdx + 1)];
+          }
+        } else {
+          // Cleared a leg exercise: drop this slot as long as another empty one remains.
+          const otherEmpty = exercises.some(
+            (e, i) => i !== exIdx && e.options && !e.exerciseId,
+          );
+          if (otherEmpty) exercises = exercises.filter((_, i) => i !== exIdx);
+        }
+      }
+      return { ...s, exercises };
+    });
   }
 
   return (
