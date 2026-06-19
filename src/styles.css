@@ -318,7 +318,7 @@ body {
   padding: 3px 0;
 }
 .ex-stats-row span {
-  text-align: right;
+  text-align: center;
   font-variant-numeric: tabular-nums;
   font-size: 13px;
 }
