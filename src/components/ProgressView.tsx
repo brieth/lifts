@@ -41,7 +41,7 @@ export function ProgressView() {
     return (
       <div className="view">
         <h1>Progress</h1>
-        <p className="muted subtitle">Log some workouts to see your strength curves and PRs.</p>
+        <p className="muted subtitle">Log some workouts to see your strength curves and bests.</p>
       </div>
     );
   }
