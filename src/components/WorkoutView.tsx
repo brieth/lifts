@@ -172,12 +172,7 @@ function ActiveSession() {
         <div>
           <h1>{session.name}</h1>
           <p className="muted subtitle session-meta">
-            {gymName && (
-              <>
-                <span className="range-chip">{gymName}</span>
-                <span className="meta-dot">·</span>
-              </>
-            )}
+            {gymName && <span className="range-chip">{gymName}</span>}
             <span className="range-chip">{emphasisLabel(emphasis)} reps</span>
           </p>
         </div>
