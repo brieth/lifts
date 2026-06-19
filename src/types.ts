@@ -40,7 +40,13 @@ export interface Session {
   name: string;
   date: string;        // ISO timestamp
   emphasis?: Emphasis; // rep emphasis chosen for this session
+  gymId?: ID;          // gym the session was performed at
   exercises: LoggedExercise[];
+}
+
+export interface Gym {
+  id: ID;
+  name: string;
 }
 
 /** Rep emphasis for the session; maps to a per-exercise rep target. */
@@ -51,4 +57,6 @@ export interface AppData {
   routines: Routine[];
   sessions: Session[];
   activeSession: Session | null;
+  gyms: Gym[];
+  currentGymId: ID | null;
 }

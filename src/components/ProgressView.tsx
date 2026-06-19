@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../store';
-import { exerciseHistory, personalRecords } from '../lib/stats';
+import { exerciseHistory, personalRecords, type PR } from '../lib/stats';
+import { isGymDependent, sessionsForExercise } from '../lib/equipment';
 import { LineChart } from './LineChart';
 
 type Metric = 'best1RM' | 'topSet' | 'volume';
@@ -12,17 +13,26 @@ const METRIC_LABELS: Record<Metric, string> = {
 };
 
 export function ProgressView() {
-  const { data, exerciseName } = useStore();
+  const { data, exerciseName, setCurrentGym } = useStore();
   const [metric, setMetric] = useState<Metric>('best1RM');
 
-  const prs = useMemo(() => personalRecords(data.sessions), [data.sessions]);
-
-  // exercises that actually have logged data, most recently used first
+  // exercises that have any logged data
   const tracked = useMemo(() => {
     const ids = new Set<string>();
     for (const s of data.sessions) for (const e of s.exercises) ids.add(e.exerciseId);
     return [...ids];
   }, [data.sessions]);
+
+  // PRs computed per exercise, gym-scoped for cable/machine
+  const prs = useMemo(() => {
+    const map = new Map<string, PR>();
+    for (const id of tracked) {
+      const sub = sessionsForExercise(data.sessions, id, data.currentGymId);
+      const pr = personalRecords(sub).get(id);
+      if (pr) map.set(id, pr);
+    }
+    return map;
+  }, [data.sessions, tracked, data.currentGymId]);
 
   const [selected, setSelected] = useState<string | null>(null);
   const current = selected ?? tracked[0] ?? null;
@@ -31,18 +41,37 @@ export function ProgressView() {
     return (
       <div className="view">
         <h1>Progress</h1>
-        <p className="muted">Log some workouts to see your strength curves and PRs.</p>
+        <p className="muted subtitle">Log some workouts to see your strength curves and PRs.</p>
       </div>
     );
   }
 
-  const history = current ? exerciseHistory(data.sessions, current) : [];
+  const sub = current ? sessionsForExercise(data.sessions, current, data.currentGymId) : [];
+  const history = current ? exerciseHistory(sub, current) : [];
   const values = history.map((p) => p[metric]);
   const labels = history.map((p) => new Date(p.date).toLocaleDateString());
+  const gymScoped = current ? isGymDependent(current) : false;
 
   return (
     <div className="view">
       <h1>Progress</h1>
+
+      {data.gyms.length > 1 && (
+        <div className="gym-bar">
+          <span className="gym-label">Gym</span>
+          <div className="gym-options">
+            {data.gyms.map((g) => (
+              <button
+                key={g.id}
+                className={g.id === data.currentGymId ? 'gym-chip active' : 'gym-chip'}
+                onClick={() => setCurrentGym(g.id)}
+              >
+                {g.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <select
         className="select"
@@ -56,13 +85,15 @@ export function ProgressView() {
         ))}
       </select>
 
+      {gymScoped && (
+        <p className="muted small gym-note">
+          Cable/machine — showing {data.gyms.find((g) => g.id === data.currentGymId)?.name}
+        </p>
+      )}
+
       <div className="metric-toggle">
         {(Object.keys(METRIC_LABELS) as Metric[]).map((m) => (
-          <button
-            key={m}
-            className={m === metric ? 'active' : ''}
-            onClick={() => setMetric(m)}
-          >
+          <button key={m} className={m === metric ? 'active' : ''} onClick={() => setMetric(m)}>
             {METRIC_LABELS[m]}
           </button>
         ))}

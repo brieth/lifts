@@ -2,7 +2,8 @@ import { useRef, useState } from 'react';
 import { useStore } from '../store';
 
 export function RoutinesView() {
-  const { data, exerciseName, resetAll, exportData, importData } = useStore();
+  const { data, exerciseName, resetAll, exportData, importData, addGym, renameGym, deleteGym, setCurrentGym } =
+    useStore();
   const fileInput = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState<string | null>(null);
 
@@ -46,6 +47,55 @@ export function RoutinesView() {
             </ol>
           </div>
         ))}
+      </div>
+
+      <h2 className="section">Gyms</h2>
+      <p className="muted small backup-note">
+        Cable &amp; machine history is tracked per gym (resistance varies between gyms). Barbell and
+        dumbbell lifts are shared across all gyms.
+      </p>
+      <div className="gym-manage">
+        {data.gyms.map((g) => (
+          <div key={g.id} className="gym-row">
+            <button
+              className={g.id === data.currentGymId ? 'gym-chip active' : 'gym-chip'}
+              onClick={() => setCurrentGym(g.id)}
+            >
+              {g.name}
+            </button>
+            <div className="gym-row-actions">
+              <button
+                className="btn ghost small"
+                onClick={() => {
+                  const n = prompt('Rename gym', g.name)?.trim();
+                  if (n) renameGym(g.id, n);
+                }}
+              >
+                Rename
+              </button>
+              {data.gyms.length > 1 && (
+                <button
+                  className="btn ghost small danger"
+                  onClick={() => {
+                    if (confirm(`Delete "${g.name}"? Its logged sessions stay but become unassigned.`))
+                      deleteGym(g.id);
+                  }}
+                >
+                  Delete
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+        <button
+          className="btn ghost block"
+          onClick={() => {
+            const n = prompt('New gym name')?.trim();
+            if (n) addGym(n);
+          }}
+        >
+          + Add gym
+        </button>
       </div>
 
       <h2 className="section">Backup & Data</h2>

@@ -3,6 +3,7 @@ import type {
   AppData,
   Emphasis,
   Exercise,
+  Gym,
   LoggedExercise,
   Routine,
   Session,
@@ -16,12 +17,16 @@ function uid(): string {
   return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
 }
 
+const DEFAULT_GYM: Gym = { id: 'gym-default', name: 'My Gym' };
+
 function load(): AppData {
   const fresh: AppData = {
     exercises: SEED.exercises,
     routines: SEED.routines,
     sessions: [],
     activeSession: null,
+    gyms: [DEFAULT_GYM],
+    currentGymId: DEFAULT_GYM.id,
   };
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -33,11 +38,19 @@ function load(): AppData {
     for (const ex of stored.exercises ?? []) {
       if (!exercises.some((e) => e.id === ex.id)) exercises.push(ex);
     }
+    const gyms = stored.gyms?.length ? stored.gyms : [DEFAULT_GYM];
+    const currentGymId = stored.currentGymId ?? gyms[0].id;
+    // Backfill a gym on any pre-existing sessions so gym-dependent history works.
+    const sessions = (stored.sessions ?? []).map((s) =>
+      s.gymId ? s : { ...s, gymId: currentGymId },
+    );
     return {
       exercises,
       routines: SEED.routines,
-      sessions: stored.sessions ?? [],
+      sessions,
       activeSession: stored.activeSession ?? null,
+      gyms,
+      currentGymId,
     };
   } catch {
     return fresh;
@@ -54,6 +67,10 @@ interface Store {
   addExerciseToActive: (exerciseId: string) => void;
   deleteSession: (id: string) => void;
   upsertExercise: (name: string, id?: string) => Exercise;
+  addGym: (name: string) => Gym;
+  setCurrentGym: (id: string) => void;
+  renameGym: (id: string, name: string) => void;
+  deleteGym: (id: string) => void;
   resetAll: () => void;
   exportData: () => string;
   importData: (json: string) => boolean;
@@ -94,15 +111,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           exerciseId: re.exerciseId,
           sets: blankSets(re.targetSets),
         }));
-        const session: Session = {
-          id: uid(),
-          routineId: routine.id,
-          name: routine.name,
-          date: new Date().toISOString(),
-          emphasis,
-          exercises,
-        };
-        setData((d) => ({ ...d, activeSession: session }));
+        setData((d) => ({
+          ...d,
+          activeSession: {
+            id: uid(),
+            routineId: routine.id,
+            name: routine.name,
+            date: new Date().toISOString(),
+            emphasis,
+            gymId: d.currentGymId ?? undefined,
+            exercises,
+          },
+        }));
       },
 
       cancelSession() {
@@ -164,12 +184,40 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         return ex;
       },
 
+      addGym(name) {
+        const gym: Gym = { id: uid(), name: name.trim() || 'Gym' };
+        setData((d) => ({ ...d, gyms: [...d.gyms, gym], currentGymId: gym.id }));
+        return gym;
+      },
+
+      setCurrentGym(id) {
+        setData((d) => ({ ...d, currentGymId: id }));
+      },
+
+      renameGym(id, name) {
+        setData((d) => ({
+          ...d,
+          gyms: d.gyms.map((g) => (g.id === id ? { ...g, name: name.trim() || g.name } : g)),
+        }));
+      },
+
+      deleteGym(id) {
+        setData((d) => {
+          if (d.gyms.length <= 1) return d; // keep at least one gym
+          const gyms = d.gyms.filter((g) => g.id !== id);
+          const currentGymId = d.currentGymId === id ? gyms[0].id : d.currentGymId;
+          return { ...d, gyms, currentGymId };
+        });
+      },
+
       resetAll() {
         setData({
           exercises: SEED.exercises,
           routines: SEED.routines,
           sessions: [],
           activeSession: null,
+          gyms: [DEFAULT_GYM],
+          currentGymId: DEFAULT_GYM.id,
         });
       },
 
@@ -184,11 +232,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           if (!incoming || !Array.isArray(incoming.sessions) || !Array.isArray(incoming.exercises)) {
             return false;
           }
+          const gyms = incoming.gyms?.length ? incoming.gyms : [DEFAULT_GYM];
           setData({
             exercises: incoming.exercises,
             routines: Array.isArray(incoming.routines) ? incoming.routines : SEED.routines,
             sessions: incoming.sessions,
             activeSession: null,
+            gyms,
+            currentGymId: incoming.currentGymId ?? gyms[0].id,
           });
           return true;
         } catch {

@@ -9,6 +9,7 @@ import {
   weightForReps,
 } from '../lib/stats';
 import { defaultOneRMFor, EMPHASES, emphasisLabel, repsFor } from '../lib/reps';
+import { sessionsForExercise } from '../lib/equipment';
 
 export function WorkoutView() {
   const { data, startSession } = useStore();
@@ -18,6 +19,7 @@ export function WorkoutView() {
       <div className="view">
         <h1>Start a workout</h1>
         <p className="muted subtitle">Choose a rep emphasis to begin.</p>
+        <GymBar />
         <div className="start-list">
           {data.routines.map((r) => (
             <div key={r.id} className="start-card">
@@ -42,6 +44,33 @@ export function WorkoutView() {
   }
 
   return <ActiveSession />;
+}
+
+function GymBar() {
+  const { data, setCurrentGym, addGym } = useStore();
+  function add() {
+    const name = prompt('New gym name')?.trim();
+    if (name) addGym(name);
+  }
+  return (
+    <div className="gym-bar">
+      <span className="gym-label">Gym</span>
+      <div className="gym-options">
+        {data.gyms.map((g) => (
+          <button
+            key={g.id}
+            className={g.id === data.currentGymId ? 'gym-chip active' : 'gym-chip'}
+            onClick={() => setCurrentGym(g.id)}
+          >
+            {g.name}
+          </button>
+        ))}
+        <button className="gym-chip add" onClick={add}>
+          + Add
+        </button>
+      </div>
+    </div>
+  );
 }
 
 /**
@@ -101,6 +130,7 @@ function ActiveSession() {
   const { data, exerciseName, updateActive, finishSession, cancelSession } = useStore();
   const session = data.activeSession!;
   const emphasis: Emphasis = session.emphasis ?? 'medium';
+  const gymName = data.gyms.find((g) => g.id === session.gymId)?.name ?? null;
 
   function setSetValue(exIdx: number, setIdx: number, patch: Partial<SetEntry>) {
     updateActive((s) => {
@@ -149,6 +179,7 @@ function ActiveSession() {
           <p className="muted subtitle">
             {completed} sets logged{' · '}
             <span className="range-chip">{emphasisLabel(emphasis)} reps</span>
+            {gymName && <span className="range-chip">{gymName}</span>}
           </p>
         </div>
         <button className="btn ghost small" onClick={cancelSession}>
@@ -159,10 +190,12 @@ function ActiveSession() {
       <div className="exercise-list">
         {session.exercises.map((ex, exIdx) => {
           const targetReps = repsFor(ex.exerciseId, emphasis);
+          // Cable/machine history is restricted to the current gym; free weights global.
+          const hist = sessionsForExercise(data.sessions, ex.exerciseId, data.currentGymId);
           // Use the most recent est. 1RM, or a category default 1RM with no history.
           // Either way, derive the weight for the target reps via inverse-Epley.
           const base1RM =
-            recentEstimated1RM(data.sessions, ex.exerciseId) ?? defaultOneRMFor(ex.exerciseId);
+            recentEstimated1RM(hist, ex.exerciseId) ?? defaultOneRMFor(ex.exerciseId);
           const suggestedWeight = round5(weightForReps(base1RM, targetReps));
           return (
             <ExerciseCard
@@ -171,8 +204,8 @@ function ActiveSession() {
               name={exerciseName(ex.exerciseId)}
               targetReps={targetReps}
               suggestedWeight={suggestedWeight}
-              last={lastExercisePoint(data.sessions, ex.exerciseId)}
-              best={bestExercisePoint(data.sessions, ex.exerciseId)}
+              last={lastExercisePoint(hist, ex.exerciseId)}
+              best={bestExercisePoint(hist, ex.exerciseId)}
               onChange={(setIdx, patch) => setSetValue(exIdx, setIdx, patch)}
               onAddSet={() => addSet(exIdx)}
               onRemoveSet={(setIdx) => removeSet(exIdx, setIdx)}

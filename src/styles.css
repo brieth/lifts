@@ -136,6 +136,61 @@ body {
   letter-spacing: -0.02em;
 }
 
+/* ---------- gym selector ---------- */
+.gym-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.gym-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.gym-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.gym-chip {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.gym-chip.active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.gym-chip.add {
+  color: var(--muted);
+}
+.gym-note {
+  margin: -6px 0 0;
+}
+.gym-manage {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.gym-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.gym-row-actions {
+  display: flex;
+  gap: 6px;
+}
+
 /* ---------- start list with inline emphasis selector ---------- */
 .start-list {
   display: flex;
