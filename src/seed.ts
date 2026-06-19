@@ -32,7 +32,7 @@ const ROUTINE_DEFS: RoutineDef[] = [
       ['Cable Crossover Fly'],
       ['Cable Row'],
       ['Machine Lying Hamstring Curl'],
-      ['Cable Rope Overhead Triceps Extension', '1'],
+      ['Cable Rope Overhead Tricep Extension', '1'],
       ['Cable Face Pull', '1'],
     ],
   },
@@ -53,7 +53,7 @@ const ROUTINE_DEFS: RoutineDef[] = [
       ['Cable Rear Delt Fly', '1'],
       ['Machine Lying Hamstring Curl'],
       ['Cable Rope Tricep Extension', '2'],
-      ['Cable Rope Hammer Curls', '2'],
+      ['Cable Rope Hammer Curl', '2'],
     ],
   },
   {

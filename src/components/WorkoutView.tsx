@@ -72,9 +72,7 @@ function doneVolume(sets: SetEntry[]): number {
 }
 
 function ActiveSession() {
-  const { data, exerciseName, updateActive, finishSession, cancelSession, addExerciseToActive } =
-    useStore();
-  const [picking, setPicking] = useState(false);
+  const { data, exerciseName, updateActive, finishSession, cancelSession } = useStore();
   const session = data.activeSession!;
   const range = session.repRange;
 
@@ -154,20 +152,6 @@ function ActiveSession() {
         ))}
       </div>
 
-      {picking ? (
-        <ExercisePicker
-          onPick={(id) => {
-            addExerciseToActive(id);
-            setPicking(false);
-          }}
-          onClose={() => setPicking(false)}
-        />
-      ) : (
-        <button className="btn ghost block" onClick={() => setPicking(true)}>
-          + Add exercise
-        </button>
-      )}
-
       <button className="btn primary block finish" onClick={finishSession}>
         Finish workout
       </button>
@@ -208,7 +192,7 @@ function ExerciseCard({
       <div className="ex-stats">
         <div className="ex-stats-row head">
           <span />
-          <span>Actual</span>
+          <span>Logged</span>
           <span>Planned</span>
           <span>Last</span>
         </div>
@@ -269,51 +253,3 @@ function ExerciseCard({
   );
 }
 
-function ExercisePicker({
-  onPick,
-  onClose,
-}: {
-  onPick: (id: string) => void;
-  onClose: () => void;
-}) {
-  const { data, upsertExercise } = useStore();
-  const [q, setQ] = useState('');
-  const filtered = data.exercises.filter((e) =>
-    e.name.toLowerCase().includes(q.toLowerCase()),
-  );
-
-  function addCustom() {
-    const name = q.trim();
-    if (!name) return;
-    const ex = upsertExercise(name);
-    onPick(ex.id);
-  }
-
-  return (
-    <div className="picker">
-      <div className="picker-head">
-        <input
-          autoFocus
-          placeholder="Search or add exercise…"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-        />
-        <button className="btn ghost small" onClick={onClose}>
-          Close
-        </button>
-      </div>
-      <div className="picker-list">
-        {filtered.map((e) => (
-          <button key={e.id} className="picker-item" onClick={() => onPick(e.id)}>
-            {e.name}
-          </button>
-        ))}
-        {q.trim() && !filtered.some((e) => e.name.toLowerCase() === q.toLowerCase()) && (
-          <button className="picker-item add" onClick={addCustom}>
-            + Create “{q.trim()}”
-          </button>
-        )}
-      </div>
-    </div>
-  );
-}
