@@ -114,7 +114,7 @@ export function ProgressView() {
         )}
       </div>
 
-      <h2 className="section">Personal Records</h2>
+      <h2 className="section">Bests</h2>
       <div className="pr-list">
         {tracked.map((id) => {
           const pr = prs.get(id);

@@ -31,6 +31,7 @@ export function RoutinesView() {
   return (
     <div className="view">
       <h1>Routine</h1>
+      <p className="muted subtitle">A leg exercise is sandwiched in the middle.</p>
 
       <div className="routine-detail-list">
         {data.routines.map((r) => (
