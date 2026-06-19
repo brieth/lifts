@@ -106,12 +106,34 @@ function encodePng(size, px) {
   ]);
 }
 
+// Nearest-neighbor upscale a GRID x GRID design buffer to a target size, so the
+// whole icon shares one chunky pixel size (the bun steps match the dumbbell).
+function upscale(grid, gridSize, size) {
+  const px = new Uint8Array(size * size * 4);
+  for (let y = 0; y < size; y++) {
+    const gy = Math.floor((y * gridSize) / size);
+    for (let x = 0; x < size; x++) {
+      const gx = Math.floor((x * gridSize) / size);
+      const si = (gy * gridSize + gx) * 4;
+      const di = (y * size + x) * 4;
+      px[di] = grid[si];
+      px[di + 1] = grid[si + 1];
+      px[di + 2] = grid[si + 2];
+      px[di + 3] = 255;
+    }
+  }
+  return px;
+}
+
+const GRID = 32; // design resolution -> the "pixel" size
+const design = drawIcon(GRID);
+
 for (const [name, size] of [
   ['icon-192.png', 192],
   ['icon-512.png', 512],
   ['apple-touch-icon.png', 180],
   ['favicon.png', 64],
 ]) {
-  writeFileSync(join(outDir, name), encodePng(size, drawIcon(size)));
+  writeFileSync(join(outDir, name), encodePng(size, upscale(design, GRID, size)));
   console.log('wrote', name);
 }
