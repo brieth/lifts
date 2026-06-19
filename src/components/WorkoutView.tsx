@@ -295,7 +295,7 @@ function ExerciseCard({
   const selected = !options || !!ex.exerciseId;
 
   return (
-    <div className="exercise-card">
+    <div className={selected ? 'exercise-card' : 'exercise-card collapsed'}>
       <div className="exercise-head">
         {options ? (
           <select
