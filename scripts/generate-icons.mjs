@@ -10,43 +10,64 @@ const outDir = join(root, 'public');
 mkdirSync(outDir, { recursive: true });
 
 const TEAL = [20, 184, 166]; // #14b8a6 background
-const BAR = [6, 43, 39]; // dark teal dumbbell handle
-const BUN = [242, 212, 160]; // cream bread
-const TOMATO = [217, 105, 74]; // tomato layer
-const MEAT = [156, 90, 44]; // filling layer
+const INK = [7, 28, 25]; // single dark mark color (monochrome)
+
+function setPx(px, size, x, y, color) {
+  if (x < 0 || y < 0 || x >= size || y >= size) return;
+  const i = (y * size + x) * 4;
+  px[i] = color[0];
+  px[i + 1] = color[1];
+  px[i + 2] = color[2];
+  px[i + 3] = 255;
+}
 
 function rect(px, size, x0, y0, x1, y1, color) {
   const a = Math.round(x0 * size),
     b = Math.round(y0 * size),
     c = Math.round(x1 * size),
     d = Math.round(y1 * size);
-  for (let y = b; y < d; y++) {
-    for (let x = a; x < c; x++) {
-      const i = (y * size + x) * 4;
-      px[i] = color[0];
-      px[i + 1] = color[1];
-      px[i + 2] = color[2];
-      px[i + 3] = 255;
+  for (let y = b; y < d; y++) for (let x = a; x < c; x++) setPx(px, size, x, y, color);
+}
+
+// Fill an ellipse. half: 0 = full, -1 = top half only, 1 = bottom half only.
+function ellipse(px, size, cx, cy, rx, ry, color, half = 0) {
+  const a = cx * size,
+    b = cy * size,
+    RX = rx * size,
+    RY = ry * size;
+  for (let y = Math.floor(b - RY); y <= Math.ceil(b + RY); y++) {
+    if (half === -1 && y > b) continue;
+    if (half === 1 && y < b) continue;
+    for (let x = Math.floor(a - RX); x <= Math.ceil(a + RX); x++) {
+      const dx = (x - a) / RX,
+        dy = (y - b) / RY;
+      if (dx * dx + dy * dy <= 1) setPx(px, size, x, y, color);
     }
   }
 }
 
-// A dumbbell whose two weight plates are little stacked sandwiches.
+// A burger: top bun, a dumbbell as the patty, bottom bun. Monochrome.
 function drawIcon(size) {
   const px = new Uint8Array(size * size * 4);
   rect(px, size, 0, 0, 1, 1, TEAL); // full-bleed teal background
-  // handle bar connecting the two sandwiches
-  rect(px, size, 0.31, 0.455, 0.69, 0.545, BAR);
-  // the two sandwich "plates"
-  for (const [x0, x1] of [
-    [0.12, 0.31],
-    [0.69, 0.88],
-  ]) {
-    rect(px, size, x0, 0.3, x1, 0.42, BUN); // top bun
-    rect(px, size, x0, 0.42, x1, 0.46, TOMATO); // tomato
-    rect(px, size, x0, 0.46, x1, 0.56, MEAT); // filling
-    rect(px, size, x0, 0.56, x1, 0.7, BUN); // bottom bun
-  }
+
+  // top bun (dome, flat bottom at y=0.43)
+  ellipse(px, size, 0.5, 0.43, 0.35, 0.2, INK, -1);
+  // bottom bun (dome down, flat top at y=0.57)
+  ellipse(px, size, 0.5, 0.57, 0.35, 0.17, INK, 1);
+
+  // sesame seeds punched out of the top bun (background color)
+  ellipse(px, size, 0.5, 0.31, 0.018, 0.03, TEAL);
+  ellipse(px, size, 0.39, 0.35, 0.018, 0.03, TEAL);
+  ellipse(px, size, 0.61, 0.35, 0.018, 0.03, TEAL);
+
+  // the dumbbell "patty" between the buns
+  rect(px, size, 0.34, 0.475, 0.66, 0.525, INK); // handle bar
+  rect(px, size, 0.21, 0.44, 0.28, 0.56, INK); // left outer plate
+  rect(px, size, 0.28, 0.46, 0.32, 0.54, INK); // left inner plate
+  rect(px, size, 0.72, 0.44, 0.79, 0.56, INK); // right outer plate
+  rect(px, size, 0.68, 0.46, 0.72, 0.54, INK); // right inner plate
+
   return px;
 }
 
