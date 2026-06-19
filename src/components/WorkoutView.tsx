@@ -1,18 +1,55 @@
 import { useState } from 'react';
 import { useStore } from '../store';
-import type { LoggedExercise, SetEntry } from '../types';
-import { lastLoggedVolume } from '../lib/stats';
+import type { LoggedExercise, RepRange, Routine, SetEntry } from '../types';
+import { bestEstimated1RM, previousExercisePoint } from '../lib/stats';
+
+// Hypertrophy-oriented rep targets to choose from when starting a workout.
+const REP_RANGES: RepRange[] = [
+  { label: 'Heavy', low: 5, high: 8 },
+  { label: 'Classic', low: 8, high: 12 },
+  { label: 'Pump', low: 12, high: 15 },
+];
 
 export function WorkoutView() {
   const { data, startSession } = useStore();
+  const [pending, setPending] = useState<Routine | null>(null);
 
   if (!data.activeSession) {
+    if (pending) {
+      return (
+        <div className="view">
+          <button className="link-back" onClick={() => setPending(null)}>
+            ‹ Back
+          </button>
+          <h1>{pending.name}</h1>
+          <p className="muted">Pick a rep range for this session</p>
+          <div className="range-list">
+            {REP_RANGES.map((r) => (
+              <button
+                key={r.label}
+                className="range-card"
+                onClick={() => {
+                  startSession(pending, r);
+                  setPending(null);
+                }}
+              >
+                <span className="range-reps">
+                  {r.low}–{r.high}
+                </span>
+                <span className="range-label">{r.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="view">
         <h1>Start a workout</h1>
         <div className="routine-grid">
           {data.routines.map((r) => (
-            <button key={r.id} className="routine-card" onClick={() => startSession(r)}>
+            <button key={r.id} className="routine-card" onClick={() => setPending(r)}>
               <span className="routine-card-name">{r.name}</span>
             </button>
           ))}
@@ -39,6 +76,7 @@ function ActiveSession() {
     useStore();
   const [picking, setPicking] = useState(false);
   const session = data.activeSession!;
+  const range = session.repRange;
 
   function setSetValue(exIdx: number, setIdx: number, patch: Partial<SetEntry>) {
     updateActive((s) => {
@@ -84,7 +122,17 @@ function ActiveSession() {
       <div className="session-head">
         <div>
           <h1>{session.name}</h1>
-          <p className="muted">{completed} sets logged</p>
+          <p className="muted">
+            {completed} sets logged
+            {range && (
+              <>
+                {' · '}
+                <span className="range-chip">
+                  {range.low}–{range.high} reps
+                </span>
+              </>
+            )}
+          </p>
         </div>
         <button className="btn ghost small" onClick={cancelSession}>
           Cancel
@@ -97,8 +145,8 @@ function ActiveSession() {
             key={`${ex.exerciseId}-${exIdx}`}
             ex={ex}
             name={exerciseName(ex.exerciseId)}
-            prevSuperset={session.exercises[exIdx - 1]?.superset}
-            prevVolume={lastLoggedVolume(data.sessions, ex.exerciseId)}
+            repLow={range?.low}
+            prev={previousExercisePoint(data.sessions, ex.exerciseId)}
             onChange={(setIdx, patch) => setSetValue(exIdx, setIdx, patch)}
             onAddSet={() => addSet(exIdx)}
             onRemoveSet={(setIdx) => removeSet(exIdx, setIdx)}
@@ -127,51 +175,55 @@ function ActiveSession() {
   );
 }
 
+function fmt(n: number | null | undefined): string {
+  return n ? Math.round(n).toLocaleString() : '—';
+}
+
 function ExerciseCard({
   ex,
   name,
-  prevSuperset,
-  prevVolume,
+  repLow,
+  prev,
   onChange,
   onAddSet,
   onRemoveSet,
 }: {
   ex: LoggedExercise;
   name: string;
-  prevSuperset?: string;
-  prevVolume: number | null;
+  repLow?: number;
+  prev: { volume: number; best1RM: number } | null;
   onChange: (setIdx: number, patch: Partial<SetEntry>) => void;
   onAddSet: () => void;
   onRemoveSet: (setIdx: number) => void;
 }) {
-  const supersetStart = ex.superset && ex.superset !== prevSuperset;
-  const done = doneVolume(ex.sets);
-  const entered = enteredVolume(ex.sets);
-  const delta = prevVolume != null ? done - prevVolume : null;
+  const volActual = doneVolume(ex.sets);
+  const volPlanned = enteredVolume(ex.sets);
+  const strActual = bestEstimated1RM(ex.sets, true);
+  const strPlanned = bestEstimated1RM(ex.sets, false);
 
   return (
-    <div className={`exercise-card ${ex.superset ? 'in-superset' : ''}`}>
-      {supersetStart && <div className="superset-tag">Superset {ex.superset}</div>}
+    <div className="exercise-card">
       <div className="exercise-name">{name}</div>
 
-      <div className="vol-summary">
-        <span className="vol done">
-          <strong>{done.toLocaleString()}</strong>
-          <em>done</em>
-        </span>
-        <span className="vol entered">
-          <strong>{entered.toLocaleString()}</strong>
-          <em>entered</em>
-        </span>
-        <span className="vol prev">
-          <strong>{prevVolume != null ? prevVolume.toLocaleString() : '—'}</strong>
-          <em>last</em>
-        </span>
-        {delta != null && delta !== 0 && (
-          <span className={`vol-delta ${delta > 0 ? 'up' : 'down'}`}>
-            {delta > 0 ? '▲' : '▼'} {Math.abs(delta).toLocaleString()}
-          </span>
-        )}
+      <div className="ex-stats">
+        <div className="ex-stats-row head">
+          <span />
+          <span>Actual</span>
+          <span>Planned</span>
+          <span>Last</span>
+        </div>
+        <div className="ex-stats-row">
+          <span className="k">Volume</span>
+          <span className="a">{fmt(volActual)}</span>
+          <span>{fmt(volPlanned)}</span>
+          <span>{fmt(prev?.volume)}</span>
+        </div>
+        <div className="ex-stats-row">
+          <span className="k">Strength</span>
+          <span className="a">{fmt(strActual)}</span>
+          <span>{fmt(strPlanned)}</span>
+          <span>{fmt(prev?.best1RM)}</span>
+        </div>
       </div>
 
       <div className="set-header">
@@ -195,7 +247,7 @@ function ExerciseCard({
             type="number"
             inputMode="numeric"
             value={s.reps || ''}
-            placeholder="0"
+            placeholder={repLow ? String(repLow) : '0'}
             onChange={(e) => onChange(i, { reps: Number(e.target.value) })}
           />
           <button

@@ -37,7 +37,14 @@ export interface Session {
   routineId?: ID;
   name: string;
   date: string;        // ISO timestamp
+  repRange?: RepRange; // hypertrophy rep target chosen for this session
   exercises: LoggedExercise[];
+}
+
+export interface RepRange {
+  low: number;
+  high: number;
+  label: string;
 }
 
 export interface AppData {

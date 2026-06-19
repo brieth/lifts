@@ -1,5 +1,13 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import type { AppData, Exercise, LoggedExercise, Routine, Session, SetEntry } from './types';
+import type {
+  AppData,
+  Exercise,
+  LoggedExercise,
+  RepRange,
+  Routine,
+  Session,
+  SetEntry,
+} from './types';
 import { SEED } from './seed';
 
 const STORAGE_KEY = 'lifts.data.v1';
@@ -39,8 +47,7 @@ function load(): AppData {
 interface Store {
   data: AppData;
   exerciseName: (id: string) => string;
-  startSession: (routine: Routine) => void;
-  startEmptySession: () => void;
+  startSession: (routine: Routine, repRange?: RepRange) => void;
   cancelSession: () => void;
   finishSession: () => void;
   updateActive: (fn: (s: Session) => Session) => void;
@@ -82,10 +89,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       data,
       exerciseName,
 
-      startSession(routine) {
+      startSession(routine, repRange) {
         const exercises: LoggedExercise[] = routine.exercises.map((re) => ({
           exerciseId: re.exerciseId,
-          superset: re.superset,
           sets: blankSets(re.targetSets),
         }));
         const session: Session = {
@@ -93,17 +99,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           routineId: routine.id,
           name: routine.name,
           date: new Date().toISOString(),
+          repRange,
           exercises,
-        };
-        setData((d) => ({ ...d, activeSession: session }));
-      },
-
-      startEmptySession() {
-        const session: Session = {
-          id: uid(),
-          name: 'Freestyle',
-          date: new Date().toISOString(),
-          exercises: [],
         };
         setData((d) => ({ ...d, activeSession: session }));
       },

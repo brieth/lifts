@@ -70,10 +70,27 @@ export function personalRecords(sessions: Session[]): Map<ID, PR> {
   return prs;
 }
 
-/** Logged (done-set) volume of an exercise in the most recent prior session, or null. */
-export function lastLoggedVolume(sessions: Session[], exerciseId: ID): number | null {
+/** Most recent prior session's logged numbers for an exercise, or null. */
+export function previousExercisePoint(
+  sessions: Session[],
+  exerciseId: ID,
+): ExercisePoint | null {
   const history = exerciseHistory(sessions, exerciseId);
-  return history.length ? history[history.length - 1].volume : null;
+  return history.length ? history[history.length - 1] : null;
+}
+
+/** Best estimated 1RM across a set list (rounded). 0 if none qualify. */
+export function bestEstimated1RM(
+  sets: { weight: number; reps: number; done?: boolean }[],
+  onlyDone: boolean,
+): number {
+  let best = 0;
+  for (const s of sets) {
+    if (onlyDone && !s.done) continue;
+    if (s.weight <= 0 || s.reps <= 0) continue;
+    best = Math.max(best, estimated1RM(s.weight, s.reps));
+  }
+  return Math.round(best);
 }
 
 export function sessionVolume(session: Session): number {
