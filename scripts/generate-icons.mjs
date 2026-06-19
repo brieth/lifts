@@ -46,27 +46,21 @@ function ellipse(px, size, cx, cy, rx, ry, color, half = 0) {
   }
 }
 
-// A burger: top bun, a dumbbell as the patty, bottom bun. Monochrome.
+// The original dumbbell, with a bun added above and below. Monochrome.
 function drawIcon(size) {
   const px = new Uint8Array(size * size * 4);
   rect(px, size, 0, 0, 1, 1, TEAL); // full-bleed teal background
 
-  // top bun (dome, flat bottom at y=0.43)
-  ellipse(px, size, 0.5, 0.43, 0.35, 0.2, INK, -1);
-  // bottom bun (dome down, flat top at y=0.57)
-  ellipse(px, size, 0.5, 0.57, 0.35, 0.17, INK, 1);
+  // top + bottom buns (domes), with a small gap from the dumbbell
+  ellipse(px, size, 0.5, 0.34, 0.34, 0.15, INK, -1);
+  ellipse(px, size, 0.5, 0.66, 0.34, 0.15, INK, 1);
 
-  // sesame seeds punched out of the top bun (background color)
-  ellipse(px, size, 0.5, 0.31, 0.018, 0.03, TEAL);
-  ellipse(px, size, 0.39, 0.35, 0.018, 0.03, TEAL);
-  ellipse(px, size, 0.61, 0.35, 0.018, 0.03, TEAL);
-
-  // the dumbbell "patty" between the buns
-  rect(px, size, 0.34, 0.475, 0.66, 0.525, INK); // handle bar
-  rect(px, size, 0.21, 0.44, 0.28, 0.56, INK); // left outer plate
-  rect(px, size, 0.28, 0.46, 0.32, 0.54, INK); // left inner plate
-  rect(px, size, 0.72, 0.44, 0.79, 0.56, INK); // right outer plate
-  rect(px, size, 0.68, 0.46, 0.72, 0.54, INK); // right inner plate
+  // the original dumbbell, unchanged
+  rect(px, size, 0.3, 0.46, 0.7, 0.54, INK); // bar
+  rect(px, size, 0.2, 0.36, 0.28, 0.64, INK); // left outer plate
+  rect(px, size, 0.28, 0.41, 0.33, 0.59, INK); // left inner plate
+  rect(px, size, 0.72, 0.36, 0.8, 0.64, INK); // right outer plate
+  rect(px, size, 0.67, 0.41, 0.72, 0.59, INK); // right inner plate
 
   return px;
 }
