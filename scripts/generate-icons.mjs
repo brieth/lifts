@@ -9,8 +9,11 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const outDir = join(root, 'public');
 mkdirSync(outDir, { recursive: true });
 
-const BG = [34, 197, 94]; // accent green
-const FG = [4, 19, 10]; // near-black
+const TEAL = [20, 184, 166]; // #14b8a6 background
+const BAR = [6, 43, 39]; // dark teal dumbbell handle
+const BUN = [242, 212, 160]; // cream bread
+const TOMATO = [217, 105, 74]; // tomato layer
+const MEAT = [156, 90, 44]; // filling layer
 
 function rect(px, size, x0, y0, x1, y1, color) {
   const a = Math.round(x0 * size),
@@ -28,16 +31,22 @@ function rect(px, size, x0, y0, x1, y1, color) {
   }
 }
 
+// A dumbbell whose two weight plates are little stacked sandwiches.
 function drawIcon(size) {
   const px = new Uint8Array(size * size * 4);
-  // background
-  rect(px, size, 0, 0, 1, 1, BG);
-  // dumbbell: handle bar + two weights each side
-  rect(px, size, 0.3, 0.46, 0.7, 0.54, FG); // bar
-  rect(px, size, 0.2, 0.36, 0.28, 0.64, FG); // left outer plate
-  rect(px, size, 0.28, 0.41, 0.33, 0.59, FG); // left inner plate
-  rect(px, size, 0.72, 0.36, 0.8, 0.64, FG); // right outer plate
-  rect(px, size, 0.67, 0.41, 0.72, 0.59, FG); // right inner plate
+  rect(px, size, 0, 0, 1, 1, TEAL); // full-bleed teal background
+  // handle bar connecting the two sandwiches
+  rect(px, size, 0.31, 0.455, 0.69, 0.545, BAR);
+  // the two sandwich "plates"
+  for (const [x0, x1] of [
+    [0.12, 0.31],
+    [0.69, 0.88],
+  ]) {
+    rect(px, size, x0, 0.3, x1, 0.42, BUN); // top bun
+    rect(px, size, x0, 0.42, x1, 0.46, TOMATO); // tomato
+    rect(px, size, x0, 0.46, x1, 0.56, MEAT); // filling
+    rect(px, size, x0, 0.56, x1, 0.7, BUN); // bottom bun
+  }
   return px;
 }
 

@@ -6,7 +6,7 @@ interface Props {
 }
 
 /** Lightweight dependency-free SVG line chart. */
-export function LineChart({ values, labels, height = 160, color = '#22c55e' }: Props) {
+export function LineChart({ values, labels, height = 160, color = '#2dd4bf' }: Props) {
   const width = 320;
   const padX = 8;
   const padY = 16;

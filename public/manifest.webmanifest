@@ -1,6 +1,6 @@
 {
-  "name": "lifts",
-  "short_name": "lifts",
+  "name": "Sandwich",
+  "short_name": "Sandwich",
   "description": "Minimalist workout tracker",
   "start_url": ".",
   "scope": ".",
