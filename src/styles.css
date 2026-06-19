@@ -243,6 +243,7 @@ body {
 }
 .range-chip {
   display: inline-block;
+  vertical-align: middle;
   background: var(--accent-dim);
   color: var(--accent);
   border-radius: 6px;
