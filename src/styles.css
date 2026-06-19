@@ -61,6 +61,11 @@ body {
 .muted {
   color: var(--muted);
 }
+/* Subtitle under the page title: fixed bottom gap so the start and active
+   screens line up identically (paired with margin-top:0 on the lists below). */
+.subtitle {
+  margin: 2px 0 16px;
+}
 .small {
   font-size: 13px;
 }
@@ -141,7 +146,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-top: 16px;
+  margin-top: 0;
 }
 .start-card {
   display: flex;
@@ -212,7 +217,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  margin-top: 16px;
+  margin-top: 0;
 }
 
 .exercise-card {

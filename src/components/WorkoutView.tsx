@@ -17,7 +17,7 @@ export function WorkoutView() {
     return (
       <div className="view">
         <h1>Start a workout</h1>
-        <p className="muted">Choose a rep emphasis to begin.</p>
+        <p className="muted subtitle">Choose a rep emphasis to begin.</p>
         <div className="start-list">
           {data.routines.map((r) => (
             <div key={r.id} className="start-card">
@@ -119,7 +119,7 @@ function ActiveSession() {
       <div className="session-head">
         <div>
           <h1>{session.name}</h1>
-          <p className="muted">
+          <p className="muted subtitle">
             {completed} sets logged{' · '}
             <span className="range-chip">{emphasisLabel(emphasis)} reps</span>
           </p>
