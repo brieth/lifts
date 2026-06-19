@@ -45,12 +45,12 @@ function drawIcon(size) {
   rect(px, size, 0.2, 0.69, 0.8, 0.79, INK); // base (height 2)
   rect(px, size, 0.25, 0.79, 0.75, 0.84, INK); // top (height 1)
 
-  // the dumbbell — tall outer plates stepping down to a thin bar
+  // the dumbbell — each weight mirrored about its own center (big plate inboard)
   rect(px, size, 0.3, 0.46, 0.7, 0.54, INK); // bar
-  rect(px, size, 0.2, 0.36, 0.28, 0.64, INK); // left outer plate
-  rect(px, size, 0.28, 0.41, 0.33, 0.59, INK); // left inner plate
-  rect(px, size, 0.72, 0.36, 0.8, 0.64, INK); // right outer plate
-  rect(px, size, 0.67, 0.41, 0.72, 0.59, INK); // right inner plate
+  rect(px, size, 0.2, 0.41, 0.25, 0.59, INK); // left outer plate (short, narrow)
+  rect(px, size, 0.25, 0.36, 0.33, 0.64, INK); // left inner plate (tall, wide)
+  rect(px, size, 0.67, 0.36, 0.75, 0.64, INK); // right inner plate (tall, wide)
+  rect(px, size, 0.75, 0.41, 0.8, 0.59, INK); // right outer plate (short, narrow)
 
   return px;
 }
