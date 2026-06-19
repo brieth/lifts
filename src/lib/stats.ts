@@ -82,6 +82,17 @@ export function weightForReps(oneRepMax: number, reps: number): number {
   return oneRepMax / (1 + reps / 30);
 }
 
+/** Most recent prior session's logged volume and est. 1RM for an exercise, or null. */
+export function lastExercisePoint(
+  sessions: Session[],
+  exerciseId: ID,
+): { volume: number; best1RM: number } | null {
+  const history = exerciseHistory(sessions, exerciseId);
+  if (!history.length) return null;
+  const p = history[history.length - 1];
+  return { volume: p.volume, best1RM: p.best1RM };
+}
+
 /** Best logged volume and best estimated 1RM for an exercise across all history. */
 export function bestExercisePoint(
   sessions: Session[],

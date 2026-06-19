@@ -4,6 +4,7 @@ import {
   bestEstimated1RM,
   bestExercisePoint,
   estimated1RM,
+  lastExercisePoint,
   recentEstimated1RM,
   weightForReps,
 } from '../lib/stats';
@@ -142,6 +143,7 @@ function ActiveSession() {
               name={exerciseName(ex.exerciseId)}
               targetReps={targetReps}
               suggestedWeight={suggestedWeight}
+              last={lastExercisePoint(data.sessions, ex.exerciseId)}
               best={bestExercisePoint(data.sessions, ex.exerciseId)}
               onChange={(setIdx, patch) => setSetValue(exIdx, setIdx, patch)}
               onAddSet={() => addSet(exIdx)}
@@ -167,6 +169,7 @@ function ExerciseCard({
   name,
   targetReps,
   suggestedWeight,
+  last,
   best,
   onChange,
   onAddSet,
@@ -176,6 +179,7 @@ function ExerciseCard({
   name: string;
   targetReps: number;
   suggestedWeight: number;
+  last: { volume: number; best1RM: number } | null;
   best: { volume: number; best1RM: number } | null;
   onChange: (setIdx: number, patch: Partial<SetEntry>) => void;
   onAddSet: () => void;
@@ -185,6 +189,19 @@ function ExerciseCard({
   const volPlanned = plannedVolume(ex.sets, suggestedWeight, targetReps);
   const strLogged = bestEstimated1RM(ex.sets, true);
   const strPlanned = plannedStrength(ex.sets, suggestedWeight, targetReps);
+
+  // Checking a set as done commits the suggested placeholders for any blanks.
+  function toggleDone(i: number, s: SetEntry) {
+    if (s.done) {
+      onChange(i, { done: false });
+    } else {
+      onChange(i, {
+        done: true,
+        weight: s.weight > 0 ? s.weight : suggestedWeight,
+        reps: s.reps > 0 ? s.reps : targetReps,
+      });
+    }
+  }
 
   return (
     <div className="exercise-card">
@@ -198,18 +215,21 @@ function ExerciseCard({
           <span />
           <span>Logged</span>
           <span>Planned</span>
+          <span>Last</span>
           <span>Best</span>
         </div>
         <div className="ex-stats-row">
           <span className="k">Strength</span>
           <span className="a">{fmt(strLogged)}</span>
           <span>{fmt(strPlanned)}</span>
+          <span>{fmt(last?.best1RM)}</span>
           <span>{fmt(best?.best1RM)}</span>
         </div>
         <div className="ex-stats-row">
           <span className="k">Volume</span>
           <span className="a">{fmt(volLogged)}</span>
           <span>{fmt(volPlanned)}</span>
+          <span>{fmt(last?.volume)}</span>
           <span>{fmt(best?.volume)}</span>
         </div>
       </div>
@@ -240,7 +260,7 @@ function ExerciseCard({
           />
           <button
             className={`check ${s.done ? 'on' : ''}`}
-            onClick={() => onChange(i, { done: !s.done })}
+            onClick={() => toggleDone(i, s)}
             aria-label="Mark set done"
           >
             ✓
