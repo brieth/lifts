@@ -70,6 +70,12 @@ export function personalRecords(sessions: Session[]): Map<ID, PR> {
   return prs;
 }
 
+/** Logged (done-set) volume of an exercise in the most recent prior session, or null. */
+export function lastLoggedVolume(sessions: Session[], exerciseId: ID): number | null {
+  const history = exerciseHistory(sessions, exerciseId);
+  return history.length ? history[history.length - 1].volume : null;
+}
+
 export function sessionVolume(session: Session): number {
   let total = 0;
   for (const logged of session.exercises) {

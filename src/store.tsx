@@ -9,18 +9,31 @@ function uid(): string {
 }
 
 function load(): AppData {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw) as AppData;
-  } catch {
-    /* ignore corrupt storage */
-  }
-  return {
+  const fresh: AppData = {
     exercises: SEED.exercises,
     routines: SEED.routines,
     sessions: [],
     activeSession: null,
   };
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return fresh;
+    const stored = JSON.parse(raw) as Partial<AppData>;
+    // Always refresh the routine definitions from the seed (program structure),
+    // while preserving the user's logged sessions and any custom exercises.
+    const exercises: Exercise[] = [...SEED.exercises];
+    for (const ex of stored.exercises ?? []) {
+      if (!exercises.some((e) => e.id === ex.id)) exercises.push(ex);
+    }
+    return {
+      exercises,
+      routines: SEED.routines,
+      sessions: stored.sessions ?? [],
+      activeSession: stored.activeSession ?? null,
+    };
+  } catch {
+    return fresh;
+  }
 }
 
 interface Store {

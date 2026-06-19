@@ -1,33 +1,37 @@
 import { useState } from 'react';
 import { useStore } from '../store';
 import type { LoggedExercise, SetEntry } from '../types';
-import { RestTimer } from './RestTimer';
+import { lastLoggedVolume } from '../lib/stats';
 
 export function WorkoutView() {
-  const { data, startSession, startEmptySession } = useStore();
+  const { data, startSession } = useStore();
 
   if (!data.activeSession) {
     return (
       <div className="view">
         <h1>Start a workout</h1>
-        <p className="muted">Pick a day from the routine, or freestyle it.</p>
         <div className="routine-grid">
           {data.routines.map((r) => (
             <button key={r.id} className="routine-card" onClick={() => startSession(r)}>
               <span className="routine-card-name">{r.name}</span>
-              <span className="routine-card-sub">{r.subtitle}</span>
-              <span className="routine-card-count">{r.exercises.length} exercises</span>
             </button>
           ))}
         </div>
-        <button className="btn ghost block" onClick={startEmptySession}>
-          + Freestyle workout
-        </button>
       </div>
     );
   }
 
   return <ActiveSession />;
+}
+
+/** Volume of all sets that have weight and reps entered (whether or not done). */
+function enteredVolume(sets: SetEntry[]): number {
+  return sets.reduce((n, s) => (s.weight > 0 && s.reps > 0 ? n + s.weight * s.reps : n), 0);
+}
+
+/** Volume of only the sets marked done. */
+function doneVolume(sets: SetEntry[]): number {
+  return sets.reduce((n, s) => (s.done ? n + s.weight * s.reps : n), 0);
 }
 
 function ActiveSession() {
@@ -87,8 +91,6 @@ function ActiveSession() {
         </button>
       </div>
 
-      <RestTimer />
-
       <div className="exercise-list">
         {session.exercises.map((ex, exIdx) => (
           <ExerciseCard
@@ -96,6 +98,7 @@ function ActiveSession() {
             ex={ex}
             name={exerciseName(ex.exerciseId)}
             prevSuperset={session.exercises[exIdx - 1]?.superset}
+            prevVolume={lastLoggedVolume(data.sessions, ex.exerciseId)}
             onChange={(setIdx, patch) => setSetValue(exIdx, setIdx, patch)}
             onAddSet={() => addSet(exIdx)}
             onRemoveSet={(setIdx) => removeSet(exIdx, setIdx)}
@@ -128,6 +131,7 @@ function ExerciseCard({
   ex,
   name,
   prevSuperset,
+  prevVolume,
   onChange,
   onAddSet,
   onRemoveSet,
@@ -135,15 +139,41 @@ function ExerciseCard({
   ex: LoggedExercise;
   name: string;
   prevSuperset?: string;
+  prevVolume: number | null;
   onChange: (setIdx: number, patch: Partial<SetEntry>) => void;
   onAddSet: () => void;
   onRemoveSet: (setIdx: number) => void;
 }) {
   const supersetStart = ex.superset && ex.superset !== prevSuperset;
+  const done = doneVolume(ex.sets);
+  const entered = enteredVolume(ex.sets);
+  const delta = prevVolume != null ? done - prevVolume : null;
+
   return (
     <div className={`exercise-card ${ex.superset ? 'in-superset' : ''}`}>
       {supersetStart && <div className="superset-tag">Superset {ex.superset}</div>}
       <div className="exercise-name">{name}</div>
+
+      <div className="vol-summary">
+        <span className="vol done">
+          <strong>{done.toLocaleString()}</strong>
+          <em>done</em>
+        </span>
+        <span className="vol entered">
+          <strong>{entered.toLocaleString()}</strong>
+          <em>entered</em>
+        </span>
+        <span className="vol prev">
+          <strong>{prevVolume != null ? prevVolume.toLocaleString() : '—'}</strong>
+          <em>last</em>
+        </span>
+        {delta != null && delta !== 0 && (
+          <span className={`vol-delta ${delta > 0 ? 'up' : 'down'}`}>
+            {delta > 0 ? '▲' : '▼'} {Math.abs(delta).toLocaleString()}
+          </span>
+        )}
+      </div>
+
       <div className="set-header">
         <span>Set</span>
         <span>lb</span>

@@ -5,7 +5,6 @@ type Def = [string, string?];
 
 interface RoutineDef {
   name: string;
-  subtitle: string;
   exercises: Def[];
 }
 
@@ -18,8 +17,7 @@ interface RoutineDef {
  */
 const ROUTINE_DEFS: RoutineDef[] = [
   {
-    name: 'Day 1A',
-    subtitle: 'Bicep Peak / Shoulder Focus',
+    name: '1A',
     exercises: [
       ['Barbell Incline Bench Press'],
       ['V-Bar Pulldown'],
@@ -29,8 +27,7 @@ const ROUTINE_DEFS: RoutineDef[] = [
     ],
   },
   {
-    name: 'Day 1B',
-    subtitle: 'Tricep Long Head Focus',
+    name: '1B',
     exercises: [
       ['Cable Crossover Fly'],
       ['Cable Row'],
@@ -40,8 +37,7 @@ const ROUTINE_DEFS: RoutineDef[] = [
     ],
   },
   {
-    name: 'Day 2A',
-    subtitle: 'Short Head / Zero Brachialis Overlap',
+    name: '2A',
     exercises: [
       ['Barbell Bench Press'],
       ['Lat Pulldown'],
@@ -51,8 +47,7 @@ const ROUTINE_DEFS: RoutineDef[] = [
     ],
   },
   {
-    name: 'Day 2B',
-    subtitle: 'Brachialis / Tricep Horseshoe',
+    name: '2B',
     exercises: [
       ['Mid Cable Crossover Fly', '1'],
       ['Cable Rear Delt Fly', '1'],
@@ -62,8 +57,7 @@ const ROUTINE_DEFS: RoutineDef[] = [
     ],
   },
   {
-    name: 'Day 3A',
-    subtitle: 'Lower Chest Mass / Free Weight Isolation',
+    name: '3A',
     exercises: [
       ['Barbell Decline Press'],
       ['Reverse Grip Pull Down'],
@@ -73,8 +67,7 @@ const ROUTINE_DEFS: RoutineDef[] = [
     ],
   },
   {
-    name: 'Day 3B',
-    subtitle: 'The Peak Builder',
+    name: '3B',
     exercises: [
       ['Low Cable Chest Fly', '1'],
       ['Shotgun Row', '1'],
@@ -108,7 +101,6 @@ function buildSeed(): { exercises: Exercise[]; routines: Routine[] } {
     routines.push({
       id: slug(def.name),
       name: def.name,
-      subtitle: def.subtitle,
       exercises,
     });
   }
