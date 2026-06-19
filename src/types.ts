@@ -41,13 +41,8 @@ export interface Session {
   exercises: LoggedExercise[];
 }
 
-/** Rep emphasis for the session; maps to per-exercise ranges. */
+/** Rep emphasis for the session; maps to a per-exercise rep target. */
 export type Emphasis = 'low' | 'medium' | 'high';
-
-export interface RepRange {
-  low: number;
-  high: number;
-}
 
 export interface AppData {
   exercises: Exercise[];

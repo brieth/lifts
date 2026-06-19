@@ -1,7 +1,7 @@
-import type { Emphasis, RepRange } from '../types';
+import type { Emphasis } from '../types';
 
 /**
- * Per-exercise hypertrophy rep ranges.
+ * Per-exercise hypertrophy rep target (a single fixed number).
  *
  * Expert consensus (Schoenfeld, Israetel/RP, Helms): growth happens across a
  * broad range near failure, but the practical sweet spot depends on the lift:
@@ -9,27 +9,15 @@ import type { Emphasis, RepRange } from '../types';
  *  - vertical/horizontal pulls -> moderate reps
  *  - isolations / cables -> higher reps (metabolic stress, safer loaded light)
  *
- * The session-wide Low/Medium/High pick shifts every exercise within its own
- * appropriate band rather than forcing one number on the whole workout.
+ * The session-wide Low/Medium/High pick shifts every exercise's target while
+ * keeping it appropriate for the exercise type.
  */
 type Category = 'compound' | 'pull' | 'isolation';
 
-const RANGES: Record<Category, Record<Emphasis, RepRange>> = {
-  compound: {
-    low: { low: 5, high: 7 },
-    medium: { low: 8, high: 10 },
-    high: { low: 10, high: 12 },
-  },
-  pull: {
-    low: { low: 6, high: 8 },
-    medium: { low: 10, high: 12 },
-    high: { low: 12, high: 15 },
-  },
-  isolation: {
-    low: { low: 8, high: 10 },
-    medium: { low: 12, high: 15 },
-    high: { low: 15, high: 20 },
-  },
+const REPS: Record<Category, Record<Emphasis, number>> = {
+  compound: { low: 6, medium: 8, high: 10 },
+  pull: { low: 8, medium: 10, high: 12 },
+  isolation: { low: 10, medium: 12, high: 14 },
 };
 
 // Exercise id (slug) -> category. Anything unlisted defaults to isolation.
@@ -51,8 +39,8 @@ function categoryFor(exerciseId: string): Category {
   return CATEGORY[exerciseId] ?? 'isolation';
 }
 
-export function repRangeFor(exerciseId: string, emphasis: Emphasis): RepRange {
-  return RANGES[categoryFor(exerciseId)][emphasis];
+export function repsFor(exerciseId: string, emphasis: Emphasis): number {
+  return REPS[categoryFor(exerciseId)][emphasis];
 }
 
 export const EMPHASES: { id: Emphasis; label: string; hint: string }[] = [

@@ -1,7 +1,7 @@
 import { useStore } from '../store';
 import type { Emphasis, LoggedExercise, SetEntry } from '../types';
 import { bestEstimated1RM, bestExercisePoint } from '../lib/stats';
-import { EMPHASES, emphasisLabel, repRangeFor } from '../lib/reps';
+import { EMPHASES, emphasisLabel, repsFor } from '../lib/reps';
 
 export function WorkoutView() {
   const { data, startSession } = useStore();
@@ -107,22 +107,18 @@ function ActiveSession() {
       </div>
 
       <div className="exercise-list">
-        {session.exercises.map((ex, exIdx) => {
-          const range = repRangeFor(ex.exerciseId, emphasis);
-          return (
-            <ExerciseCard
-              key={`${ex.exerciseId}-${exIdx}`}
-              ex={ex}
-              name={exerciseName(ex.exerciseId)}
-              targetLow={range.low}
-              targetHigh={range.high}
-              best={bestExercisePoint(data.sessions, ex.exerciseId)}
-              onChange={(setIdx, patch) => setSetValue(exIdx, setIdx, patch)}
-              onAddSet={() => addSet(exIdx)}
-              onRemoveSet={(setIdx) => removeSet(exIdx, setIdx)}
-            />
-          );
-        })}
+        {session.exercises.map((ex, exIdx) => (
+          <ExerciseCard
+            key={`${ex.exerciseId}-${exIdx}`}
+            ex={ex}
+            name={exerciseName(ex.exerciseId)}
+            targetReps={repsFor(ex.exerciseId, emphasis)}
+            best={bestExercisePoint(data.sessions, ex.exerciseId)}
+            onChange={(setIdx, patch) => setSetValue(exIdx, setIdx, patch)}
+            onAddSet={() => addSet(exIdx)}
+            onRemoveSet={(setIdx) => removeSet(exIdx, setIdx)}
+          />
+        ))}
       </div>
 
       <button className="btn primary block finish" onClick={finishSession}>
@@ -139,8 +135,7 @@ function fmt(n: number | null | undefined): string {
 function ExerciseCard({
   ex,
   name,
-  targetLow,
-  targetHigh,
+  targetReps,
   best,
   onChange,
   onAddSet,
@@ -148,8 +143,7 @@ function ExerciseCard({
 }: {
   ex: LoggedExercise;
   name: string;
-  targetLow: number;
-  targetHigh: number;
+  targetReps: number;
   best: { volume: number; best1RM: number } | null;
   onChange: (setIdx: number, patch: Partial<SetEntry>) => void;
   onAddSet: () => void;
@@ -164,9 +158,7 @@ function ExerciseCard({
     <div className="exercise-card">
       <div className="exercise-head">
         <span className="exercise-name">{name}</span>
-        <span className="target-chip">
-          {targetLow}–{targetHigh} reps
-        </span>
+        <span className="target-chip">{targetReps} reps</span>
       </div>
 
       <div className="ex-stats">
@@ -211,7 +203,7 @@ function ExerciseCard({
             type="number"
             inputMode="numeric"
             value={s.reps || ''}
-            placeholder={String(targetLow)}
+            placeholder={String(targetReps)}
             onChange={(e) => onChange(i, { reps: Number(e.target.value) })}
           />
           <button
