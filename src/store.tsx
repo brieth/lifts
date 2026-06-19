@@ -109,6 +109,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       startSession(routine, emphasis) {
         const exercises: LoggedExercise[] = routine.exercises.map((re) => ({
           exerciseId: re.exerciseId,
+          options: re.options,
           sets: blankSets(re.targetSets),
         }));
         setData((d) => ({

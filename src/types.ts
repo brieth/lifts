@@ -9,6 +9,8 @@ export interface RoutineExercise {
   exerciseId: ID;
   /** Superset group label (e.g. "1", "2"). Undefined = straight sets. */
   superset?: string;
+  /** If set, this slot is a menu: the user can swap among these exercise ids. */
+  options?: ID[];
   targetSets: number;
   targetReps: number;
 }
@@ -31,6 +33,8 @@ export interface SetEntry {
 export interface LoggedExercise {
   exerciseId: ID;
   superset?: string;
+  /** If set, this slot is a menu: ids the user can swap to during the session. */
+  options?: ID[];
   sets: SetEntry[];
 }
 

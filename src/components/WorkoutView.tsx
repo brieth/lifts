@@ -166,6 +166,13 @@ function ActiveSession() {
     });
   }
 
+  function changeExercise(exIdx: number, exerciseId: string) {
+    updateActive((s) => ({
+      ...s,
+      exercises: s.exercises.map((e, i) => (i === exIdx ? { ...e, exerciseId } : e)),
+    }));
+  }
+
   return (
     <div className="view">
       <div className="session-head">
@@ -191,15 +198,20 @@ function ActiveSession() {
           const base1RM =
             recentEstimated1RM(hist, ex.exerciseId) ?? defaultOneRMFor(ex.exerciseId);
           const suggestedWeight = round5(weightForReps(base1RM, targetReps));
+          const options = ex.options
+            ?.map((id) => ({ id, name: exerciseName(id) }))
+            .sort((a, b) => a.name.localeCompare(b.name));
           return (
             <ExerciseCard
-              key={`${ex.exerciseId}-${exIdx}`}
+              key={`${exIdx}`}
               ex={ex}
               name={exerciseName(ex.exerciseId)}
               targetReps={targetReps}
               suggestedWeight={suggestedWeight}
               last={lastExercisePoint(hist, ex.exerciseId)}
               best={bestExercisePoint(hist, ex.exerciseId)}
+              options={options}
+              onSelect={(id) => changeExercise(exIdx, id)}
               onChange={(setIdx, patch) => setSetValue(exIdx, setIdx, patch)}
               onAddSet={() => addSet(exIdx)}
               onRemoveSet={(setIdx) => removeSet(exIdx, setIdx)}
@@ -226,6 +238,8 @@ function ExerciseCard({
   suggestedWeight,
   last,
   best,
+  options,
+  onSelect,
   onChange,
   onAddSet,
   onRemoveSet,
@@ -236,6 +250,8 @@ function ExerciseCard({
   suggestedWeight: number;
   last: { volume: number; best1RM: number } | null;
   best: { volume: number; best1RM: number } | null;
+  options?: { id: string; name: string }[];
+  onSelect: (id: string) => void;
   onChange: (setIdx: number, patch: Partial<SetEntry>) => void;
   onAddSet: () => void;
   onRemoveSet: (setIdx: number) => void;
@@ -279,7 +295,21 @@ function ExerciseCard({
   return (
     <div className="exercise-card">
       <div className="exercise-head">
-        <span className="exercise-name">{name}</span>
+        {options ? (
+          <select
+            className="ex-menu"
+            value={ex.exerciseId}
+            onChange={(e) => onSelect(e.target.value)}
+          >
+            {options.map((o) => (
+              <option key={o.id} value={o.id}>
+                {o.name}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <span className="exercise-name">{name}</span>
+        )}
         <span className="target-chip">{targetReps} reps</span>
       </div>
 

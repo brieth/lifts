@@ -94,14 +94,39 @@ const ROUTINE_DEFS: RoutineDef[] = [
 const DEFAULT_SETS = 3;
 const DEFAULT_REPS = 10;
 
+/**
+ * The center "leg slot" is a menu the user picks from each workout. Listed
+ * alphabetically by name. The routine's own leg exercise stays the default.
+ */
+const LEG_OPTIONS: ExRef[] = [
+  ['machine-glute-bridge', 'Machine Glute Bridge'],
+  ['machine-leg-curl', 'Machine Leg Curl'],
+  ['machine-leg-extension', 'Machine Leg Extension'],
+  ['machine-leg-press', 'Machine Leg Press'],
+  ['machine-lying-hamstring-curl', 'Machine Lying Hamstring Curl'],
+];
+const LEG_OPTION_IDS = LEG_OPTIONS.map(([id]) => id);
+
 function buildSeed(): { exercises: Exercise[]; routines: Routine[] } {
   const exerciseMap = new Map<string, Exercise>();
   const routines: Routine[] = [];
 
+  // Register every leg-menu option so each has a name and its own history.
+  for (const [id, name] of LEG_OPTIONS) {
+    if (!exerciseMap.has(id)) exerciseMap.set(id, { id, name });
+  }
+
   for (const def of ROUTINE_DEFS) {
     const exercises: RoutineExercise[] = def.exercises.map(([id, name]) => {
       if (!exerciseMap.has(id)) exerciseMap.set(id, { id, name });
-      return { exerciseId: id, targetSets: DEFAULT_SETS, targetReps: DEFAULT_REPS };
+      const re: RoutineExercise = {
+        exerciseId: id,
+        targetSets: DEFAULT_SETS,
+        targetReps: DEFAULT_REPS,
+      };
+      // The leg slot (its default is one of the leg options) becomes a menu.
+      if (LEG_OPTION_IDS.includes(id)) re.options = LEG_OPTION_IDS;
+      return re;
     });
     routines.push({ id: def.id, name: def.name, exercises });
   }
