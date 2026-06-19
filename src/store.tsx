@@ -1,9 +1,9 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type {
   AppData,
+  Emphasis,
   Exercise,
   LoggedExercise,
-  RepRange,
   Routine,
   Session,
   SetEntry,
@@ -47,7 +47,7 @@ function load(): AppData {
 interface Store {
   data: AppData;
   exerciseName: (id: string) => string;
-  startSession: (routine: Routine, repRange?: RepRange) => void;
+  startSession: (routine: Routine, emphasis?: Emphasis) => void;
   cancelSession: () => void;
   finishSession: () => void;
   updateActive: (fn: (s: Session) => Session) => void;
@@ -89,7 +89,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       data,
       exerciseName,
 
-      startSession(routine, repRange) {
+      startSession(routine, emphasis) {
         const exercises: LoggedExercise[] = routine.exercises.map((re) => ({
           exerciseId: re.exerciseId,
           sets: blankSets(re.targetSets),
@@ -99,7 +99,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           routineId: routine.id,
           name: routine.name,
           date: new Date().toISOString(),
-          repRange,
+          emphasis,
           exercises,
         };
         setData((d) => ({ ...d, activeSession: session }));

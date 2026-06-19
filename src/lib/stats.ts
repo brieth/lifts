@@ -70,13 +70,17 @@ export function personalRecords(sessions: Session[]): Map<ID, PR> {
   return prs;
 }
 
-/** Most recent prior session's logged numbers for an exercise, or null. */
-export function previousExercisePoint(
+/** Best logged volume and best estimated 1RM for an exercise across all history. */
+export function bestExercisePoint(
   sessions: Session[],
   exerciseId: ID,
-): ExercisePoint | null {
+): { volume: number; best1RM: number } | null {
   const history = exerciseHistory(sessions, exerciseId);
-  return history.length ? history[history.length - 1] : null;
+  if (!history.length) return null;
+  return {
+    volume: Math.max(...history.map((p) => p.volume)),
+    best1RM: Math.max(...history.map((p) => p.best1RM)),
+  };
 }
 
 /** Best estimated 1RM across a set list (rounded). 0 if none qualify. */

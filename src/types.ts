@@ -37,14 +37,16 @@ export interface Session {
   routineId?: ID;
   name: string;
   date: string;        // ISO timestamp
-  repRange?: RepRange; // hypertrophy rep target chosen for this session
+  emphasis?: Emphasis; // rep emphasis chosen for this session
   exercises: LoggedExercise[];
 }
+
+/** Rep emphasis for the session; maps to per-exercise ranges. */
+export type Emphasis = 'low' | 'medium' | 'high';
 
 export interface RepRange {
   low: number;
   high: number;
-  label: string;
 }
 
 export interface AppData {

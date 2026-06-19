@@ -1,57 +1,33 @@
-import { useState } from 'react';
 import { useStore } from '../store';
-import type { LoggedExercise, RepRange, Routine, SetEntry } from '../types';
-import { bestEstimated1RM, previousExercisePoint } from '../lib/stats';
-
-// Hypertrophy-oriented rep targets to choose from when starting a workout.
-const REP_RANGES: RepRange[] = [
-  { label: 'Heavy', low: 5, high: 8 },
-  { label: 'Classic', low: 8, high: 12 },
-  { label: 'Pump', low: 12, high: 15 },
-];
+import type { Emphasis, LoggedExercise, SetEntry } from '../types';
+import { bestEstimated1RM, bestExercisePoint } from '../lib/stats';
+import { EMPHASES, emphasisLabel, repRangeFor } from '../lib/reps';
 
 export function WorkoutView() {
   const { data, startSession } = useStore();
-  const [pending, setPending] = useState<Routine | null>(null);
 
   if (!data.activeSession) {
-    if (pending) {
-      return (
-        <div className="view">
-          <button className="link-back" onClick={() => setPending(null)}>
-            ‹ Back
-          </button>
-          <h1>{pending.name}</h1>
-          <p className="muted">Pick a rep range for this session</p>
-          <div className="range-list">
-            {REP_RANGES.map((r) => (
-              <button
-                key={r.label}
-                className="range-card"
-                onClick={() => {
-                  startSession(pending, r);
-                  setPending(null);
-                }}
-              >
-                <span className="range-reps">
-                  {r.low}–{r.high}
-                </span>
-                <span className="range-label">{r.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      );
-    }
-
     return (
       <div className="view">
         <h1>Start a workout</h1>
-        <div className="routine-grid">
+        <p className="muted">Choose a rep emphasis to begin.</p>
+        <div className="start-list">
           {data.routines.map((r) => (
-            <button key={r.id} className="routine-card" onClick={() => setPending(r)}>
-              <span className="routine-card-name">{r.name}</span>
-            </button>
+            <div key={r.id} className="start-card">
+              <span className="start-name">{r.name}</span>
+              <div className="emphasis-row">
+                {EMPHASES.map((e) => (
+                  <button
+                    key={e.id}
+                    className="emphasis-btn"
+                    onClick={() => startSession(r, e.id)}
+                  >
+                    <span className="lvl">{e.label}</span>
+                    <small>{e.hint}</small>
+                  </button>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       </div>
@@ -74,7 +50,7 @@ function doneVolume(sets: SetEntry[]): number {
 function ActiveSession() {
   const { data, exerciseName, updateActive, finishSession, cancelSession } = useStore();
   const session = data.activeSession!;
-  const range = session.repRange;
+  const emphasis: Emphasis = session.emphasis ?? 'medium';
 
   function setSetValue(exIdx: number, setIdx: number, patch: Partial<SetEntry>) {
     updateActive((s) => {
@@ -121,15 +97,8 @@ function ActiveSession() {
         <div>
           <h1>{session.name}</h1>
           <p className="muted">
-            {completed} sets logged
-            {range && (
-              <>
-                {' · '}
-                <span className="range-chip">
-                  {range.low}–{range.high} reps
-                </span>
-              </>
-            )}
+            {completed} sets logged{' · '}
+            <span className="range-chip">{emphasisLabel(emphasis)} reps</span>
           </p>
         </div>
         <button className="btn ghost small" onClick={cancelSession}>
@@ -138,18 +107,22 @@ function ActiveSession() {
       </div>
 
       <div className="exercise-list">
-        {session.exercises.map((ex, exIdx) => (
-          <ExerciseCard
-            key={`${ex.exerciseId}-${exIdx}`}
-            ex={ex}
-            name={exerciseName(ex.exerciseId)}
-            repLow={range?.low}
-            prev={previousExercisePoint(data.sessions, ex.exerciseId)}
-            onChange={(setIdx, patch) => setSetValue(exIdx, setIdx, patch)}
-            onAddSet={() => addSet(exIdx)}
-            onRemoveSet={(setIdx) => removeSet(exIdx, setIdx)}
-          />
-        ))}
+        {session.exercises.map((ex, exIdx) => {
+          const range = repRangeFor(ex.exerciseId, emphasis);
+          return (
+            <ExerciseCard
+              key={`${ex.exerciseId}-${exIdx}`}
+              ex={ex}
+              name={exerciseName(ex.exerciseId)}
+              targetLow={range.low}
+              targetHigh={range.high}
+              best={bestExercisePoint(data.sessions, ex.exerciseId)}
+              onChange={(setIdx, patch) => setSetValue(exIdx, setIdx, patch)}
+              onAddSet={() => addSet(exIdx)}
+              onRemoveSet={(setIdx) => removeSet(exIdx, setIdx)}
+            />
+          );
+        })}
       </div>
 
       <button className="btn primary block finish" onClick={finishSession}>
@@ -166,47 +139,54 @@ function fmt(n: number | null | undefined): string {
 function ExerciseCard({
   ex,
   name,
-  repLow,
-  prev,
+  targetLow,
+  targetHigh,
+  best,
   onChange,
   onAddSet,
   onRemoveSet,
 }: {
   ex: LoggedExercise;
   name: string;
-  repLow?: number;
-  prev: { volume: number; best1RM: number } | null;
+  targetLow: number;
+  targetHigh: number;
+  best: { volume: number; best1RM: number } | null;
   onChange: (setIdx: number, patch: Partial<SetEntry>) => void;
   onAddSet: () => void;
   onRemoveSet: (setIdx: number) => void;
 }) {
-  const volActual = doneVolume(ex.sets);
+  const volLogged = doneVolume(ex.sets);
   const volPlanned = enteredVolume(ex.sets);
-  const strActual = bestEstimated1RM(ex.sets, true);
+  const strLogged = bestEstimated1RM(ex.sets, true);
   const strPlanned = bestEstimated1RM(ex.sets, false);
 
   return (
     <div className="exercise-card">
-      <div className="exercise-name">{name}</div>
+      <div className="exercise-head">
+        <span className="exercise-name">{name}</span>
+        <span className="target-chip">
+          {targetLow}–{targetHigh} reps
+        </span>
+      </div>
 
       <div className="ex-stats">
         <div className="ex-stats-row head">
           <span />
           <span>Logged</span>
           <span>Planned</span>
-          <span>Last</span>
+          <span>Best</span>
         </div>
         <div className="ex-stats-row">
           <span className="k">Volume</span>
-          <span className="a">{fmt(volActual)}</span>
+          <span className="a">{fmt(volLogged)}</span>
           <span>{fmt(volPlanned)}</span>
-          <span>{fmt(prev?.volume)}</span>
+          <span>{fmt(best?.volume)}</span>
         </div>
         <div className="ex-stats-row">
           <span className="k">Strength</span>
-          <span className="a">{fmt(strActual)}</span>
+          <span className="a">{fmt(strLogged)}</span>
           <span>{fmt(strPlanned)}</span>
-          <span>{fmt(prev?.best1RM)}</span>
+          <span>{fmt(best?.best1RM)}</span>
         </div>
       </div>
 
@@ -231,7 +211,7 @@ function ExerciseCard({
             type="number"
             inputMode="numeric"
             value={s.reps || ''}
-            placeholder={repLow ? String(repLow) : '0'}
+            placeholder={String(targetLow)}
             onChange={(e) => onChange(i, { reps: Number(e.target.value) })}
           />
           <button
@@ -252,4 +232,3 @@ function ExerciseCard({
     </div>
   );
 }
-

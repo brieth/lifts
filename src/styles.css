@@ -136,48 +136,59 @@ body {
   letter-spacing: -0.02em;
 }
 
-/* ---------- rep range picker ---------- */
-.link-back {
-  background: none;
-  border: none;
-  color: var(--muted);
-  font-size: 15px;
-  cursor: pointer;
-  padding: 0 0 4px;
-  font-family: inherit;
-}
-.range-list {
+/* ---------- start list with inline emphasis selector ---------- */
+.start-list {
   display: flex;
   flex-direction: column;
   gap: 10px;
   margin-top: 16px;
 }
-.range-card {
+.start-card {
   display: flex;
-  align-items: baseline;
+  align-items: center;
+  justify-content: space-between;
   gap: 12px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 18px 16px;
-  cursor: pointer;
-  color: var(--text);
-  font-family: inherit;
-  text-align: left;
+  padding: 12px 14px;
 }
-.range-card:active {
-  border-color: var(--accent);
-}
-.range-reps {
+.start-name {
   font-size: 24px;
   font-weight: 800;
-  font-variant-numeric: tabular-nums;
-  color: var(--accent);
-  min-width: 74px;
+  letter-spacing: -0.02em;
 }
-.range-label {
-  font-size: 15px;
-  font-weight: 600;
+.emphasis-row {
+  display: flex;
+  gap: 6px;
+}
+.emphasis-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  min-width: 52px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 7px 8px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.emphasis-btn:active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.emphasis-btn .lvl {
+  font-size: 13px;
+  font-weight: 700;
+}
+.emphasis-btn small {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
 }
 .range-chip {
   display: inline-block;
@@ -210,10 +221,26 @@ body {
   border-radius: var(--radius);
   padding: 14px;
 }
+.exercise-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
 .exercise-name {
   font-size: 16px;
   font-weight: 700;
-  margin-bottom: 10px;
+}
+.target-chip {
+  flex-shrink: 0;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
 }
 
 .ex-stats {
