@@ -21,55 +21,54 @@ function setPx(px, size, x, y, color) {
   px[i + 3] = 255;
 }
 
-function rect(px, size, x0, y0, x1, y1, color) {
-  const a = Math.round(x0 * size),
-    b = Math.round(y0 * size),
-    c = Math.round(x1 * size),
-    d = Math.round(y1 * size);
-  for (let y = b; y < d; y++) for (let x = a; x < c; x++) setPx(px, size, x, y, color);
+// Everything is drawn on a single GRID x GRID grid of equal blocks, then
+// nearest-neighbor upscaled, so every pixel block is exactly the same size.
+const GRID = 24;
+
+// Fill whole cells [x0,x1) x [y0,y1) on the grid.
+function cell(px, x0, y0, x1, y1, color) {
+  for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) setPx(px, GRID, x, y, color);
 }
 
-// Fill an ellipse. half: 0 = full, -1 = top half only, 1 = bottom half only.
-function ellipse(px, size, cx, cy, rx, ry, color, half = 0) {
-  const a = cx * size,
-    b = cy * size,
-    RX = rx * size,
-    RY = ry * size;
-  for (let y = Math.floor(b - RY); y <= Math.ceil(b + RY); y++) {
-    if (half === -1 && y > b) continue;
-    if (half === 1 && y < b) continue;
-    for (let x = Math.floor(a - RX); x <= Math.ceil(a + RX); x++) {
-      const dx = (x - a) / RX,
-        dy = (y - b) / RY;
-      if (dx * dx + dy * dy <= 1) setPx(px, size, x, y, color);
+// A pixel-art dumbbell (wider outer plates, shorter inner plates, thin bar)
+// with a 2-step bun above and below. Symmetric about col 12 and row 12.
+function drawDesign() {
+  const px = new Uint8Array(GRID * GRID * 4);
+  cell(px, 0, 0, GRID, GRID, TEAL); // background
+
+  // top bun: wide step (plate width) + narrow step (bar width)
+  cell(px, 3, 5, 21, 7, INK);
+  cell(px, 8, 3, 16, 5, INK);
+  // bottom bun (mirror about row 12)
+  cell(px, 3, 17, 21, 19, INK);
+  cell(px, 8, 19, 16, 21, INK);
+
+  // dumbbell
+  cell(px, 8, 11, 16, 13, INK); // bar
+  cell(px, 6, 9, 8, 15, INK); // left inner plate
+  cell(px, 16, 9, 18, 15, INK); // right inner plate
+  cell(px, 3, 8, 6, 16, INK); // left outer plate
+  cell(px, 18, 8, 21, 16, INK); // right outer plate
+
+  return px;
+}
+
+// Nearest-neighbor upscale the GRID design to a target size.
+function drawIcon(size) {
+  const grid = drawDesign();
+  const px = new Uint8Array(size * size * 4);
+  for (let y = 0; y < size; y++) {
+    const gy = Math.floor((y * GRID) / size);
+    for (let x = 0; x < size; x++) {
+      const gx = Math.floor((x * GRID) / size);
+      const si = (gy * GRID + gx) * 4;
+      const di = (y * size + x) * 4;
+      px[di] = grid[si];
+      px[di + 1] = grid[si + 1];
+      px[di + 2] = grid[si + 2];
+      px[di + 3] = 255;
     }
   }
-}
-
-// The original dumbbell (untouched) with a stepped, pixel-style bun above and
-// below built from blocks. Monochrome.
-function drawIcon(size) {
-  const px = new Uint8Array(size * size * 4);
-  rect(px, size, 0, 0, 1, 1, TEAL); // full-bleed teal background
-
-  // top bun — stepped dome; step edges align with the dumbbell's plate lines
-  // (0.2/0.8 outer, 0.28/0.72 inner-outer, 0.33/0.67 inner-inner) so the
-  // verticals run continuously into the dumbbell. Each step is 0.05 tall.
-  rect(px, size, 0.2, 0.3, 0.8, 0.35, INK);
-  rect(px, size, 0.28, 0.25, 0.72, 0.3, INK);
-  rect(px, size, 0.33, 0.2, 0.67, 0.25, INK);
-  // bottom bun — mirror
-  rect(px, size, 0.2, 0.65, 0.8, 0.7, INK);
-  rect(px, size, 0.28, 0.7, 0.72, 0.75, INK);
-  rect(px, size, 0.33, 0.75, 0.67, 0.8, INK);
-
-  // the original dumbbell, EXACTLY as before
-  rect(px, size, 0.3, 0.46, 0.7, 0.54, INK); // bar
-  rect(px, size, 0.2, 0.36, 0.28, 0.64, INK); // left outer plate
-  rect(px, size, 0.28, 0.41, 0.33, 0.59, INK); // left inner plate
-  rect(px, size, 0.72, 0.36, 0.8, 0.64, INK); // right outer plate
-  rect(px, size, 0.67, 0.41, 0.72, 0.59, INK); // right inner plate
-
   return px;
 }
 
