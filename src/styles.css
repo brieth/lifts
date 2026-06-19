@@ -556,6 +556,30 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* ---------- backup / data ---------- */
+.backup-note {
+  line-height: 1.45;
+  margin: 0 0 12px;
+}
+.data-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.data-status {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--accent);
+  background: var(--accent-dim);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  padding: 10px 12px;
+  line-height: 1.4;
+}
+.reset-btn {
+  margin-top: 20px;
+}
+
 /* ---------- tab bar ---------- */
 .tabbar {
   position: fixed;

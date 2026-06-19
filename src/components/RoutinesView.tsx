@@ -1,7 +1,31 @@
+import { useRef, useState } from 'react';
 import { useStore } from '../store';
 
 export function RoutinesView() {
-  const { data, exerciseName, resetAll } = useStore();
+  const { data, exerciseName, resetAll, exportData, importData } = useStore();
+  const fileInput = useRef<HTMLInputElement>(null);
+  const [status, setStatus] = useState<string | null>(null);
+
+  function handleExport() {
+    const blob = new Blob([exportData()], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const stamp = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = `lifts-backup-${stamp}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setStatus('Backup downloaded. Keep it somewhere safe (Files, Drive, email…).');
+  }
+
+  function handleImportFile(file: File) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const ok = importData(String(reader.result));
+      setStatus(ok ? 'Backup restored ✓' : 'That file could not be read as a lifts backup.');
+    };
+    reader.readAsText(file);
+  }
 
   return (
     <div className="view">
@@ -39,9 +63,36 @@ export function RoutinesView() {
         ))}
       </div>
 
-      <h2 className="section">Data</h2>
+      <h2 className="section">Backup & Data</h2>
+      <p className="muted small backup-note">
+        Workouts are saved on this device only. Export a backup file regularly so nothing is lost if
+        your browser data gets cleared — and use Import to restore it or move to another device.
+      </p>
+
+      <div className="data-buttons">
+        <button className="btn ghost" onClick={handleExport}>
+          ⬇ Export backup
+        </button>
+        <button className="btn ghost" onClick={() => fileInput.current?.click()}>
+          ⬆ Import backup
+        </button>
+      </div>
+      <input
+        ref={fileInput}
+        type="file"
+        accept="application/json,.json"
+        hidden
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) handleImportFile(f);
+          e.target.value = '';
+        }}
+      />
+
+      {status && <div className="data-status">{status}</div>}
+
       <button
-        className="btn ghost block danger"
+        className="btn ghost block danger reset-btn"
         onClick={() => {
           if (confirm('Reset all workouts and restore the default routine? This cannot be undone.'))
             resetAll();

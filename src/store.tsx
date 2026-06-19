@@ -35,6 +35,8 @@ interface Store {
   deleteSession: (id: string) => void;
   upsertExercise: (name: string, id?: string) => Exercise;
   resetAll: () => void;
+  exportData: () => string;
+  importData: (json: string) => boolean;
 }
 
 const Ctx = createContext<Store | null>(null);
@@ -45,6 +47,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   }, [data]);
+
+  // Ask the browser to keep this data and not auto-evict it under storage pressure.
+  useEffect(() => {
+    if (navigator.storage?.persist) {
+      navigator.storage.persisted().then((already) => {
+        if (!already) navigator.storage.persist().catch(() => {});
+      });
+    }
+  }, []);
 
   const store = useMemo<Store>(() => {
     const exerciseName = (id: string) =>
@@ -150,6 +161,29 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           sessions: [],
           activeSession: null,
         });
+      },
+
+      exportData() {
+        return JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), data }, null, 2);
+      },
+
+      importData(json) {
+        try {
+          const parsed = JSON.parse(json);
+          const incoming: AppData = parsed?.data ?? parsed;
+          if (!incoming || !Array.isArray(incoming.sessions) || !Array.isArray(incoming.exercises)) {
+            return false;
+          }
+          setData({
+            exercises: incoming.exercises,
+            routines: Array.isArray(incoming.routines) ? incoming.routines : SEED.routines,
+            sessions: incoming.sessions,
+            activeSession: null,
+          });
+          return true;
+        } catch {
+          return false;
+        }
       },
     };
   }, [data]);
