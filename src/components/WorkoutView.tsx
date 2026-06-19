@@ -255,7 +255,7 @@ function ExerciseCard({
         <span>Set</span>
         <span>lb</span>
         <span>Reps</span>
-        <span>Done</span>
+        <span />
         <span />
       </div>
       {ex.sets.map((s, i) => (

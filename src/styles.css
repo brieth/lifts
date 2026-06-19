@@ -298,6 +298,9 @@ body {
   margin-bottom: 6px;
   padding: 0 2px;
 }
+.set-header span {
+  text-align: center;
+}
 .set-row {
   margin-bottom: 8px;
 }
@@ -336,13 +339,15 @@ body {
   border-radius: 8px;
   border: 1px solid var(--border);
   background: var(--surface-2);
-  color: transparent;
+  color: var(--muted);
+  opacity: 0.6;
   font-size: 16px;
   cursor: pointer;
 }
 .check.on {
   background: var(--accent);
   border-color: var(--accent);
+  opacity: 1;
   color: #04130a;
 }
 .set-remove {
