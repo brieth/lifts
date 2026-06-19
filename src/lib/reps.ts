@@ -56,7 +56,7 @@ export function defaultWeightFor(exerciseId: string): number {
 
 export const EMPHASES: { id: Emphasis; label: string; hint: string }[] = [
   { id: 'low', label: 'Low', hint: 'heavier' },
-  { id: 'medium', label: 'Med', hint: 'moderate' },
+  { id: 'medium', label: 'Mid', hint: 'moderate' },
   { id: 'high', label: 'High', hint: 'lighter' },
 ];
 
