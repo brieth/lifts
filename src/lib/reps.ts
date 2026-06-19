@@ -43,6 +43,17 @@ export function repsFor(exerciseId: string, emphasis: Emphasis): number {
   return REPS[categoryFor(exerciseId)][emphasis];
 }
 
+// Rough starting weights (lb) used only until there's logged history to learn from.
+const DEFAULT_WEIGHT: Record<Category, number> = {
+  compound: 95,
+  pull: 80,
+  isolation: 20,
+};
+
+export function defaultWeightFor(exerciseId: string): number {
+  return DEFAULT_WEIGHT[categoryFor(exerciseId)];
+}
+
 export const EMPHASES: { id: Emphasis; label: string; hint: string }[] = [
   { id: 'low', label: 'Low', hint: 'heavier' },
   { id: 'medium', label: 'Med', hint: 'moderate' },

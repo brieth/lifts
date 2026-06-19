@@ -1,7 +1,13 @@
 import { useStore } from '../store';
 import type { Emphasis, LoggedExercise, SetEntry } from '../types';
-import { bestEstimated1RM, bestExercisePoint } from '../lib/stats';
-import { EMPHASES, emphasisLabel, repsFor } from '../lib/reps';
+import {
+  bestEstimated1RM,
+  bestExercisePoint,
+  estimated1RM,
+  recentEstimated1RM,
+  weightForReps,
+} from '../lib/stats';
+import { defaultWeightFor, EMPHASES, emphasisLabel, repsFor } from '../lib/reps';
 
 export function WorkoutView() {
   const { data, startSession } = useStore();
@@ -37,14 +43,30 @@ export function WorkoutView() {
   return <ActiveSession />;
 }
 
-/** Volume of all sets that have weight and reps entered (whether or not done). */
-function enteredVolume(sets: SetEntry[]): number {
-  return sets.reduce((n, s) => (s.weight > 0 && s.reps > 0 ? n + s.weight * s.reps : n), 0);
+/** Effective value: what's entered, else the suggested placeholder. */
+function eff(entered: number, placeholder: number): number {
+  return entered > 0 ? entered : placeholder;
 }
 
-/** Volume of only the sets marked done. */
-function doneVolume(sets: SetEntry[]): number {
+/** Logged volume: only sets marked done, using their actual entered values. */
+function loggedVolume(sets: SetEntry[]): number {
   return sets.reduce((n, s) => (s.done ? n + s.weight * s.reps : n), 0);
+}
+
+/** Planned volume: every set, filling blanks with the suggested weight/reps. */
+function plannedVolume(sets: SetEntry[], weight: number, reps: number): number {
+  return sets.reduce((n, s) => n + eff(s.weight, weight) * eff(s.reps, reps), 0);
+}
+
+/** Planned strength: best estimated 1RM across all sets, blanks filled in. */
+function plannedStrength(sets: SetEntry[], weight: number, reps: number): number {
+  let best = 0;
+  for (const s of sets) best = Math.max(best, estimated1RM(eff(s.weight, weight), eff(s.reps, reps)));
+  return Math.round(best);
+}
+
+function round5(n: number): number {
+  return Math.round(n / 5) * 5;
 }
 
 function ActiveSession() {
@@ -107,18 +129,26 @@ function ActiveSession() {
       </div>
 
       <div className="exercise-list">
-        {session.exercises.map((ex, exIdx) => (
-          <ExerciseCard
-            key={`${ex.exerciseId}-${exIdx}`}
-            ex={ex}
-            name={exerciseName(ex.exerciseId)}
-            targetReps={repsFor(ex.exerciseId, emphasis)}
-            best={bestExercisePoint(data.sessions, ex.exerciseId)}
-            onChange={(setIdx, patch) => setSetValue(exIdx, setIdx, patch)}
-            onAddSet={() => addSet(exIdx)}
-            onRemoveSet={(setIdx) => removeSet(exIdx, setIdx)}
-          />
-        ))}
+        {session.exercises.map((ex, exIdx) => {
+          const targetReps = repsFor(ex.exerciseId, emphasis);
+          const recent1RM = recentEstimated1RM(data.sessions, ex.exerciseId);
+          const suggestedWeight = recent1RM
+            ? round5(weightForReps(recent1RM, targetReps))
+            : defaultWeightFor(ex.exerciseId);
+          return (
+            <ExerciseCard
+              key={`${ex.exerciseId}-${exIdx}`}
+              ex={ex}
+              name={exerciseName(ex.exerciseId)}
+              targetReps={targetReps}
+              suggestedWeight={suggestedWeight}
+              best={bestExercisePoint(data.sessions, ex.exerciseId)}
+              onChange={(setIdx, patch) => setSetValue(exIdx, setIdx, patch)}
+              onAddSet={() => addSet(exIdx)}
+              onRemoveSet={(setIdx) => removeSet(exIdx, setIdx)}
+            />
+          );
+        })}
       </div>
 
       <button className="btn primary block finish" onClick={finishSession}>
@@ -136,6 +166,7 @@ function ExerciseCard({
   ex,
   name,
   targetReps,
+  suggestedWeight,
   best,
   onChange,
   onAddSet,
@@ -144,15 +175,16 @@ function ExerciseCard({
   ex: LoggedExercise;
   name: string;
   targetReps: number;
+  suggestedWeight: number;
   best: { volume: number; best1RM: number } | null;
   onChange: (setIdx: number, patch: Partial<SetEntry>) => void;
   onAddSet: () => void;
   onRemoveSet: (setIdx: number) => void;
 }) {
-  const volLogged = doneVolume(ex.sets);
-  const volPlanned = enteredVolume(ex.sets);
+  const volLogged = loggedVolume(ex.sets);
+  const volPlanned = plannedVolume(ex.sets, suggestedWeight, targetReps);
   const strLogged = bestEstimated1RM(ex.sets, true);
-  const strPlanned = bestEstimated1RM(ex.sets, false);
+  const strPlanned = plannedStrength(ex.sets, suggestedWeight, targetReps);
 
   return (
     <div className="exercise-card">
@@ -169,16 +201,16 @@ function ExerciseCard({
           <span>Best</span>
         </div>
         <div className="ex-stats-row">
-          <span className="k">Volume</span>
-          <span className="a">{fmt(volLogged)}</span>
-          <span>{fmt(volPlanned)}</span>
-          <span>{fmt(best?.volume)}</span>
-        </div>
-        <div className="ex-stats-row">
           <span className="k">Strength</span>
           <span className="a">{fmt(strLogged)}</span>
           <span>{fmt(strPlanned)}</span>
           <span>{fmt(best?.best1RM)}</span>
+        </div>
+        <div className="ex-stats-row">
+          <span className="k">Volume</span>
+          <span className="a">{fmt(volLogged)}</span>
+          <span>{fmt(volPlanned)}</span>
+          <span>{fmt(best?.volume)}</span>
         </div>
       </div>
 
@@ -196,7 +228,7 @@ function ExerciseCard({
             type="number"
             inputMode="decimal"
             value={s.weight || ''}
-            placeholder="0"
+            placeholder={String(suggestedWeight)}
             onChange={(e) => onChange(i, { weight: Number(e.target.value) })}
           />
           <input

@@ -70,6 +70,18 @@ export function personalRecords(sessions: Session[]): Map<ID, PR> {
   return prs;
 }
 
+/** Most recent session's best estimated 1RM for an exercise, or null. */
+export function recentEstimated1RM(sessions: Session[], exerciseId: ID): number | null {
+  const history = exerciseHistory(sessions, exerciseId);
+  return history.length ? history[history.length - 1].best1RM : null;
+}
+
+/** Inverse Epley: the weight you'd expect to hit for a given rep count at a 1RM. */
+export function weightForReps(oneRepMax: number, reps: number): number {
+  if (reps <= 1) return oneRepMax;
+  return oneRepMax / (1 + reps / 30);
+}
+
 /** Best logged volume and best estimated 1RM for an exercise across all history. */
 export function bestExercisePoint(
   sessions: Session[],
