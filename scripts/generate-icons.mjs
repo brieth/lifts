@@ -52,14 +52,16 @@ function drawIcon(size) {
   const px = new Uint8Array(size * size * 4);
   rect(px, size, 0, 0, 1, 1, TEAL); // full-bleed teal background
 
-  // top bun — stepped dome (widest row capped at the dumbbell's width 0.2–0.8)
+  // top bun — stepped dome; step edges align with the dumbbell's plate lines
+  // (0.2/0.8 outer, 0.28/0.72 inner-outer, 0.33/0.67 inner-inner) so the
+  // verticals run continuously into the dumbbell. Each step is 0.05 tall.
   rect(px, size, 0.2, 0.3, 0.8, 0.35, INK);
-  rect(px, size, 0.26, 0.25, 0.74, 0.3, INK);
-  rect(px, size, 0.34, 0.2, 0.66, 0.25, INK);
+  rect(px, size, 0.28, 0.25, 0.72, 0.3, INK);
+  rect(px, size, 0.33, 0.2, 0.67, 0.25, INK);
   // bottom bun — mirror
   rect(px, size, 0.2, 0.65, 0.8, 0.7, INK);
-  rect(px, size, 0.26, 0.7, 0.74, 0.75, INK);
-  rect(px, size, 0.34, 0.75, 0.66, 0.8, INK);
+  rect(px, size, 0.28, 0.7, 0.72, 0.75, INK);
+  rect(px, size, 0.33, 0.75, 0.67, 0.8, INK);
 
   // the original dumbbell, EXACTLY as before
   rect(px, size, 0.3, 0.46, 0.7, 0.54, INK); // bar
