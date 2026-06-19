@@ -292,6 +292,8 @@ function ExerciseCard({
     }
   }
 
+  const selected = !options || !!ex.exerciseId;
+
   return (
     <div className="exercise-card">
       <div className="exercise-head">
@@ -301,6 +303,7 @@ function ExerciseCard({
             value={ex.exerciseId}
             onChange={(e) => onSelect(e.target.value)}
           >
+            <option value="">Select leg exercise…</option>
             {options.map((o) => (
               <option key={o.id} value={o.id}>
                 {o.name}
@@ -310,9 +313,10 @@ function ExerciseCard({
         ) : (
           <span className="exercise-name">{name}</span>
         )}
-        <span className="target-chip">{targetReps} reps</span>
       </div>
 
+      {selected && (
+        <>
       <div className="ex-stats">
         <div className="ex-stats-row head">
           <span />
@@ -376,6 +380,8 @@ function ExerciseCard({
       <button className="btn ghost small addset" onClick={onAddSet}>
         + Add set
       </button>
+        </>
+      )}
     </div>
   );
 }

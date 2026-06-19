@@ -39,11 +39,13 @@ export function RoutinesView() {
               <span className="routine-detail-name">{r.name}</span>
             </div>
             <ol className="routine-exercises">
-              {r.exercises.map((re, i) => (
-                <li key={`${re.exerciseId}-${i}`}>
-                  <span className="re-name">{exerciseName(re.exerciseId)}</span>
-                </li>
-              ))}
+              {r.exercises
+                .filter((re) => !re.options)
+                .map((re, i) => (
+                  <li key={`${re.exerciseId}-${i}`}>
+                    <span className="re-name">{exerciseName(re.exerciseId)}</span>
+                  </li>
+                ))}
             </ol>
           </div>
         ))}

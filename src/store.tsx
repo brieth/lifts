@@ -108,7 +108,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
       startSession(routine, emphasis) {
         const exercises: LoggedExercise[] = routine.exercises.map((re) => ({
-          exerciseId: re.exerciseId,
+          // Menu slots (e.g. the leg slot) start with no selection — pick each time.
+          exerciseId: re.options ? '' : re.exerciseId,
           options: re.options,
           sets: blankSets(re.targetSets),
         }));
@@ -139,7 +140,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             date: new Date().toISOString(),
             exercises: d.activeSession.exercises
               .map((e) => ({ ...e, sets: e.sets.filter((s) => s.done) }))
-              .filter((e) => e.sets.length > 0),
+              .filter((e) => e.exerciseId && e.sets.length > 0),
           };
           if (cleaned.exercises.length === 0) {
             return { ...d, activeSession: null };
