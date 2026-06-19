@@ -45,8 +45,8 @@ export function WorkoutView() {
 }
 
 /**
- * Per-set weight placeholder: starts at the suggested weight, then matches the
- * most recent manually-entered weight so subsequent sets suggest the same load.
+ * Per-set placeholders: start at the base value (suggested weight / target reps),
+ * then match the most recent manually-entered value so subsequent sets suggest it.
  */
 function weightPlaceholders(sets: SetEntry[], suggested: number): number[] {
   const out: number[] = [];
@@ -58,8 +58,14 @@ function weightPlaceholders(sets: SetEntry[], suggested: number): number[] {
   return out;
 }
 
-function effReps(s: SetEntry, targetReps: number): number {
-  return s.reps > 0 ? s.reps : targetReps;
+function repPlaceholders(sets: SetEntry[], target: number): number[] {
+  const out: number[] = [];
+  let running = target;
+  for (const s of sets) {
+    out.push(running);
+    if (s.reps > 0 && !s.autoReps) running = s.reps;
+  }
+  return out;
 }
 
 /** Logged volume: only sets marked done, using their actual entered values. */
@@ -68,18 +74,21 @@ function loggedVolume(sets: SetEntry[]): number {
 }
 
 /** Planned volume: every set, filling blanks with the per-set placeholder weight/reps. */
-function plannedVolume(sets: SetEntry[], phWeights: number[], reps: number): number {
+function plannedVolume(sets: SetEntry[], phWeights: number[], phReps: number[]): number {
   return sets.reduce(
-    (n, s, i) => n + (s.weight > 0 ? s.weight : phWeights[i]) * effReps(s, reps),
+    (n, s, i) => n + (s.weight > 0 ? s.weight : phWeights[i]) * (s.reps > 0 ? s.reps : phReps[i]),
     0,
   );
 }
 
 /** Planned strength: best estimated 1RM across all sets, blanks filled in. */
-function plannedStrength(sets: SetEntry[], phWeights: number[], reps: number): number {
+function plannedStrength(sets: SetEntry[], phWeights: number[], phReps: number[]): number {
   let best = 0;
   sets.forEach((s, i) => {
-    best = Math.max(best, estimated1RM(s.weight > 0 ? s.weight : phWeights[i], effReps(s, reps)));
+    best = Math.max(
+      best,
+      estimated1RM(s.weight > 0 ? s.weight : phWeights[i], s.reps > 0 ? s.reps : phReps[i]),
+    );
   });
   return Math.round(best);
 }
@@ -205,10 +214,11 @@ function ExerciseCard({
   onRemoveSet: (setIdx: number) => void;
 }) {
   const phWeights = weightPlaceholders(ex.sets, suggestedWeight);
+  const phReps = repPlaceholders(ex.sets, targetReps);
   const volLogged = loggedVolume(ex.sets);
-  const volPlanned = plannedVolume(ex.sets, phWeights, targetReps);
+  const volPlanned = plannedVolume(ex.sets, phWeights, phReps);
   const strLogged = bestEstimated1RM(ex.sets, true);
-  const strPlanned = plannedStrength(ex.sets, phWeights, targetReps);
+  const strPlanned = plannedStrength(ex.sets, phWeights, phReps);
 
   // Checking a set fills blanks from the placeholders (marked auto so they
   // light up as "used"); unchecking reverts those auto-filled values back to
@@ -232,7 +242,7 @@ function ExerciseCard({
         patch.autoWeight = true;
       }
       if (s.reps <= 0) {
-        patch.reps = targetReps;
+        patch.reps = phReps[i];
         patch.autoReps = true;
       }
       onChange(i, patch);
@@ -291,7 +301,7 @@ function ExerciseCard({
             type="number"
             inputMode="numeric"
             value={s.reps || ''}
-            placeholder={String(targetReps)}
+            placeholder={String(phReps[i])}
             onChange={(e) => onChange(i, { reps: Number(e.target.value), autoReps: false })}
           />
           <button
