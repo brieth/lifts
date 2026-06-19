@@ -24,6 +24,8 @@ export interface SetEntry {
   weight: number;
   reps: number;
   done: boolean;
+  autoWeight?: boolean; // weight was filled from the placeholder on Done
+  autoReps?: boolean;   // reps were filled from the placeholder on Done
 }
 
 export interface LoggedExercise {

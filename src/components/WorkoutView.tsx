@@ -190,16 +190,32 @@ function ExerciseCard({
   const strLogged = bestEstimated1RM(ex.sets, true);
   const strPlanned = plannedStrength(ex.sets, suggestedWeight, targetReps);
 
-  // Checking a set as done commits the suggested placeholders for any blanks.
+  // Checking a set fills blanks from the placeholders (marked auto so they
+  // light up as "used"); unchecking reverts those auto-filled values back to
+  // placeholders, but keeps anything that was typed manually.
   function toggleDone(i: number, s: SetEntry) {
     if (s.done) {
-      onChange(i, { done: false });
+      const patch: Partial<SetEntry> = { done: false };
+      if (s.autoWeight) {
+        patch.weight = 0;
+        patch.autoWeight = false;
+      }
+      if (s.autoReps) {
+        patch.reps = 0;
+        patch.autoReps = false;
+      }
+      onChange(i, patch);
     } else {
-      onChange(i, {
-        done: true,
-        weight: s.weight > 0 ? s.weight : suggestedWeight,
-        reps: s.reps > 0 ? s.reps : targetReps,
-      });
+      const patch: Partial<SetEntry> = { done: true };
+      if (s.weight <= 0) {
+        patch.weight = suggestedWeight;
+        patch.autoWeight = true;
+      }
+      if (s.reps <= 0) {
+        patch.reps = targetReps;
+        patch.autoReps = true;
+      }
+      onChange(i, patch);
     }
   }
 
@@ -249,14 +265,14 @@ function ExerciseCard({
             inputMode="decimal"
             value={s.weight || ''}
             placeholder={String(suggestedWeight)}
-            onChange={(e) => onChange(i, { weight: Number(e.target.value) })}
+            onChange={(e) => onChange(i, { weight: Number(e.target.value), autoWeight: false })}
           />
           <input
             type="number"
             inputMode="numeric"
             value={s.reps || ''}
             placeholder={String(targetReps)}
-            onChange={(e) => onChange(i, { reps: Number(e.target.value) })}
+            onChange={(e) => onChange(i, { reps: Number(e.target.value), autoReps: false })}
           />
           <button
             className={`check ${s.done ? 'on' : ''}`}
