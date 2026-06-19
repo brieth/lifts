@@ -8,7 +8,9 @@ export function HistoryView() {
     return (
       <div className="view">
         <h1>History</h1>
-        <p className="muted">No workouts logged yet. Finish a session and it'll show up here.</p>
+        <p className="muted subtitle">
+          No workouts logged yet. Finish a session and it'll show up here.
+        </p>
       </div>
     );
   }
