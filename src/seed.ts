@@ -85,7 +85,7 @@ const ROUTINE_DEFS: RoutineDef[] = [
       ['low-cable-chest-fly', 'Low Cable Chest Fly'],
       ['shotgun-row', 'Shotgun Row'],
       ['machine-lying-hamstring-curl', 'Machine Lying Hamstring Curl'],
-      ['chest-supported-dumbbell-kickback', 'Chest-Supported Dumbbell Kickback'],
+      ['dumbbell-kickback', 'Dumbbell Kickback'],
       ['incline-dumbbell-curl', 'Incline Dumbbell Curl'],
     ],
   },
