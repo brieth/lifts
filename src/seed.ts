@@ -107,7 +107,7 @@ const LEG_OPTIONS: ExRef[] = [
   ['machine-leg-press', 'Machine Leg Press'],
   ['machine-lying-hamstring-curl', 'Machine Lying Hamstring Curl'],
 ];
-const LEG_OPTION_IDS = LEG_OPTIONS.map(([id]) => id);
+export const LEG_OPTION_IDS = LEG_OPTIONS.map(([id]) => id);
 
 function buildSeed(): { exercises: Exercise[]; routines: Routine[] } {
   const exerciseMap = new Map<string, Exercise>();

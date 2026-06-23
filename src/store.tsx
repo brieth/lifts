@@ -9,7 +9,7 @@ import type {
   Session,
   SetEntry,
 } from './types';
-import { SEED } from './seed';
+import { LEG_OPTION_IDS, SEED } from './seed';
 
 const STORAGE_KEY = 'lifts.data.v1';
 
@@ -44,11 +44,21 @@ function load(): AppData {
     const sessions = (stored.sessions ?? []).map((s) =>
       s.gymId ? s : { ...s, gymId: currentGymId },
     );
+    // Refresh menu (leg) slot options in an in-progress workout to the current list.
+    let activeSession = stored.activeSession ?? null;
+    if (activeSession) {
+      activeSession = {
+        ...activeSession,
+        exercises: activeSession.exercises.map((e) =>
+          e.options ? { ...e, options: LEG_OPTION_IDS } : e,
+        ),
+      };
+    }
     return {
       exercises,
       routines: SEED.routines,
       sessions,
-      activeSession: stored.activeSession ?? null,
+      activeSession,
       gyms,
       currentGymId,
     };
