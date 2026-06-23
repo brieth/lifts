@@ -340,8 +340,7 @@ body {
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: 10px;
-  /* slightly tighter right padding to balance the left-aligned row labels */
-  padding: 8px 4px 8px 10px;
+  padding: 8px 10px;
   margin-bottom: 12px;
 }
 .ex-stats-row {
@@ -414,7 +413,7 @@ body {
 }
 .set-row input:focus {
   outline: none;
-  border-color: var(--accent);
+  border-color: var(--text);
 }
 /* Done sets light up green to show the values were used. */
 .set-row.done input {
