@@ -93,6 +93,20 @@ export function lastExercisePoint(
   return { volume: p.volume, best1RM: p.best1RM };
 }
 
+/** Mean logged volume and mean est. 1RM per session for an exercise, or null. */
+export function meanExercisePoint(
+  sessions: Session[],
+  exerciseId: ID,
+): { volume: number; best1RM: number } | null {
+  const history = exerciseHistory(sessions, exerciseId);
+  if (!history.length) return null;
+  const n = history.length;
+  return {
+    volume: Math.round(history.reduce((a, p) => a + p.volume, 0) / n),
+    best1RM: Math.round(history.reduce((a, p) => a + p.best1RM, 0) / n),
+  };
+}
+
 /** Best logged volume and best estimated 1RM for an exercise across all history. */
 export function bestExercisePoint(
   sessions: Session[],

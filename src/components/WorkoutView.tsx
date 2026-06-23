@@ -5,6 +5,7 @@ import {
   bestExercisePoint,
   estimated1RM,
   lastExercisePoint,
+  meanExercisePoint,
   recentEstimated1RM,
   weightForReps,
 } from '../lib/stats';
@@ -235,6 +236,7 @@ function ActiveSession() {
               targetReps={targetReps}
               suggestedWeight={suggestedWeight}
               last={lastExercisePoint(hist, ex.exerciseId)}
+              mean={meanExercisePoint(hist, ex.exerciseId)}
               best={bestExercisePoint(hist, ex.exerciseId)}
               options={options}
               onSelect={(id) => changeExercise(exIdx, id)}
@@ -263,6 +265,7 @@ function ExerciseCard({
   targetReps,
   suggestedWeight,
   last,
+  mean,
   best,
   options,
   onSelect,
@@ -275,6 +278,7 @@ function ExerciseCard({
   targetReps: number;
   suggestedWeight: number;
   last: { volume: number; best1RM: number } | null;
+  mean: { volume: number; best1RM: number } | null;
   best: { volume: number; best1RM: number } | null;
   options?: { id: string; name: string }[];
   onSelect: (id: string) => void;
@@ -349,6 +353,7 @@ function ExerciseCard({
           <span>Logged</span>
           <span>Planned</span>
           <span>Last</span>
+          <span>Mean</span>
           <span>Best</span>
         </div>
         <div className="ex-stats-row">
@@ -356,6 +361,7 @@ function ExerciseCard({
           <span className="a">{fmt(strLogged)}</span>
           <span>{fmt(strPlanned)}</span>
           <span>{fmt(last?.best1RM)}</span>
+          <span>{fmt(mean?.best1RM)}</span>
           <span>{fmt(best?.best1RM)}</span>
         </div>
         <div className="ex-stats-row">
@@ -363,6 +369,7 @@ function ExerciseCard({
           <span className="a">{fmt(volLogged)}</span>
           <span>{fmt(volPlanned)}</span>
           <span>{fmt(last?.volume)}</span>
+          <span>{fmt(mean?.volume)}</span>
           <span>{fmt(best?.volume)}</span>
         </div>
       </div>

@@ -345,14 +345,14 @@ body {
 }
 .ex-stats-row {
   display: grid;
-  grid-template-columns: 1.1fr repeat(4, 1fr);
+  grid-template-columns: 1.2fr repeat(5, 1fr);
   align-items: baseline;
   padding: 3px 0;
 }
 .ex-stats-row span {
   text-align: center;
   font-variant-numeric: tabular-nums;
-  font-size: 13px;
+  font-size: 12px;
 }
 .ex-stats-row .k {
   text-align: left;

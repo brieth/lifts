@@ -20,6 +20,8 @@ const EQUIPMENT: Record<string, Equipment> = {
   'machine-leg-press': 'machine',
   'machine-lying-hamstring-curl': 'machine',
   'machine-glute-bridge': 'machine',
+  'machine-hip-abductor': 'machine',
+  'machine-hip-adductor': 'machine',
   'machine-leg-curl': 'machine',
   'machine-leg-extension': 'machine',
   // cables — gym-dependent
