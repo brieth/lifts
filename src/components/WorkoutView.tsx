@@ -19,7 +19,6 @@ export function WorkoutView() {
     return (
       <div className="view">
         <h1>Start a workout</h1>
-        <p className="muted subtitle">Choose a rep emphasis to begin.</p>
         <GymBar />
         <div className="start-list">
           {data.routines.map((r) => (
