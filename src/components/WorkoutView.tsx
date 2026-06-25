@@ -11,6 +11,7 @@ import {
 } from '../lib/stats';
 import { defaultOneRMFor, EMPHASES, emphasisLabel, repsFor } from '../lib/reps';
 import { sessionsForExercise } from '../lib/equipment';
+import { volumeMultiplier } from '../lib/sides';
 
 export function WorkoutView() {
   const { data, startSession } = useStore();
@@ -287,8 +288,9 @@ function ExerciseCard({
 }) {
   const phWeights = weightPlaceholders(ex.sets, suggestedWeight);
   const phReps = repPlaceholders(ex.sets, targetReps);
-  const volLogged = loggedVolume(ex.sets);
-  const volPlanned = plannedVolume(ex.sets, phWeights, phReps);
+  const volMult = volumeMultiplier(ex.exerciseId);
+  const volLogged = loggedVolume(ex.sets) * volMult;
+  const volPlanned = plannedVolume(ex.sets, phWeights, phReps) * volMult;
   const strLogged = bestEstimated1RM(ex.sets, true);
   const strPlanned = plannedStrength(ex.sets, phWeights, phReps);
 
@@ -364,7 +366,10 @@ function ExerciseCard({
           <span>{fmt(best?.best1RM)}</span>
         </div>
         <div className="ex-stats-row">
-          <span className="k">Volume</span>
+          <span className="k">
+            Volume
+            {volMult > 1 && <em className="x2">×2</em>}
+          </span>
           <span className="a">{fmt(volLogged)}</span>
           <span>{fmt(volPlanned)}</span>
           <span>{fmt(last?.volume)}</span>

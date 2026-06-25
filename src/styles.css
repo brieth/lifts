@@ -360,6 +360,14 @@ body {
   font-weight: 600;
   color: var(--text);
 }
+.ex-stats-row .k .x2 {
+  font-style: normal;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--accent);
+  margin-left: 3px;
+  vertical-align: middle;
+}
 .ex-stats-row.head span {
   font-size: 10px;
   text-transform: uppercase;

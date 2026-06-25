@@ -1,4 +1,5 @@
 import type { Session, ID } from '../types';
+import { volumeMultiplier } from './sides';
 
 /** Epley estimated 1-rep max. */
 export function estimated1RM(weight: number, reps: number): number {
@@ -25,13 +26,14 @@ export function exerciseHistory(sessions: Session[], exerciseId: ID): ExercisePo
     const doneSets = logged.sets.filter((s) => s.done && s.weight > 0 && s.reps > 0);
     if (doneSets.length === 0) continue;
 
+    const mult = volumeMultiplier(exerciseId);
     let topSet = 0;
     let best1RM = 0;
     let volume = 0;
     for (const s of doneSets) {
       topSet = Math.max(topSet, s.weight);
       best1RM = Math.max(best1RM, estimated1RM(s.weight, s.reps));
-      volume += s.weight * s.reps;
+      volume += s.weight * s.reps * mult;
     }
     points.push({ date: session.date, topSet, best1RM: Math.round(best1RM), volume });
   }
@@ -137,8 +139,9 @@ export function bestEstimated1RM(
 export function sessionVolume(session: Session): number {
   let total = 0;
   for (const logged of session.exercises) {
+    const mult = volumeMultiplier(logged.exerciseId);
     for (const s of logged.sets) {
-      if (s.done) total += s.weight * s.reps;
+      if (s.done) total += s.weight * s.reps * mult;
     }
   }
   return total;
