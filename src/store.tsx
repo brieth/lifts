@@ -76,6 +76,7 @@ interface Store {
   updateActive: (fn: (s: Session) => Session) => void;
   addExerciseToActive: (exerciseId: string) => void;
   deleteSession: (id: string) => void;
+  updateSessionExercise: (sessionId: string, exIdx: number, exerciseId: string) => void;
   upsertExercise: (name: string, id?: string) => Exercise;
   addGym: (name: string) => Gym;
   setCurrentGym: (id: string) => void;
@@ -182,6 +183,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
       deleteSession(id) {
         setData((d) => ({ ...d, sessions: d.sessions.filter((s) => s.id !== id) }));
+      },
+
+      updateSessionExercise(sessionId, exIdx, exerciseId) {
+        setData((d) => ({
+          ...d,
+          sessions: d.sessions.map((s) =>
+            s.id === sessionId
+              ? {
+                  ...s,
+                  exercises: s.exercises.map((e, i) =>
+                    i === exIdx ? { ...e, exerciseId } : e,
+                  ),
+                }
+              : s,
+          ),
+        }));
       },
 
       upsertExercise(name, id) {

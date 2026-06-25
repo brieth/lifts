@@ -584,6 +584,29 @@ body {
   font-weight: 600;
   margin-bottom: 4px;
 }
+.history-exercise-select {
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text);
+  background: transparent;
+  border: none;
+  padding: 0 18px 0 0;
+  margin: 0 0 4px;
+  cursor: pointer;
+  max-width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--accent) 50%),
+    linear-gradient(135deg, var(--accent) 50%, transparent 50%);
+  background-position: right 5px center, right 1px center;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
+.history-exercise-select:focus {
+  outline: none;
+}
 .history-sets {
   display: flex;
   flex-wrap: wrap;

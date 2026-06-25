@@ -1,8 +1,15 @@
+import { useMemo } from 'react';
 import { useStore } from '../store';
 import { sessionVolume } from '../lib/stats';
 
 export function HistoryView() {
-  const { data, exerciseName, deleteSession } = useStore();
+  const { data, deleteSession, updateSessionExercise } = useStore();
+
+  // all exercises, sorted by name, for the edit dropdowns
+  const exerciseOptions = useMemo(
+    () => [...data.exercises].sort((a, b) => a.name.localeCompare(b.name)),
+    [data.exercises],
+  );
 
   if (data.sessions.length === 0) {
     return (
@@ -40,7 +47,17 @@ export function HistoryView() {
               <div className="history-body">
                 {s.exercises.map((e, i) => (
                   <div key={i} className="history-exercise">
-                    <div className="history-exercise-name">{exerciseName(e.exerciseId)}</div>
+                    <select
+                      className="history-exercise-select"
+                      value={e.exerciseId}
+                      onChange={(ev) => updateSessionExercise(s.id, i, ev.target.value)}
+                    >
+                      {exerciseOptions.map((ex) => (
+                        <option key={ex.id} value={ex.id}>
+                          {ex.name}
+                        </option>
+                      ))}
+                    </select>
                     <div className="history-sets">
                       {e.sets.map((st, j) => (
                         <span key={j} className="history-set">
