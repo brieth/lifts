@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useStore } from '../store';
 import type { Emphasis, LoggedExercise, SetEntry } from '../types';
 import {
@@ -129,6 +130,7 @@ function round5(n: number): number {
 
 function ActiveSession() {
   const { data, exerciseName, updateActive, finishSession, cancelSession } = useStore();
+  const [historyFor, setHistoryFor] = useState<string | null>(null);
   const session = data.activeSession!;
   const emphasis: Emphasis = session.emphasis ?? 'medium';
   const gymName = data.gyms.find((g) => g.id === session.gymId)?.name ?? null;
@@ -240,6 +242,7 @@ function ActiveSession() {
               best={bestExercisePoint(hist, ex.exerciseId)}
               options={options}
               onSelect={(id) => changeExercise(exIdx, id)}
+              onShowHistory={() => setHistoryFor(ex.exerciseId)}
               onChange={(setIdx, patch) => setSetValue(exIdx, setIdx, patch)}
               onAddSet={() => addSet(exIdx)}
               onRemoveSet={(setIdx) => removeSet(exIdx, setIdx)}
@@ -251,6 +254,82 @@ function ActiveSession() {
       <button className="btn primary block finish" onClick={finishSession}>
         Finish workout
       </button>
+
+      {historyFor && (
+        <ExerciseHistoryModal
+          exerciseId={historyFor}
+          name={exerciseName(historyFor)}
+          onClose={() => setHistoryFor(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+function ExerciseHistoryModal({
+  exerciseId,
+  name,
+  onClose,
+}: {
+  exerciseId: string;
+  name: string;
+  onClose: () => void;
+}) {
+  const { data } = useStore();
+  const mult = volumeMultiplier(exerciseId);
+  const rows = sessionsForExercise(data.sessions, exerciseId, data.currentGymId)
+    .map((s) => {
+      const logged = s.exercises.find((e) => e.exerciseId === exerciseId);
+      const sets = logged?.sets.filter((st) => st.done && st.weight > 0 && st.reps > 0) ?? [];
+      if (!sets.length) return null;
+      const volume = sets.reduce((a, st) => a + st.weight * st.reps * mult, 0);
+      const best1RM = Math.round(
+        Math.max(...sets.map((st) => estimated1RM(st.weight, st.reps))),
+      );
+      return { date: s.date, sets, volume, best1RM };
+    })
+    .filter((r): r is NonNullable<typeof r> => r !== null)
+    .sort((a, b) => b.date.localeCompare(a.date));
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-head">
+          <span className="modal-title">{name}</span>
+          <button className="btn ghost small" onClick={onClose}>
+            Close
+          </button>
+        </div>
+        {rows.length === 0 ? (
+          <p className="muted small">No history yet for this exercise.</p>
+        ) : (
+          <div className="modal-list">
+            {rows.map((r, i) => (
+              <div key={i} className="modal-row">
+                <div className="modal-row-head">
+                  <span className="modal-date">
+                    {new Date(r.date).toLocaleDateString(undefined, {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                    })}
+                  </span>
+                  <span className="muted small">
+                    {r.volume.toLocaleString()} vol · {r.best1RM} 1RM
+                  </span>
+                </div>
+                <div className="history-sets">
+                  {r.sets.map((st, j) => (
+                    <span key={j} className="history-set">
+                      {st.weight}×{st.reps}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -269,6 +348,7 @@ function ExerciseCard({
   best,
   options,
   onSelect,
+  onShowHistory,
   onChange,
   onAddSet,
   onRemoveSet,
@@ -282,6 +362,7 @@ function ExerciseCard({
   best: { volume: number; best1RM: number } | null;
   options?: { id: string; name: string }[];
   onSelect: (id: string) => void;
+  onShowHistory: () => void;
   onChange: (setIdx: number, patch: Partial<SetEntry>) => void;
   onAddSet: () => void;
   onRemoveSet: (setIdx: number) => void;
@@ -348,7 +429,12 @@ function ExerciseCard({
 
       {selected && (
         <>
-      <div className="ex-stats">
+      <div
+        className="ex-stats clickable"
+        role="button"
+        tabIndex={0}
+        onClick={onShowHistory}
+      >
         <div className="ex-stats-row head">
           <span />
           <span>Logged</span>
