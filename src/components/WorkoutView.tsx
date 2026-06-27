@@ -366,10 +366,7 @@ function ExerciseCard({
           <span>{fmt(best?.best1RM)}</span>
         </div>
         <div className="ex-stats-row">
-          <span className="k">
-            Volume
-            {volMult > 1 && <em className="x2">×2</em>}
-          </span>
+          <span className="k">Volume</span>
           <span className="a">{fmt(volLogged)}</span>
           <span>{fmt(volPlanned)}</span>
           <span>{fmt(last?.volume)}</span>
