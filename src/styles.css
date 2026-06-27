@@ -450,7 +450,7 @@ body {
   font-size: 12px;
 }
 .ex-stats-row .k {
-  text-align: left;
+  text-align: center;
   font-size: 12px;
   font-weight: 600;
   color: var(--text);
