@@ -346,8 +346,8 @@ body {
 .ex-stats.clickable {
   cursor: pointer;
 }
-.ex-stats.clickable:active {
-  border-color: var(--accent);
+.ex-stats.clickable:focus {
+  outline: none;
 }
 
 /* ---------- modal ---------- */
