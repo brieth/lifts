@@ -317,12 +317,12 @@ function ExerciseHistoryModal({
                   </span>
                   <span className="modal-row-stats">
                     <span className="kv">
-                      <SvBadge letter="V" />
-                      {r.volume.toLocaleString()}
-                    </span>
-                    <span className="kv">
                       <SvBadge letter="S" />
                       {r.best1RM}
+                    </span>
+                    <span className="kv">
+                      <SvBadge letter="V" />
+                      {r.volume.toLocaleString()}
                     </span>
                   </span>
                 </div>
