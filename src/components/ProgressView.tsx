@@ -3,6 +3,7 @@ import { useStore } from '../store';
 import { exerciseHistory, personalRecords, type PR } from '../lib/stats';
 import { isGymDependent, sessionsForExercise } from '../lib/equipment';
 import { LineChart } from './LineChart';
+import { SvBadge } from './SvBadge';
 
 type Metric = 'best1RM' | 'volume';
 
@@ -124,7 +125,7 @@ export function ProgressView() {
               <span className="pr-detail">
                 {pr.weight}×{pr.reps}
                 <span className="pr-1rm">
-                  <span className="sv-badge">S</span> {pr.est1RM}
+                  <SvBadge letter="S" /> {pr.est1RM}
                 </span>
               </span>
             </div>

@@ -13,6 +13,7 @@ import {
 import { defaultOneRMFor, EMPHASES, emphasisLabel, repsFor } from '../lib/reps';
 import { sessionsForExercise } from '../lib/equipment';
 import { volumeMultiplier } from '../lib/sides';
+import { SvBadge } from './SvBadge';
 
 export function WorkoutView() {
   const { data, startSession } = useStore();
@@ -316,11 +317,11 @@ function ExerciseHistoryModal({
                   </span>
                   <span className="modal-row-stats">
                     <span className="kv">
-                      <span className="sv-badge">V</span>
+                      <SvBadge letter="V" />
                       {r.volume.toLocaleString()}
                     </span>
                     <span className="kv">
-                      <span className="sv-badge">S</span>
+                      <SvBadge letter="S" />
                       {r.best1RM}
                     </span>
                   </span>
@@ -451,7 +452,7 @@ function ExerciseCard({
           <span>Best</span>
         </div>
         <div className="ex-stats-row">
-          <span className="k"><span className="sv-badge">S</span></span>
+          <span className="k"><SvBadge letter="S" /></span>
           <span className="a">{fmt(strLogged)}</span>
           <span>{fmt(strPlanned)}</span>
           <span>{fmt(last?.best1RM)}</span>
@@ -459,7 +460,7 @@ function ExerciseCard({
           <span>{fmt(best?.best1RM)}</span>
         </div>
         <div className="ex-stats-row">
-          <span className="k"><span className="sv-badge">V</span></span>
+          <span className="k"><SvBadge letter="V" /></span>
           <span className="a">{fmt(volLogged)}</span>
           <span>{fmt(volPlanned)}</span>
           <span>{fmt(last?.volume)}</span>

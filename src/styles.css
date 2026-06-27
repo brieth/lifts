@@ -417,21 +417,18 @@ body {
   gap: 5px;
 }
 
-/* Strength / Volume badge used wherever those labels repeat */
+/* Strength / Volume badge (SVG) used wherever those labels repeat */
 .sv-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 17px;
-  height: 17px;
-  border-radius: 50%;
-  background: var(--accent);
-  color: var(--bg);
-  font-size: 10px;
-  font-weight: 800;
-  line-height: 1;
+  width: 18px;
+  height: 18px;
+  display: inline-block;
   vertical-align: middle;
+  flex-shrink: 0;
+}
+.sv-badge text {
+  font-family: inherit;
+  font-weight: 800;
+  font-size: 11px;
 }
 
 /* Progress chart-stat labels — same all-caps style as the workout headers */
@@ -443,8 +440,8 @@ body {
 }
 .ex-stats-row {
   display: grid;
-  grid-template-columns: 1.2fr repeat(5, 1fr);
-  align-items: baseline;
+  grid-template-columns: 26px repeat(5, 1fr);
+  align-items: center;
   padding: 3px 0;
 }
 .ex-stats-row span {
