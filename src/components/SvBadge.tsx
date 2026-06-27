@@ -14,7 +14,7 @@ export function SvBadge({ letter }: { letter: 'S' | 'V' }) {
       aria-label={letter === 'S' ? 'Strength' : 'Volume'}
     >
       <circle cx="12" cy="12" r="10.6" fill="none" stroke="var(--accent)" strokeWidth="1.6" />
-      <circle cx="12" cy="12" r="7.2" fill="var(--text)" />
+      <circle cx="12" cy="12" r="7.2" fill="var(--accent)" />
       <text x="12" y={y} textAnchor="middle" dominantBaseline="central" fill="var(--bg)">
         {letter}
       </text>
