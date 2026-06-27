@@ -314,8 +314,15 @@ function ExerciseHistoryModal({
                       day: 'numeric',
                     })}
                   </span>
-                  <span className="muted small">
-                    {r.volume.toLocaleString()} vol · {r.best1RM} 1RM
+                  <span className="modal-row-stats">
+                    <span className="kv">
+                      <span className="sv-badge">V</span>
+                      {r.volume.toLocaleString()}
+                    </span>
+                    <span className="kv">
+                      <span className="sv-badge">S</span>
+                      {r.best1RM}
+                    </span>
                   </span>
                 </div>
                 <div className="history-sets">
@@ -444,7 +451,7 @@ function ExerciseCard({
           <span>Best</span>
         </div>
         <div className="ex-stats-row">
-          <span className="k">Strength</span>
+          <span className="k"><span className="sv-badge">S</span></span>
           <span className="a">{fmt(strLogged)}</span>
           <span>{fmt(strPlanned)}</span>
           <span>{fmt(last?.best1RM)}</span>
@@ -452,7 +459,7 @@ function ExerciseCard({
           <span>{fmt(best?.best1RM)}</span>
         </div>
         <div className="ex-stats-row">
-          <span className="k">Volume</span>
+          <span className="k"><span className="sv-badge">V</span></span>
           <span className="a">{fmt(volLogged)}</span>
           <span>{fmt(volPlanned)}</span>
           <span>{fmt(last?.volume)}</span>

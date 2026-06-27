@@ -4,11 +4,10 @@ import { exerciseHistory, personalRecords, type PR } from '../lib/stats';
 import { isGymDependent, sessionsForExercise } from '../lib/equipment';
 import { LineChart } from './LineChart';
 
-type Metric = 'best1RM' | 'topSet' | 'volume';
+type Metric = 'best1RM' | 'volume';
 
 const METRIC_LABELS: Record<Metric, string> = {
-  best1RM: 'Est. 1RM',
-  topSet: 'Top set',
+  best1RM: 'Strength',
   volume: 'Volume',
 };
 
@@ -104,12 +103,12 @@ export function ProgressView() {
         {values.length > 0 && (
           <div className="chart-stats">
             <span>
-              now <strong>{values[values.length - 1]}</strong>
+              <span className="cs-k">Last</span> <strong>{values[values.length - 1]}</strong>
             </span>
             <span>
-              best <strong>{Math.max(...values)}</strong>
+              <span className="cs-k">Best</span> <strong>{Math.max(...values)}</strong>
             </span>
-            <span>{history.length} sessions</span>
+            <span className="cs-n">{history.length} sessions</span>
           </div>
         )}
       </div>
@@ -124,7 +123,9 @@ export function ProgressView() {
               <span className="pr-name">{exerciseName(id)}</span>
               <span className="pr-detail">
                 {pr.weight}×{pr.reps}
-                <span className="pr-1rm">~{pr.est1RM} 1RM</span>
+                <span className="pr-1rm">
+                  <span className="sv-badge">S</span> {pr.est1RM}
+                </span>
               </span>
             </div>
           );
