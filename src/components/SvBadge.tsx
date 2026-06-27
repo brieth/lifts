@@ -4,6 +4,8 @@
  * text-anchor/dominant-baseline (reliable optical centering).
  */
 export function SvBadge({ letter }: { letter: 'S' | 'V' }) {
+  // "V" is top-heavy, so it reads high when geometrically centered — nudge it down.
+  const y = letter === 'V' ? 13.4 : 12;
   return (
     <svg
       className="sv-badge"
@@ -13,7 +15,7 @@ export function SvBadge({ letter }: { letter: 'S' | 'V' }) {
     >
       <circle cx="12" cy="12" r="10.6" fill="none" stroke="var(--accent)" strokeWidth="1.6" />
       <circle cx="12" cy="12" r="7.2" fill="var(--accent)" />
-      <text x="12" y="12" textAnchor="middle" dominantBaseline="central" fill="var(--bg)">
+      <text x="12" y={y} textAnchor="middle" dominantBaseline="central" fill="var(--bg)">
         {letter}
       </text>
     </svg>
