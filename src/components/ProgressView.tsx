@@ -1,9 +1,8 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../store';
-import { exerciseHistory, personalRecords, type PR } from '../lib/stats';
+import { exerciseHistory } from '../lib/stats';
 import { isGymDependent, sessionsForExercise } from '../lib/equipment';
 import { LineChart } from './LineChart';
-import { SvBadge } from './SvBadge';
 
 type Metric = 'best1RM' | 'volume';
 
@@ -22,17 +21,6 @@ export function ProgressView() {
     for (const s of data.sessions) for (const e of s.exercises) ids.add(e.exerciseId);
     return [...ids];
   }, [data.sessions]);
-
-  // PRs computed per exercise, gym-scoped for cable/machine
-  const prs = useMemo(() => {
-    const map = new Map<string, PR>();
-    for (const id of tracked) {
-      const sub = sessionsForExercise(data.sessions, id, data.currentGymId);
-      const pr = personalRecords(sub).get(id);
-      if (pr) map.set(id, pr);
-    }
-    return map;
-  }, [data.sessions, tracked, data.currentGymId]);
 
   const [selected, setSelected] = useState<string | null>(null);
   const current = selected ?? tracked[0] ?? null;
@@ -112,25 +100,6 @@ export function ProgressView() {
             <span className="cs-n">{history.length} sessions</span>
           </div>
         )}
-      </div>
-
-      <h2 className="section">Bests</h2>
-      <div className="pr-list">
-        {tracked.map((id) => {
-          const pr = prs.get(id);
-          if (!pr) return null;
-          return (
-            <div key={id} className="pr-row">
-              <span className="pr-name">{exerciseName(id)}</span>
-              <span className="pr-detail">
-                {pr.weight}×{pr.reps}
-                <span className="pr-1rm">
-                  <SvBadge letter="S" /> {pr.est1RM}
-                </span>
-              </span>
-            </div>
-          );
-        })}
       </div>
     </div>
   );
