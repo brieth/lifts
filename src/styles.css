@@ -1010,7 +1010,6 @@ body {
   height: 9px;
   background: var(--surface-2);
   border-radius: 5px;
-  overflow: hidden;
 }
 .muscle-bar-fill {
   position: absolute;
@@ -1027,9 +1026,9 @@ body {
 }
 .muscle-bar-tick {
   position: absolute;
-  top: -1px;
+  top: 0;
   width: 2px;
-  height: 11px;
+  height: 9px;
   background: var(--muted);
   opacity: 0.6;
   transform: translateX(-1px);
@@ -1038,12 +1037,10 @@ body {
   font-size: 14px;
   text-align: right;
   white-space: nowrap;
+  color: var(--accent);
 }
-.muscle-planned {
+.muscle-sets.planned {
   color: #fff;
-  opacity: 0.85;
-  font-size: 12px;
-  margin-left: 3px;
 }
 .weekly-empty {
   margin: 4px 0 0;

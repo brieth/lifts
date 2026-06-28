@@ -9,6 +9,7 @@ import type { Session } from '../types';
 export type MuscleGroup =
   | 'Chest'
   | 'Back'
+  | 'Front Delt'
   | 'Side Delt'
   | 'Rear Delt'
   | 'Triceps'
@@ -18,6 +19,7 @@ export type MuscleGroup =
 export const MUSCLE_GROUPS: MuscleGroup[] = [
   'Chest',
   'Back',
+  'Front Delt',
   'Side Delt',
   'Rear Delt',
   'Triceps',
@@ -71,14 +73,13 @@ export function muscleFor(exerciseId: string): MuscleGroup | null {
 }
 
 /**
- * Secondary movers, credited at HALF a set each. Presses drive the triceps;
- * pulls drive the biceps; rows additionally hit the rear delts. (Front delt is
- * a secondary on every press but we don't track it, so it's omitted.)
+ * Secondary movers, credited at HALF a set each. Presses drive the triceps and
+ * front delts; pulls drive the biceps; rows additionally hit the rear delts.
  */
 const SECONDARY: Record<string, MuscleGroup[]> = {
-  'barbell-incline-bench-press': ['Triceps'],
-  'barbell-bench-press': ['Triceps'],
-  'barbell-decline-bench-press': ['Triceps'],
+  'barbell-incline-bench-press': ['Triceps', 'Front Delt'],
+  'barbell-bench-press': ['Triceps', 'Front Delt'],
+  'barbell-decline-bench-press': ['Triceps', 'Front Delt'],
   'v-bar-pulldown': ['Biceps'],
   'lat-pulldown': ['Biceps'],
   'reverse-grip-pull-down': ['Biceps'],

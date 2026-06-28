@@ -64,21 +64,33 @@ export function WeeklyMuscles() {
             const totalW = Math.min(logged + planned, SET_SCALE);
             const tealPct = (tealW / SET_SCALE) * 100;
             const whitePct = ((totalW - tealW) / SET_SCALE) * 100;
+            const hasTeal = tealW > 0;
+            const hasWhite = totalW - tealW > 0;
             return (
               <div key={g} className="muscle-row">
                 <span className="muscle-name">{g}</span>
                 <div className="muscle-bar-track">
-                  <div className="muscle-bar-fill" style={{ width: `${tealPct}%` }} />
-                  <div
-                    className="muscle-bar-planned"
-                    style={{ left: `${tealPct}%`, width: `${whitePct}%` }}
-                  />
+                  {hasTeal && (
+                    <div
+                      className="muscle-bar-fill"
+                      style={{ width: `${tealPct}%`, borderRadius: hasWhite ? '5px 0 0 5px' : '5px' }}
+                    />
+                  )}
+                  {hasWhite && (
+                    <div
+                      className="muscle-bar-planned"
+                      style={{
+                        left: `${tealPct}%`,
+                        width: `${whitePct}%`,
+                        borderRadius: hasTeal ? '0 5px 5px 0' : '5px',
+                      }}
+                    />
+                  )}
                   <span className="muscle-bar-tick" style={{ left: `${(TICK_AT / SET_SCALE) * 100}%` }} />
                 </div>
-                <span className="muscle-sets">
-                  <strong>{fmt(logged)}</strong>
-                  {planned > 0 && <span className="muscle-planned">+{fmt(planned)}</span>}
-                </span>
+                <strong className={planned > 0 ? 'muscle-sets planned' : 'muscle-sets'}>
+                  {fmt(planned > 0 ? logged + planned : logged)}
+                </strong>
               </div>
             );
           })}
@@ -86,9 +98,8 @@ export function WeeklyMuscles() {
       )}
 
       <p className="muted small weekly-note">
-        Hard sets per muscle this week ({fmt(totalLogged)} logged
-        {totalPlanned > 0 ? `, +${fmt(totalPlanned)} planned` : ''}). Secondary movers count as half.
-        Bar spans the ~10–20 sets/week range; the tick marks 10.
+        Hard sets per muscle this week. Teal is logged; white is planned for today. Secondary movers
+        count as half. Bar spans the ~10–20 sets/week range; the tick marks 10.
       </p>
     </div>
   );
