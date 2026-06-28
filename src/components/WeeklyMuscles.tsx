@@ -88,7 +88,7 @@ export function WeeklyMuscles() {
                   )}
                   <span className="muscle-bar-tick" style={{ left: `${(TICK_AT / SET_SCALE) * 100}%` }} />
                 </div>
-                <strong className={planned > 0 ? 'muscle-sets planned' : 'muscle-sets'}>
+                <strong className={planned > 0 || logged === 0 ? 'muscle-sets planned' : 'muscle-sets'}>
                   {fmt(planned > 0 ? logged + planned : logged)}
                 </strong>
               </div>
