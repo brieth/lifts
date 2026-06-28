@@ -6,22 +6,12 @@ import type { Session } from '../types';
  * rather than inflating it). Front delt has no direct work in this program (it
  * rides on the presses), so there's intentionally no Front Delt bucket.
  */
-export type MuscleGroup =
-  | 'Chest'
-  | 'Back'
-  | 'Front Delt'
-  | 'Side Delt'
-  | 'Rear Delt'
-  | 'Triceps'
-  | 'Biceps'
-  | 'Legs';
+export type MuscleGroup = 'Chest' | 'Back' | 'Delts' | 'Triceps' | 'Biceps' | 'Legs';
 
 export const MUSCLE_GROUPS: MuscleGroup[] = [
   'Chest',
   'Back',
-  'Front Delt',
-  'Side Delt',
-  'Rear Delt',
+  'Delts',
   'Triceps',
   'Biceps',
   'Legs',
@@ -41,13 +31,12 @@ const MUSCLE: Record<string, MuscleGroup> = {
   'lat-pulldown': 'Back',
   'reverse-grip-pull-down': 'Back',
   'shotgun-row': 'Back',
-  // Side delt
-  'behind-the-back-cable-lateral-raise': 'Side Delt',
-  'cable-upright-row': 'Side Delt',
-  'dumbbell-lateral-raise': 'Side Delt',
-  // Rear delt
-  'cable-face-pull': 'Rear Delt',
-  'cable-rear-delt-fly': 'Rear Delt',
+  // Delts (front / side / rear tracked together as one group)
+  'behind-the-back-cable-lateral-raise': 'Delts',
+  'cable-upright-row': 'Delts',
+  'dumbbell-lateral-raise': 'Delts',
+  'cable-face-pull': 'Delts',
+  'cable-rear-delt-fly': 'Delts',
   // Triceps
   'cable-rope-overhead-tricep-extension': 'Triceps',
   'cable-rope-tricep-extension': 'Triceps',
@@ -75,16 +64,17 @@ export function muscleFor(exerciseId: string): MuscleGroup | null {
 /**
  * Secondary movers, credited at HALF a set each. Presses drive the triceps and
  * front delts; pulls drive the biceps; rows additionally hit the rear delts.
+ * (Front/rear delt both roll up into the single Delts group.)
  */
 const SECONDARY: Record<string, MuscleGroup[]> = {
-  'barbell-incline-bench-press': ['Triceps', 'Front Delt'],
-  'barbell-bench-press': ['Triceps', 'Front Delt'],
-  'barbell-decline-bench-press': ['Triceps', 'Front Delt'],
+  'barbell-incline-bench-press': ['Triceps', 'Delts'],
+  'barbell-bench-press': ['Triceps', 'Delts'],
+  'barbell-decline-bench-press': ['Triceps', 'Delts'],
   'v-bar-pulldown': ['Biceps'],
   'lat-pulldown': ['Biceps'],
   'reverse-grip-pull-down': ['Biceps'],
-  'cable-row': ['Biceps', 'Rear Delt'],
-  'shotgun-row': ['Biceps', 'Rear Delt'],
+  'cable-row': ['Biceps', 'Delts'],
+  'shotgun-row': ['Biceps', 'Delts'],
 };
 
 export function secondaryFor(exerciseId: string): MuscleGroup[] {
