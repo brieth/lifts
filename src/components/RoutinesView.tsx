@@ -13,17 +13,18 @@ export function RoutinesView() {
     const filename = `sandwich-${stamp}.json`;
 
     // Native share sheet (Save to Files, Google Drive, AirDrop, Mail…) — lets
-    // you send the backup anywhere. Best on phones.
-    try {
-      const file = new File([json], filename, { type: 'application/json' });
-      if (navigator.canShare?.({ files: [file] })) {
+    // you send the backup anywhere. Try it whenever the browser has share;
+    // fall back to a download only if it actually fails.
+    if (typeof navigator.share === 'function') {
+      try {
+        const file = new File([json], filename, { type: 'application/json' });
         await navigator.share({ files: [file], title: 'Sandwich backup' });
         setStatus('Backup shared — saved wherever you chose.');
         return;
+      } catch (err) {
+        if ((err as Error).name === 'AbortError') return; // user cancelled the sheet
+        // otherwise fall through to a plain download
       }
-    } catch (err) {
-      if ((err as Error).name === 'AbortError') return; // user cancelled the sheet
-      // otherwise fall through to a plain download
     }
 
     // Fallback: download to the browser's default location.
