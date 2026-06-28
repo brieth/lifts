@@ -70,11 +70,10 @@ export function muscleFor(exerciseId: string): MuscleGroup | null {
   return MUSCLE[exerciseId] ?? null;
 }
 
-/** Monday 00:00 of the calendar week containing `d` (local time). */
+/** Sunday 00:00 of the calendar week (Sun–Sat) containing `d` (local time). */
 export function weekStart(d: Date): Date {
   const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  const dow = (x.getDay() + 6) % 7; // Mon = 0 … Sun = 6
-  x.setDate(x.getDate() - dow);
+  x.setDate(x.getDate() - x.getDay()); // getDay(): Sun = 0 … Sat = 6
   return x;
 }
 
