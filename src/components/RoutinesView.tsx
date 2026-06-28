@@ -10,16 +10,15 @@ export function RoutinesView() {
   async function handleExport() {
     const json = exportData();
     const stamp = new Date().toISOString().slice(0, 10);
-    const filename = `sandwich-${stamp}.json`;
 
-    // Native share sheet (Save to Files, Google Drive, AirDrop, Mail…) — lets
-    // you send the backup anywhere. Try it whenever the browser has share;
-    // fall back to a download only if it actually fails.
-    if (typeof navigator.share === 'function') {
+    // Native share sheet (Drive, Files, Gmail…) — lets you send the backup
+    // anywhere. Android only allows a fixed list of file types, and it checks
+    // the extension matches the MIME type, so we share a .txt/text-plain file
+    // (the contents are still JSON; Import reads it back fine).
+    const shareFile = new File([json], `sandwich-${stamp}.txt`, { type: 'text/plain' });
+    if (typeof navigator.canShare === 'function' && navigator.canShare({ files: [shareFile] })) {
       try {
-        // text/plain so Android's Web Share allowlist accepts it; .json name kept.
-        const file = new File([json], filename, { type: 'text/plain' });
-        await navigator.share({ files: [file], title: 'Sandwich backup' });
+        await navigator.share({ files: [shareFile], title: 'Sandwich backup' });
         setStatus('Backup shared — saved wherever you chose.');
         return;
       } catch (err) {
@@ -33,7 +32,7 @@ export function RoutinesView() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = filename;
+    a.download = `sandwich-${stamp}.json`;
     a.click();
     URL.revokeObjectURL(url);
     setStatus('Backup downloaded — move it to Drive/Files to keep it safe.');
@@ -137,7 +136,7 @@ export function RoutinesView() {
       <input
         ref={fileInput}
         type="file"
-        accept="application/json,.json"
+        accept="application/json,.json,text/plain,.txt"
         hidden
         onChange={(e) => {
           const f = e.target.files?.[0];
