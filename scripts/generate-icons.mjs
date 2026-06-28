@@ -29,28 +29,36 @@ function rect(px, size, x0, y0, x1, y1, color) {
   for (let y = b; y < d; y++) for (let x = a; x < c; x++) setPx(px, size, x, y, color);
 }
 
-// The original (full-resolution) dumbbell with a 2-step bun above and below.
-// Bun step 1 = plate width (0.2–0.8), step 2 = bar width (0.3–0.7). Monochrome.
+// Fill an ellipse. half: 0 = full, -1 = top half only, 1 = bottom half only.
+function ellipse(px, size, cx, cy, rx, ry, color, half = 0) {
+  const a = cx * size,
+    b = cy * size,
+    RX = rx * size,
+    RY = ry * size;
+  for (let y = Math.floor(b - RY); y <= Math.ceil(b + RY); y++) {
+    if (half === -1 && y > b) continue;
+    if (half === 1 && y < b) continue;
+    for (let x = Math.floor(a - RX); x <= Math.ceil(a + RX); x++) {
+      const dx = (x - a) / RX,
+        dy = (y - b) / RY;
+      if (dx * dx + dy * dy <= 1) setPx(px, size, x, y, color);
+    }
+  }
+}
+
+// Simple monochrome logo: a barbell sandwiched between a top and bottom bun.
 function drawIcon(size) {
   const px = new Uint8Array(size * size * 4);
-  rect(px, size, 0, 0, 1, 1, TEAL); // background
+  rect(px, size, 0, 0, 1, 1, TEAL); // teal background
 
-  // Bun built from square blocks (1 unit = 0.05 wide AND tall). Base step is
-  // height 2, narrow top step is height 1, inset by 1 unit per side. The gap to
-  // the dumbbell (top plate at 0.36) is exactly 1 unit (0.05).
-  // top bun
-  rect(px, size, 0.2, 0.21, 0.8, 0.31, INK); // base (height 2)
-  rect(px, size, 0.25, 0.16, 0.75, 0.21, INK); // top (height 1)
-  // bottom bun — mirror (bottom plate at 0.64, gap 0.05)
-  rect(px, size, 0.2, 0.69, 0.8, 0.79, INK); // base (height 2)
-  rect(px, size, 0.25, 0.79, 0.75, 0.84, INK); // top (height 1)
+  // buns — smooth domes, flat sides facing the barbell
+  ellipse(px, size, 0.5, 0.42, 0.33, 0.18, INK, -1); // top bun
+  ellipse(px, size, 0.5, 0.58, 0.33, 0.18, INK, 1); // bottom bun
 
-  // the dumbbell — each weight mirrored about its own center (big plate inboard)
-  rect(px, size, 0.3, 0.46, 0.7, 0.54, INK); // bar
-  rect(px, size, 0.2, 0.41, 0.25, 0.59, INK); // left outer plate (short, narrow)
-  rect(px, size, 0.25, 0.36, 0.33, 0.64, INK); // left inner plate (tall, wide)
-  rect(px, size, 0.67, 0.36, 0.75, 0.64, INK); // right inner plate (tall, wide)
-  rect(px, size, 0.75, 0.41, 0.8, 0.59, INK); // right outer plate (short, narrow)
+  // barbell — long bar with a plate at each end (bar ends protrude)
+  rect(px, size, 0.22, 0.485, 0.78, 0.515, INK); // bar
+  ellipse(px, size, 0.31, 0.5, 0.04, 0.07, INK); // left plate
+  ellipse(px, size, 0.69, 0.5, 0.04, 0.07, INK); // right plate
 
   return px;
 }
