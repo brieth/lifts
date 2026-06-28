@@ -38,7 +38,7 @@ export function RoutinesView() {
   return (
     <div className="view">
       <div className="brand">
-        <img className="brand-logo" src={`${import.meta.env.BASE_URL}icon-512.png?v=10`} alt="Sandwich logo" />
+        <img className="brand-logo" src={`${import.meta.env.BASE_URL}icon-512.png?v=11`} alt="Sandwich logo" />
         <span className="brand-name">Sandwich</span>
       </div>
 
