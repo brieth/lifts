@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../store';
 import { exerciseHistory } from '../lib/stats';
-import { isGymDependent, sessionsForExercise } from '../lib/equipment';
+import { sessionsForExercise } from '../lib/equipment';
 import { LineChart } from './LineChart';
 
 type Metric = 'best1RM' | 'volume';
@@ -38,7 +38,6 @@ export function ProgressView() {
   const history = current ? exerciseHistory(sub, current) : [];
   const values = history.map((p) => p[metric]);
   const labels = history.map((p) => new Date(p.date).toLocaleDateString());
-  const gymScoped = current ? isGymDependent(current) : false;
 
   return (
     <div className="view">
@@ -72,12 +71,6 @@ export function ProgressView() {
           </option>
         ))}
       </select>
-
-      {gymScoped && (
-        <p className="muted small gym-note">
-          Cable/machine — showing {data.gyms.find((g) => g.id === data.currentGymId)?.name}
-        </p>
-      )}
 
       <div className="metric-toggle">
         {(Object.keys(METRIC_LABELS) as Metric[]).map((m) => (
