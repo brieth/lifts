@@ -37,11 +37,6 @@ export function RoutinesView() {
 
   return (
     <div className="view">
-      <div className="brand">
-        <img className="brand-logo" src={`${import.meta.env.BASE_URL}icon-512.png?v=11`} alt="Sandwich logo" />
-        <span className="brand-name">Sandwich</span>
-      </div>
-
       <h1>Routine</h1>
 
       <div className="routine-detail-list">

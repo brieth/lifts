@@ -35,8 +35,7 @@ function roundedRect(px, size, x0, y0, x1, y1, r, color) {
     ay = y0 * size,
     bx = x1 * size,
     by = y1 * size,
-    // never let the radius exceed half the shorter side
-    R = Math.min(r * size, (bx - ax) / 2, (by - ay) / 2);
+    R = r * size;
   for (let y = Math.floor(ay); y < Math.ceil(by); y++) {
     for (let x = Math.floor(ax); x < Math.ceil(bx); x++) {
       // distance to the nearest point of the inner (corner-clamped) rectangle
@@ -81,15 +80,15 @@ function drawIcon(size) {
   roundedRect(px, size, 0.2, 0.66, 0.8, 0.8, R, INK); // bottom bun
 
   // bar — slightly thicker rounded bar through the middle
-  // bar stub past the outer plate is one plate-width (0.05): ends at 0.15
+  // ends extend past the outer plate by the small plate's non-overlapping
+  // (exposed) thickness: 0.05 (it spans 0.2–0.25 before the inner plate begins)
   roundedRect(px, size, 0.15, 0.468, 0.85, 0.532, R, INK);
 
-  // tiered plates — all the same width (0.05), sitting side by side (no overlap):
-  // tall inner plate then shorter outer plate, outer edge (0.2) aligned to the bun.
-  // [centre-x, x-half-width, y-half-height].
+  // tiered plates — tall inner block + shorter outer block, touching (no gap)
+  // and sitting near the bar ends. [centre-x, x-half-width, y-half-height].
   const tiers = [
-    [0.275, 0.025, 0.12], // inner (tall)  spans 0.25–0.30
-    [0.225, 0.025, 0.078], // outer (short) spans 0.20–0.25
+    [0.3, 0.05, 0.12], // inner (tall)
+    [0.24, 0.04, 0.078], // outer (short); outer edge (0.2) aligns with the bun
   ];
   for (const [cx, hw, hh] of tiers) {
     roundedRect(px, size, cx - hw, 0.5 - hh, cx + hw, 0.5 + hh, R, INK); // left
