@@ -17,7 +17,8 @@ export function RoutinesView() {
     // fall back to a download only if it actually fails.
     if (typeof navigator.share === 'function') {
       try {
-        const file = new File([json], filename, { type: 'application/json' });
+        // text/plain so Android's Web Share allowlist accepts it; .json name kept.
+        const file = new File([json], filename, { type: 'text/plain' });
         await navigator.share({ files: [file], title: 'Sandwich backup' });
         setStatus('Backup shared — saved wherever you chose.');
         return;
