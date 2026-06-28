@@ -80,8 +80,9 @@ function drawIcon(size) {
   roundedRect(px, size, 0.2, 0.66, 0.8, 0.8, R, INK); // bottom bun
 
   // bar — slightly thicker rounded bar through the middle
-  // ends extend past the outer plate by one small-plate thickness (0.08)
-  roundedRect(px, size, 0.12, 0.468, 0.88, 0.532, R, INK);
+  // ends extend past the outer plate by the small plate's non-overlapping
+  // (exposed) thickness: 0.05 (it spans 0.2–0.25 before the inner plate begins)
+  roundedRect(px, size, 0.15, 0.468, 0.85, 0.532, R, INK);
 
   // tiered plates — tall inner block + shorter outer block, touching (no gap)
   // and sitting near the bar ends. [centre-x, x-half-width, y-half-height].
