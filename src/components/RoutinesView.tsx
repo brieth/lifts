@@ -11,31 +11,18 @@ export function RoutinesView() {
     const json = exportData();
     const stamp = new Date().toISOString().slice(0, 10);
 
-    // Native share sheet (Drive, Files, Gmail…) — lets you send the backup
-    // anywhere. Android only allows a fixed list of file types, and it checks
-    // the extension matches the MIME type, so we share a .txt/text-plain file
-    // (the contents are still JSON; Import reads it back fine).
-    const shareFile = new File([json], `sandwich-${stamp}.txt`, { type: 'text/plain' });
-    if (typeof navigator.canShare === 'function' && navigator.canShare({ files: [shareFile] })) {
-      try {
-        await navigator.share({ files: [shareFile], title: 'Sandwich backup' });
-        setStatus('Backup shared — saved wherever you chose.');
-        return;
-      } catch (err) {
-        if ((err as Error).name === 'AbortError') return; // user cancelled the sheet
-        // otherwise fall through to a plain download
-      }
+    // Open the native share sheet (Drive, Files, Gmail…). Chrome's Web Share
+    // checks the file extension matches the MIME type and only allows a fixed
+    // list of types, so we share a .txt/text-plain file — the contents are
+    // still JSON and Import reads it back fine.
+    const file = new File([json], `sandwich-${stamp}.txt`, { type: 'text/plain' });
+    try {
+      await navigator.share({ files: [file], title: 'Sandwich backup' });
+      setStatus('Backup shared — saved wherever you chose.');
+    } catch (err) {
+      if ((err as Error).name === 'AbortError') return; // user cancelled the sheet
+      setStatus('Could not open the share sheet on this device.');
     }
-
-    // Fallback: download to the browser's default location.
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `sandwich-${stamp}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    setStatus('Backup downloaded — move it to Drive/Files to keep it safe.');
   }
 
   function handleImportFile(file: File) {
