@@ -51,14 +51,26 @@ function drawIcon(size) {
   const px = new Uint8Array(size * size * 4);
   rect(px, size, 0, 0, 1, 1, TEAL); // teal background
 
-  // buns — small smooth domes, pushed out to leave room for the barbell
-  ellipse(px, size, 0.5, 0.32, 0.27, 0.12, INK, -1); // top bun
-  ellipse(px, size, 0.5, 0.68, 0.27, 0.12, INK, 1); // bottom bun
+  // buns — fully rounded ovals (no sharp corners), top and bottom
+  ellipse(px, size, 0.5, 0.265, 0.27, 0.1, INK); // top bun
+  ellipse(px, size, 0.5, 0.735, 0.27, 0.1, INK); // bottom bun
 
-  // barbell — big: long thick bar with a chunky plate at each end
-  rect(px, size, 0.12, 0.465, 0.88, 0.535, INK); // bar
-  ellipse(px, size, 0.32, 0.5, 0.065, 0.135, INK); // left plate
-  ellipse(px, size, 0.68, 0.5, 0.065, 0.135, INK); // right plate
+  // bar — runs through the middle with rounded ends (caps)
+  const barHalf = 0.028;
+  rect(px, size, 0.13, 0.5 - barHalf, 0.87, 0.5 + barHalf, INK);
+  ellipse(px, size, 0.13, 0.5, barHalf, barHalf, INK); // left rounded end
+  ellipse(px, size, 0.87, 0.5, barHalf, barHalf, INK); // right rounded end
+
+  // tiered plates — a big inner disc and a smaller outer disc on each side,
+  // separated by a sliver of bar so they read as two stacked plates.
+  const tiers = [
+    [0.35, 0.05, 0.14], // inner (big)
+    [0.25, 0.042, 0.092], // outer (small)
+  ];
+  for (const [cx, rx, ry] of tiers) {
+    ellipse(px, size, cx, 0.5, rx, ry, INK); // left side
+    ellipse(px, size, 1 - cx, 0.5, rx, ry, INK); // mirrored right side
+  }
 
   return px;
 }
