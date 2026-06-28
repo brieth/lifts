@@ -17,7 +17,9 @@ export function RoutinesView() {
     // still JSON and Import reads it back fine.
     const file = new File([json], `sandwich-${stamp}.txt`, { type: 'text/plain' });
     try {
-      await navigator.share({ files: [file], title: 'Sandwich backup' });
+      // No title — some targets (e.g. Drive) use it as the upload name and
+      // would drop the real filename. Let the file's own name come through.
+      await navigator.share({ files: [file] });
       setStatus('Backup shared — saved wherever you chose.');
     } catch (err) {
       if ((err as Error).name === 'AbortError') return; // user cancelled the sheet
