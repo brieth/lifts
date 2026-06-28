@@ -86,7 +86,7 @@ function drawIcon(size) {
   // and sitting near the bar ends. [centre-x, x-half-width, y-half-height].
   const tiers = [
     [0.3, 0.05, 0.12], // inner (tall)
-    [0.21, 0.04, 0.078], // outer (short), abuts the inner block
+    [0.24, 0.04, 0.078], // outer (short); outer edge (0.2) aligns with the bun
   ];
   for (const [cx, hw, hh] of tiers) {
     roundedRect(px, size, cx - hw, 0.5 - hh, cx + hw, 0.5 + hh, R, INK); // left
