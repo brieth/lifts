@@ -25,7 +25,7 @@ const CATEGORY: Record<string, Category> = {
   // heavy compounds
   'barbell-incline-bench-press': 'compound',
   'barbell-bench-press': 'compound',
-  'barbell-decline-press': 'compound',
+  'barbell-decline-bench-press': 'compound',
   'machine-leg-press': 'compound',
   // pulls
   'v-bar-pulldown': 'pull',

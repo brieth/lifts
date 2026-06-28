@@ -13,7 +13,7 @@ export function RoutinesView() {
     const a = document.createElement('a');
     const stamp = new Date().toISOString().slice(0, 10);
     a.href = url;
-    a.download = `lifts-backup-${stamp}.json`;
+    a.download = `sandwich-backup-${stamp}.json`;
     a.click();
     URL.revokeObjectURL(url);
     setStatus('Backup downloaded. Keep it somewhere safe (Files, Drive, email…).');
@@ -23,7 +23,7 @@ export function RoutinesView() {
     const reader = new FileReader();
     reader.onload = () => {
       const ok = importData(String(reader.result));
-      setStatus(ok ? 'Backup restored ✓' : 'That file could not be read as a lifts backup.');
+      setStatus(ok ? 'Backup restored ✓' : 'That file could not be read as a Sandwich backup.');
     };
     reader.readAsText(file);
   }

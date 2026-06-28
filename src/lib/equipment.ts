@@ -11,7 +11,7 @@ const EQUIPMENT: Record<string, Equipment> = {
   // free weights — consistent anywhere (gym-independent)
   'barbell-incline-bench-press': 'barbell',
   'barbell-bench-press': 'barbell',
-  'barbell-decline-press': 'barbell',
+  'barbell-decline-bench-press': 'barbell',
   'dumbbell-lateral-raise': 'dumbbell',
   'dumbbell-skullcrusher': 'dumbbell',
   'dumbbell-kickback': 'dumbbell',
