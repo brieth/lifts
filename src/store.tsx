@@ -19,6 +19,15 @@ function uid(): string {
 
 const DEFAULT_GYM: Gym = { id: 'gym-default', name: 'My Gym' };
 
+// Old exercise id -> new id, so renamed exercises keep their logged history.
+const ID_RENAMES: Record<string, string> = {
+  'barbell-decline-press': 'barbell-decline-bench-press',
+  'cable-upright-row-straight-bar': 'cable-upright-row',
+  'cable-bicep-curl-straight-bar': 'cable-bicep-curl',
+  'chest-supported-dumbbell-kickback': 'dumbbell-kickback',
+};
+const renameId = (id: string): string => ID_RENAMES[id] ?? id;
+
 function load(): AppData {
   const fresh: AppData = {
     exercises: SEED.exercises,
@@ -36,22 +45,27 @@ function load(): AppData {
     // while preserving the user's logged sessions and any custom exercises.
     const exercises: Exercise[] = [...SEED.exercises];
     for (const ex of stored.exercises ?? []) {
+      if (ID_RENAMES[ex.id]) continue; // renamed -> already a seed exercise
       if (!exercises.some((e) => e.id === ex.id)) exercises.push(ex);
     }
     const gyms = stored.gyms?.length ? stored.gyms : [DEFAULT_GYM];
     const currentGymId = stored.currentGymId ?? gyms[0].id;
-    // Backfill a gym on any pre-existing sessions so gym-dependent history works.
-    const sessions = (stored.sessions ?? []).map((s) =>
-      s.gymId ? s : { ...s, gymId: currentGymId },
-    );
-    // Refresh menu (leg) slot options in an in-progress workout to the current list.
+    // Backfill a gym on pre-existing sessions, and migrate any renamed exercise ids.
+    const sessions = (stored.sessions ?? []).map((s) => ({
+      ...s,
+      gymId: s.gymId ?? currentGymId,
+      exercises: s.exercises.map((e) => ({ ...e, exerciseId: renameId(e.exerciseId) })),
+    }));
+    // Refresh leg-slot options + migrate renamed ids in an in-progress workout.
     let activeSession = stored.activeSession ?? null;
     if (activeSession) {
       activeSession = {
         ...activeSession,
-        exercises: activeSession.exercises.map((e) =>
-          e.options ? { ...e, options: LEG_OPTION_IDS } : e,
-        ),
+        exercises: activeSession.exercises.map((e) => ({
+          ...e,
+          exerciseId: renameId(e.exerciseId),
+          options: e.options ? LEG_OPTION_IDS : e.options,
+        })),
       };
     }
     return {
