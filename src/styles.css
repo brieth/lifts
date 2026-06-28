@@ -364,6 +364,7 @@ body {
 .modal {
   background: var(--surface);
   border: 1px solid var(--border);
+  border-bottom: none;
   border-radius: var(--radius) var(--radius) 0 0;
   width: 100%;
   max-width: 520px;
@@ -758,8 +759,14 @@ body {
 }
 .linechart {
   width: 100%;
-  height: 160px;
+  height: auto;
+  aspect-ratio: 320 / 180;
   display: block;
+}
+.chart-axis {
+  font-family: inherit;
+  font-size: 9px;
+  fill: var(--muted);
 }
 .chart-empty {
   color: var(--muted);

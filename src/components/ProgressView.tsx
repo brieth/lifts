@@ -15,12 +15,12 @@ export function ProgressView() {
   const { data, exerciseName, setCurrentGym } = useStore();
   const [metric, setMetric] = useState<Metric>('best1RM');
 
-  // exercises that have any logged data
+  // exercises that have any logged data, alphabetical
   const tracked = useMemo(() => {
     const ids = new Set<string>();
     for (const s of data.sessions) for (const e of s.exercises) ids.add(e.exerciseId);
-    return [...ids];
-  }, [data.sessions]);
+    return [...ids].sort((a, b) => exerciseName(a).localeCompare(exerciseName(b)));
+  }, [data.sessions, exerciseName]);
 
   const [selected, setSelected] = useState<string | null>(null);
   const current = selected ?? tracked[0] ?? null;
