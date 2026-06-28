@@ -1,11 +1,13 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../store';
-import { MUSCLE_GROUPS, weekStart, weeklyMuscleSets } from '../lib/muscles';
+import { MUSCLE_GROUPS, weekStart, weeklyMuscleTally } from '../lib/muscles';
 
 // Bar is full at 20 sets (top of the ~10–20 sets/week effective range); the
 // tick sits at 10 (the bottom) so you can see at a glance where each muscle lands.
 const SET_SCALE = 20;
 const TICK_AT = 10;
+
+const fmt = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(1));
 
 export function WeeklyMuscles() {
   const { data } = useStore();
@@ -17,12 +19,18 @@ export function WeeklyMuscles() {
     return s;
   }, [offset]);
 
-  const sets = useMemo(() => weeklyMuscleSets(data.sessions, start), [data.sessions, start]);
+  // The active session only contributes to the current week's planned/logged.
+  const active = offset === 0 ? data.activeSession : null;
+  const tally = useMemo(
+    () => weeklyMuscleTally(data.sessions, start, active),
+    [data.sessions, start, active],
+  );
 
   const end = new Date(start);
   end.setDate(end.getDate() + 6);
-  const fmt = (d: Date) => d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-  const total = MUSCLE_GROUPS.reduce((a, g) => a + sets[g], 0);
+  const dateFmt = (d: Date) => d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  const totalLogged = MUSCLE_GROUPS.reduce((a, g) => a + tally[g].logged, 0);
+  const totalPlanned = MUSCLE_GROUPS.reduce((a, g) => a + tally[g].planned, 0);
 
   return (
     <div className="weekly">
@@ -32,7 +40,7 @@ export function WeeklyMuscles() {
         </button>
         <div className="week-range">
           <span className="week-dates">
-            {fmt(start)} – {fmt(end)}
+            {dateFmt(start)} – {dateFmt(end)}
           </span>
           {offset === 0 && <span className="week-tag">This week</span>}
         </div>
@@ -46,22 +54,30 @@ export function WeeklyMuscles() {
         </button>
       </div>
 
-      {total === 0 ? (
+      {totalLogged === 0 && totalPlanned === 0 ? (
         <p className="muted small weekly-empty">No sets logged this week.</p>
       ) : (
         <div className="muscle-list">
           {MUSCLE_GROUPS.map((g) => {
-            const n = sets[g];
-            const pct = Math.min(n / SET_SCALE, 1) * 100;
+            const { logged, planned } = tally[g];
+            const tealW = Math.min(logged, SET_SCALE);
+            const totalW = Math.min(logged + planned, SET_SCALE);
+            const tealPct = (tealW / SET_SCALE) * 100;
+            const whitePct = ((totalW - tealW) / SET_SCALE) * 100;
             return (
               <div key={g} className="muscle-row">
                 <span className="muscle-name">{g}</span>
                 <div className="muscle-bar-track">
-                  <div className="muscle-bar-fill" style={{ width: `${pct}%` }} />
+                  <div className="muscle-bar-fill" style={{ width: `${tealPct}%` }} />
+                  <div
+                    className="muscle-bar-planned"
+                    style={{ left: `${tealPct}%`, width: `${whitePct}%` }}
+                  />
                   <span className="muscle-bar-tick" style={{ left: `${(TICK_AT / SET_SCALE) * 100}%` }} />
                 </div>
                 <span className="muscle-sets">
-                  <strong>{n}</strong>
+                  <strong>{fmt(logged)}</strong>
+                  {planned > 0 && <span className="muscle-planned">+{fmt(planned)}</span>}
                 </span>
               </div>
             );
@@ -70,8 +86,9 @@ export function WeeklyMuscles() {
       )}
 
       <p className="muted small weekly-note">
-        Hard sets per muscle this week ({total} total). Bar spans the ~10–20 sets/week range; the tick
-        marks 10.
+        Hard sets per muscle this week ({fmt(totalLogged)} logged
+        {totalPlanned > 0 ? `, +${fmt(totalPlanned)} planned` : ''}). Secondary movers count as half.
+        Bar spans the ~10–20 sets/week range; the tick marks 10.
       </p>
     </div>
   );

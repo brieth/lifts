@@ -70,6 +70,26 @@ export function muscleFor(exerciseId: string): MuscleGroup | null {
   return MUSCLE[exerciseId] ?? null;
 }
 
+/**
+ * Secondary movers, credited at HALF a set each. Presses drive the triceps;
+ * pulls drive the biceps; rows additionally hit the rear delts. (Front delt is
+ * a secondary on every press but we don't track it, so it's omitted.)
+ */
+const SECONDARY: Record<string, MuscleGroup[]> = {
+  'barbell-incline-bench-press': ['Triceps'],
+  'barbell-bench-press': ['Triceps'],
+  'barbell-decline-bench-press': ['Triceps'],
+  'v-bar-pulldown': ['Biceps'],
+  'lat-pulldown': ['Biceps'],
+  'reverse-grip-pull-down': ['Biceps'],
+  'cable-row': ['Biceps', 'Rear Delt'],
+  'shotgun-row': ['Biceps', 'Rear Delt'],
+};
+
+export function secondaryFor(exerciseId: string): MuscleGroup[] {
+  return SECONDARY[exerciseId] ?? [];
+}
+
 /** Sunday 00:00 of the calendar week (Sun–Sat) containing `d` (local time). */
 export function weekStart(d: Date): Date {
   const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -77,23 +97,63 @@ export function weekStart(d: Date): Date {
   return x;
 }
 
-/** Hard (completed) sets per muscle group for the calendar week starting `start`. */
-export function weeklyMuscleSets(sessions: Session[], start: Date): Record<MuscleGroup, number> {
+export interface MuscleTally {
+  /** Completed (done) sets, full credit for primary + 0.5 per secondary. */
+  logged: number;
+  /** Active-session sets not yet done — the planned remainder for today. */
+  planned: number;
+}
+
+type Tally = Record<MuscleGroup, MuscleTally>;
+
+function blankTally(): Tally {
+  return Object.fromEntries(MUSCLE_GROUPS.map((g) => [g, { logged: 0, planned: 0 }])) as Tally;
+}
+
+function credit(out: Tally, exerciseId: string, key: keyof MuscleTally, sets: number): void {
+  if (sets <= 0) return;
+  const primary = muscleFor(exerciseId);
+  if (!primary) return;
+  out[primary][key] += sets;
+  for (const m of secondaryFor(exerciseId)) out[m][key] += sets * 0.5;
+}
+
+/**
+ * Hard sets per muscle for the calendar week starting `start`. Completed sets
+ * (from finished sessions, plus done sets in the active session) count as
+ * `logged`; the active session's not-yet-done sets count as `planned`, so the
+ * bars can update live during a workout.
+ */
+export function weeklyMuscleTally(
+  sessions: Session[],
+  start: Date,
+  active?: Session | null,
+): Tally {
   const end = new Date(start);
   end.setDate(end.getDate() + 7);
+  const inWeek = (iso: string) => {
+    const d = new Date(iso);
+    return d >= start && d < end;
+  };
 
-  const out = Object.fromEntries(MUSCLE_GROUPS.map((g) => [g, 0])) as Record<MuscleGroup, number>;
+  const out = blankTally();
 
   for (const s of sessions) {
-    const d = new Date(s.date);
-    if (d < start || d >= end) continue;
+    if (!inWeek(s.date)) continue;
     for (const ex of s.exercises) {
-      const m = muscleFor(ex.exerciseId);
-      if (!m) continue;
-      for (const set of ex.sets) {
-        if (set.done && set.weight > 0 && set.reps > 0) out[m] += 1;
-      }
+      const done = ex.sets.filter((st) => st.done && st.weight > 0 && st.reps > 0).length;
+      credit(out, ex.exerciseId, 'logged', done);
     }
   }
+
+  if (active && inWeek(active.date)) {
+    for (const ex of active.exercises) {
+      const done = ex.sets.filter((st) => st.done && st.weight > 0 && st.reps > 0).length;
+      const planned = ex.sets.filter((st) => !st.done).length;
+      credit(out, ex.exerciseId, 'logged', done);
+      credit(out, ex.exerciseId, 'planned', planned);
+    }
+  }
+
   return out;
 }
