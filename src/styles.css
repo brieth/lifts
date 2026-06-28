@@ -942,3 +942,100 @@ body {
   border-radius: 50%;
   background: var(--accent);
 }
+
+/* Weekly muscle-group module (Progress tab) */
+.weekly {
+  margin-top: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+}
+.week-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.week-arrow {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  width: 36px;
+  height: 32px;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  font-family: inherit;
+}
+.week-arrow:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.week-range {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.week-dates {
+  font-size: 14px;
+  font-weight: 600;
+}
+.week-tag {
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.muscle-list {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+.muscle-row {
+  display: grid;
+  grid-template-columns: 74px 1fr 26px;
+  align-items: center;
+  gap: 10px;
+}
+.muscle-name {
+  font-size: 13px;
+  color: var(--muted);
+}
+.muscle-bar-track {
+  position: relative;
+  height: 9px;
+  background: var(--surface-2);
+  border-radius: 5px;
+  overflow: hidden;
+}
+.muscle-bar-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: var(--accent);
+  border-radius: 5px;
+}
+.muscle-bar-tick {
+  position: absolute;
+  top: -1px;
+  width: 2px;
+  height: 11px;
+  background: var(--muted);
+  opacity: 0.6;
+  transform: translateX(-1px);
+}
+.muscle-sets {
+  font-size: 14px;
+  text-align: right;
+}
+.weekly-empty {
+  margin: 4px 0 0;
+}
+.weekly-note {
+  margin: 14px 0 0;
+}
