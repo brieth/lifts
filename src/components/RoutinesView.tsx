@@ -13,7 +13,7 @@ export function RoutinesView() {
     const a = document.createElement('a');
     const stamp = new Date().toISOString().slice(0, 10);
     a.href = url;
-    a.download = `sandwich-backup-${stamp}.json`;
+    a.download = `sandwich-${stamp}.json`;
     a.click();
     URL.revokeObjectURL(url);
     setStatus('Backup downloaded. Keep it somewhere safe (Files, Drive, email…).');
