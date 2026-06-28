@@ -71,7 +71,7 @@ const ROUTINE_DEFS: RoutineDef[] = [
     id: '3a',
     name: '3A',
     exercises: [
-      ['barbell-decline-press', 'Barbell Decline Press'],
+      ['barbell-decline-press', 'Barbell Decline Bench Press'],
       ['reverse-grip-pull-down', 'Reverse Grip Pull Down'],
       ['machine-leg-press', 'Machine Leg Press'],
       ['dumbbell-lateral-raise', 'Dumbbell Lateral Raise'],
