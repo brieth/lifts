@@ -51,14 +51,14 @@ function drawIcon(size) {
   const px = new Uint8Array(size * size * 4);
   rect(px, size, 0, 0, 1, 1, TEAL); // teal background
 
-  // buns — smooth domes, flat sides facing the barbell
-  ellipse(px, size, 0.5, 0.42, 0.33, 0.18, INK, -1); // top bun
-  ellipse(px, size, 0.5, 0.58, 0.33, 0.18, INK, 1); // bottom bun
+  // buns — small smooth domes, pushed out to leave room for the barbell
+  ellipse(px, size, 0.5, 0.32, 0.27, 0.12, INK, -1); // top bun
+  ellipse(px, size, 0.5, 0.68, 0.27, 0.12, INK, 1); // bottom bun
 
-  // barbell — long bar with a plate at each end (bar ends protrude)
-  rect(px, size, 0.22, 0.485, 0.78, 0.515, INK); // bar
-  ellipse(px, size, 0.31, 0.5, 0.04, 0.07, INK); // left plate
-  ellipse(px, size, 0.69, 0.5, 0.04, 0.07, INK); // right plate
+  // barbell — big: long thick bar with a chunky plate at each end
+  rect(px, size, 0.12, 0.465, 0.88, 0.535, INK); // bar
+  ellipse(px, size, 0.32, 0.5, 0.065, 0.135, INK); // left plate
+  ellipse(px, size, 0.68, 0.5, 0.065, 0.135, INK); // right plate
 
   return px;
 }

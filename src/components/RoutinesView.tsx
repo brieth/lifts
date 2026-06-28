@@ -20,7 +20,6 @@ export function RoutinesView() {
       // No title — some targets (e.g. Drive) use it as the upload name and
       // would drop the real filename. Let the file's own name come through.
       await navigator.share({ files: [file] });
-      setStatus('Backup shared — saved wherever you chose.');
     } catch (err) {
       if ((err as Error).name === 'AbortError') return; // user cancelled the sheet
       setStatus('Could not open the share sheet on this device.');
