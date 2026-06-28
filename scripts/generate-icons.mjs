@@ -72,12 +72,15 @@ function drawIcon(size) {
 
   // Everything is a rounded rectangle.
 
+  // One uniform corner radius for every rounded rectangle in the mark.
+  const R = 0.03;
+
   // buns — top and bottom rounded bars, hugging close to the barbell
-  roundedRect(px, size, 0.2, 0.2, 0.8, 0.34, 0.07, INK); // top bun
-  roundedRect(px, size, 0.2, 0.66, 0.8, 0.8, 0.07, INK); // bottom bun
+  roundedRect(px, size, 0.2, 0.2, 0.8, 0.34, R, INK); // top bun
+  roundedRect(px, size, 0.2, 0.66, 0.8, 0.8, R, INK); // bottom bun
 
   // bar — slightly thicker rounded bar through the middle
-  roundedRect(px, size, 0.1, 0.468, 0.9, 0.532, 0.032, INK);
+  roundedRect(px, size, 0.1, 0.468, 0.9, 0.532, R, INK);
 
   // tiered plates — tall inner block + shorter outer block, touching (no gap)
   // and sitting near the bar ends. [centre-x, x-half-width, y-half-height].
@@ -86,8 +89,8 @@ function drawIcon(size) {
     [0.21, 0.04, 0.078], // outer (short), abuts the inner block
   ];
   for (const [cx, hw, hh] of tiers) {
-    roundedRect(px, size, cx - hw, 0.5 - hh, cx + hw, 0.5 + hh, 0.025, INK); // left
-    roundedRect(px, size, 1 - cx - hw, 0.5 - hh, 1 - cx + hw, 0.5 + hh, 0.025, INK); // right
+    roundedRect(px, size, cx - hw, 0.5 - hh, cx + hw, 0.5 + hh, R, INK); // left
+    roundedRect(px, size, 1 - cx - hw, 0.5 - hh, 1 - cx + hw, 0.5 + hh, R, INK); // right
   }
 
   return px;
