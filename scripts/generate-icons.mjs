@@ -29,6 +29,25 @@ function rect(px, size, x0, y0, x1, y1, color) {
   for (let y = b; y < d; y++) for (let x = a; x < c; x++) setPx(px, size, x, y, color);
 }
 
+// Fill a rounded rectangle (all coords are fractions of the canvas).
+function roundedRect(px, size, x0, y0, x1, y1, r, color) {
+  const ax = x0 * size,
+    ay = y0 * size,
+    bx = x1 * size,
+    by = y1 * size,
+    R = r * size;
+  for (let y = Math.floor(ay); y < Math.ceil(by); y++) {
+    for (let x = Math.floor(ax); x < Math.ceil(bx); x++) {
+      // distance to the nearest point of the inner (corner-clamped) rectangle
+      const cx = Math.min(Math.max(x, ax + R), bx - R);
+      const cy = Math.min(Math.max(y, ay + R), by - R);
+      const dx = x - cx,
+        dy = y - cy;
+      if (dx * dx + dy * dy <= R * R) setPx(px, size, x, y, color);
+    }
+  }
+}
+
 // Fill an ellipse. half: 0 = full, -1 = top half only, 1 = bottom half only.
 function ellipse(px, size, cx, cy, rx, ry, color, half = 0) {
   const a = cx * size,
@@ -51,25 +70,24 @@ function drawIcon(size) {
   const px = new Uint8Array(size * size * 4);
   rect(px, size, 0, 0, 1, 1, TEAL); // teal background
 
-  // buns — fully rounded ovals (no sharp corners), top and bottom
-  ellipse(px, size, 0.5, 0.265, 0.27, 0.1, INK); // top bun
-  ellipse(px, size, 0.5, 0.735, 0.27, 0.1, INK); // bottom bun
+  // Everything is a rounded rectangle.
 
-  // bar — runs through the middle with rounded ends (caps)
-  const barHalf = 0.028;
-  rect(px, size, 0.13, 0.5 - barHalf, 0.87, 0.5 + barHalf, INK);
-  ellipse(px, size, 0.13, 0.5, barHalf, barHalf, INK); // left rounded end
-  ellipse(px, size, 0.87, 0.5, barHalf, barHalf, INK); // right rounded end
+  // buns — top and bottom rounded bars
+  roundedRect(px, size, 0.2, 0.15, 0.8, 0.3, 0.075, INK); // top bun
+  roundedRect(px, size, 0.2, 0.7, 0.8, 0.85, 0.075, INK); // bottom bun
 
-  // tiered plates — a big inner disc and a smaller outer disc on each side,
-  // separated by a sliver of bar so they read as two stacked plates.
+  // bar — long thin rounded bar through the middle
+  roundedRect(px, size, 0.1, 0.475, 0.9, 0.525, 0.025, INK);
+
+  // tiered plates — tall inner block + shorter outer block on each side.
+  // [x-half-width, y-half-height] per tier, measured from the bar centre.
   const tiers = [
-    [0.35, 0.05, 0.14], // inner (big)
-    [0.25, 0.042, 0.092], // outer (small)
+    [0.355, 0.045, 0.115], // inner (tall)
+    [0.255, 0.038, 0.075], // outer (short)
   ];
-  for (const [cx, rx, ry] of tiers) {
-    ellipse(px, size, cx, 0.5, rx, ry, INK); // left side
-    ellipse(px, size, 1 - cx, 0.5, rx, ry, INK); // mirrored right side
+  for (const [cx, hw, hh] of tiers) {
+    roundedRect(px, size, cx - hw, 0.5 - hh, cx + hw, 0.5 + hh, 0.025, INK); // left
+    roundedRect(px, size, 1 - cx - hw, 0.5 - hh, 1 - cx + hw, 0.5 + hh, 0.025, INK); // right
   }
 
   return px;
