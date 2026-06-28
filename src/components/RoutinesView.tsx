@@ -7,16 +7,34 @@ export function RoutinesView() {
   const fileInput = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState<string | null>(null);
 
-  function handleExport() {
-    const blob = new Blob([exportData()], { type: 'application/json' });
+  async function handleExport() {
+    const json = exportData();
+    const stamp = new Date().toISOString().slice(0, 10);
+    const filename = `sandwich-${stamp}.json`;
+
+    // Native share sheet (Save to Files, Google Drive, AirDrop, Mail…) — lets
+    // you send the backup anywhere. Best on phones.
+    try {
+      const file = new File([json], filename, { type: 'application/json' });
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title: 'Sandwich backup' });
+        setStatus('Backup shared — saved wherever you chose.');
+        return;
+      }
+    } catch (err) {
+      if ((err as Error).name === 'AbortError') return; // user cancelled the sheet
+      // otherwise fall through to a plain download
+    }
+
+    // Fallback: download to the browser's default location.
+    const blob = new Blob([json], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    const stamp = new Date().toISOString().slice(0, 10);
     a.href = url;
-    a.download = `sandwich-${stamp}.json`;
+    a.download = filename;
     a.click();
     URL.revokeObjectURL(url);
-    setStatus('Backup downloaded. Keep it somewhere safe (Files, Drive, email…).');
+    setStatus('Backup downloaded — move it to Drive/Files to keep it safe.');
   }
 
   function handleImportFile(file: File) {
