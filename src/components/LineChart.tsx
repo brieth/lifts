@@ -21,14 +21,14 @@ export function LineChart({ values, mean, labels, color = '#2dd4bf' }: Props) {
 
   const W = 320;
   const H = 180;
-  // Only the left gutter is inset (for the flush-left y-axis numbers). Top/right/
-  // bottom run to the SVG edge so the only margin is the card's uniform padding;
-  // the axis labels and end dots overflow gently into that padding (svg overflow
-  // is visible). This keeps all four margins equal to the card padding.
+  // Left gutter holds the flush-left y-axis numbers. The other three insets are
+  // just enough that the axis numbers (top/bottom) and the right-most line end
+  // sit AT the SVG edge — so every side's only margin is the card's uniform
+  // padding, with nothing spilling past it.
   const padL = 22;
   const padR = 0;
-  const padT = 0;
-  const padB = 0;
+  const padT = 4;
+  const padB = 4;
 
   // Scale over both series so the mean line always fits.
   const meanNums = mean ? mean.filter((v): v is number => v != null) : [];
@@ -40,8 +40,11 @@ export function LineChart({ values, mean, labels, color = '#2dd4bf' }: Props) {
   const innerW = W - padL - padR;
   const innerH = H - padT - padB;
 
+  // The mean series may carry one extra (forward) point, so x-spacing spans the
+  // longer of the two series.
+  const count = Math.max(values.length, mean ? mean.length : 0);
   const x = (i: number) =>
-    values.length === 1 ? padL + innerW / 2 : padL + (i / (values.length - 1)) * innerW;
+    count <= 1 ? padL + innerW / 2 : padL + (i / (count - 1)) * innerW;
   const y = (v: number) => padT + innerH - ((v - min) / span) * innerH;
 
   const points = values.map((v, i) => `${x(i)},${y(v)}`).join(' ');

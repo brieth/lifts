@@ -41,12 +41,17 @@ export function ProgressView() {
   const labels = history.map((p) => new Date(p.date).toLocaleDateString());
   // The mean you were actually up against that day = mean of all PRIOR sessions
   // (lagged by one). The first session had no baseline, so it's null.
-  const meanValues = values.map((_, i) => {
+  const meanValues: (number | null)[] = values.map((_, i) => {
     if (i === 0) return null;
     let sum = 0;
     for (let k = 0; k < i; k++) sum += values[k];
     return sum / i;
   });
+  // One extra point past the last session: the current standing mean — the bar
+  // your next (not-yet-logged) workout is aiming at.
+  if (values.length) {
+    meanValues.push(values.reduce((a, b) => a + b, 0) / values.length);
+  }
 
   return (
     <div className="view">

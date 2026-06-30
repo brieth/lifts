@@ -762,7 +762,6 @@ body {
   height: auto;
   aspect-ratio: 320 / 180;
   display: block;
-  overflow: visible;
 }
 .chart-axis {
   font-family: inherit;
