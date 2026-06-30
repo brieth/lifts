@@ -2,6 +2,7 @@ interface Props {
   values: number[];
   /** Optional cumulative-mean series (same length as values), drawn in white. */
   mean?: number[];
+  /** Per-point labels — used for point tooltips only (no x-axis text). */
   labels?: string[];
   color?: string;
 }
@@ -17,10 +18,11 @@ export function LineChart({ values, mean, labels, color = '#2dd4bf' }: Props) {
 
   const W = 320;
   const H = 180;
-  const padL = 38;
-  const padR = 10;
+  // Symmetric left/right margins; the y-axis numbers sit flush-left in the gutter.
+  const padL = 22;
+  const padR = 22;
   const padT = 12;
-  const padB = 22;
+  const padB = 10;
 
   // Scale over both series so the mean line always fits.
   const all = mean && mean.length ? values.concat(mean) : values;
@@ -49,13 +51,7 @@ export function LineChart({ values, mean, labels, color = '#2dd4bf' }: Props) {
         return (
           <g key={k}>
             <line x1={padL} y1={ty} x2={W - padR} y2={ty} stroke="var(--border)" strokeWidth={1} />
-            <text
-              x={padL - 6}
-              y={ty}
-              textAnchor="end"
-              dominantBaseline="central"
-              className="chart-axis"
-            >
+            <text x={0} y={ty} textAnchor="start" dominantBaseline="central" className="chart-axis">
               {fmtNum(tv)}
             </text>
           </g>
@@ -93,19 +89,6 @@ export function LineChart({ values, mean, labels, color = '#2dd4bf' }: Props) {
           </title>
         </circle>
       ))}
-
-      {labels && labels.length > 0 && (
-        <>
-          <text x={padL} y={H - 6} textAnchor="start" className="chart-axis">
-            {labels[0]}
-          </text>
-          {labels.length > 1 && (
-            <text x={W - padR} y={H - 6} textAnchor="end" className="chart-axis">
-              {labels[labels.length - 1]}
-            </text>
-          )}
-        </>
-      )}
     </svg>
   );
 }
