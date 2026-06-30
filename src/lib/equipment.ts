@@ -16,6 +16,7 @@ const EQUIPMENT: Record<string, Equipment> = {
   'dumbbell-skullcrusher': 'dumbbell',
   'dumbbell-kickback': 'dumbbell',
   'incline-dumbbell-curl': 'dumbbell',
+  'dumbbell-spider-curl': 'dumbbell',
   // machines — gym-dependent
   'machine-leg-press': 'machine',
   'machine-lying-hamstring-curl': 'machine',

@@ -47,6 +47,7 @@ const MUSCLE: Record<string, MuscleGroup> = {
   'cable-bicep-curl': 'Biceps',
   'cable-rope-hammer-curl': 'Biceps',
   'incline-dumbbell-curl': 'Biceps',
+  'dumbbell-spider-curl': 'Biceps',
   // Legs (every leg-menu option)
   'machine-leg-press': 'Legs',
   'machine-lying-hamstring-curl': 'Legs',

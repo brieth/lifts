@@ -16,6 +16,7 @@ const DOUBLED = new Set<string>([
   'dumbbell-skullcrusher',
   'dumbbell-kickback',
   'incline-dumbbell-curl',
+  'dumbbell-spider-curl',
 ]);
 
 export function volumeMultiplier(exerciseId: string): number {
