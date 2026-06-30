@@ -1,7 +1,10 @@
 interface Props {
   values: number[];
-  /** Optional cumulative-mean series (same length as values), drawn in white. */
-  mean?: number[];
+  /**
+   * Optional mean series (same length as values), drawn in white. Entries may be
+   * null (e.g. the first session has no prior mean) and are skipped.
+   */
+  mean?: (number | null)[];
   /** Per-point labels — used for point tooltips only (no x-axis text). */
   labels?: string[];
   color?: string;
@@ -26,7 +29,8 @@ export function LineChart({ values, mean, labels, color = '#2dd4bf' }: Props) {
   const padB = 10;
 
   // Scale over both series so the mean line always fits.
-  const all = mean && mean.length ? values.concat(mean) : values;
+  const meanNums = mean ? mean.filter((v): v is number => v != null) : [];
+  const all = meanNums.length ? values.concat(meanNums) : values;
   const max = Math.max(...all);
   const min = Math.min(...all);
   const span = max - min || 1;
@@ -40,7 +44,12 @@ export function LineChart({ values, mean, labels, color = '#2dd4bf' }: Props) {
 
   const points = values.map((v, i) => `${x(i)},${y(v)}`).join(' ');
   const areaPoints = `${x(0)},${padT + innerH} ${points} ${x(values.length - 1)},${padT + innerH}`;
-  const meanPoints = mean && mean.length ? mean.map((v, i) => `${x(i)},${y(v)}`).join(' ') : '';
+  const meanPoints = mean
+    ? mean
+        .map((v, i) => (v == null ? null : `${x(i)},${y(v)}`))
+        .filter((p): p is string => p != null)
+        .join(' ')
+    : '';
 
   // horizontal gridline values (max / middle / min), relative to the data
   const ticks = max === min ? [max] : [max, (max + min) / 2, min];

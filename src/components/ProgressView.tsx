@@ -39,11 +39,13 @@ export function ProgressView() {
   const history = current ? exerciseHistory(sub, current) : [];
   const values = history.map((p) => p[metric]);
   const labels = history.map((p) => new Date(p.date).toLocaleDateString());
-  // Cumulative mean up to and including each session — the "bar you're beating".
+  // The mean you were actually up against that day = mean of all PRIOR sessions
+  // (lagged by one). The first session had no baseline, so it's null.
   const meanValues = values.map((_, i) => {
+    if (i === 0) return null;
     let sum = 0;
-    for (let k = 0; k <= i; k++) sum += values[k];
-    return sum / (i + 1);
+    for (let k = 0; k < i; k++) sum += values[k];
+    return sum / i;
   });
 
   return (
