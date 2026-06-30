@@ -22,11 +22,11 @@ export function LineChart({ values, mean, labels, color = '#2dd4bf' }: Props) {
   const W = 320;
   const H = 180;
   // Left gutter holds the flush-left y-axis numbers. The other three insets are
-  // just enough that the axis numbers (top/bottom) and the right-most line end
-  // sit AT the SVG edge — so every side's only margin is the card's uniform
-  // padding, with nothing spilling past it.
+  // just enough that the axis numbers (top/bottom) and the end dots sit AT the
+  // SVG edge — so every side's only margin is the card's uniform padding, with
+  // nothing spilling past it.
   const padL = 22;
-  const padR = 0;
+  const padR = 3;
   const padT = 4;
   const padB = 4;
 
