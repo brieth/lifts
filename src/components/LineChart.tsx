@@ -21,12 +21,14 @@ export function LineChart({ values, mean, labels, color = '#2dd4bf' }: Props) {
 
   const W = 320;
   const H = 180;
-  // Left gutter holds the flush-left y-axis numbers; the plot then runs nearly
-  // to the right edge so the chart fills the card uniformly. Equal top/bottom.
+  // Only the left gutter is inset (for the flush-left y-axis numbers). Top/right/
+  // bottom run to the SVG edge so the only margin is the card's uniform padding;
+  // the axis labels and end dots overflow gently into that padding (svg overflow
+  // is visible). This keeps all four margins equal to the card padding.
   const padL = 22;
-  const padR = 6;
-  const padT = 10;
-  const padB = 10;
+  const padR = 0;
+  const padT = 0;
+  const padB = 0;
 
   // Scale over both series so the mean line always fits.
   const meanNums = mean ? mean.filter((v): v is number => v != null) : [];
