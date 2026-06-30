@@ -96,11 +96,6 @@ export function WeeklyMuscles() {
           })}
         </div>
       )}
-
-      <p className="muted small weekly-note">
-        Hard sets per muscle this week. Teal is logged; white is planned for today. Secondary movers
-        count as half. Bar spans the ~10–20 sets/week range; the tick marks 10.
-      </p>
     </div>
   );
 }
