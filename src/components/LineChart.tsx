@@ -18,10 +18,11 @@ export function LineChart({ values, mean, labels, color = '#2dd4bf' }: Props) {
 
   const W = 320;
   const H = 180;
-  // Symmetric left/right margins; the y-axis numbers sit flush-left in the gutter.
+  // Left gutter holds the flush-left y-axis numbers; the plot then runs nearly
+  // to the right edge so the chart fills the card uniformly. Equal top/bottom.
   const padL = 22;
-  const padR = 22;
-  const padT = 12;
+  const padR = 6;
+  const padT = 10;
   const padB = 10;
 
   // Scale over both series so the mean line always fits.
