@@ -23,11 +23,16 @@ export function MonthCalendar() {
   const { data } = useStore();
   const [offset, setOffset] = useState(0); // months from the current month
 
-  // Days that have at least one logged session.
-  const logged = useMemo(() => {
+  // Days that have at least one logged session, plus the earliest session date.
+  const { logged, earliest } = useMemo(() => {
     const s = new Set<string>();
-    for (const sess of data.sessions) s.add(dayKey(new Date(sess.date)));
-    return s;
+    let min: Date | null = null;
+    for (const sess of data.sessions) {
+      const d = new Date(sess.date);
+      s.add(dayKey(d));
+      if (!min || d < min) min = d;
+    }
+    return { logged: s, earliest: min };
   }, [data.sessions]);
 
   const today = new Date();
@@ -39,6 +44,12 @@ export function MonthCalendar() {
   const firstDow = new Date(year, month, 1).getDay(); // 0 = Sun
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
+  // Don't page back past the first logged month (or at all if nothing's logged).
+  const atFirstMonth =
+    !earliest ||
+    year < earliest.getFullYear() ||
+    (year === earliest.getFullYear() && month <= earliest.getMonth());
+
   const cells: (number | null)[] = [];
   for (let i = 0; i < firstDow; i++) cells.push(null);
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
@@ -46,7 +57,12 @@ export function MonthCalendar() {
   return (
     <div className="weekly">
       <div className="week-nav">
-        <button className="week-arrow" onClick={() => setOffset((o) => o - 1)} aria-label="Previous month">
+        <button
+          className="week-arrow"
+          onClick={() => setOffset((o) => o - 1)}
+          disabled={atFirstMonth}
+          aria-label="Previous month"
+        >
           ‹
         </button>
         <div className="week-range">
