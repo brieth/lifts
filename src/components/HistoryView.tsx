@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useStore } from '../store';
 import { sessionVolume } from '../lib/stats';
+import { MonthCalendar } from './MonthCalendar';
 
 export function HistoryView() {
   const { data, deleteSession, updateSessionExercise } = useStore();
@@ -11,20 +12,15 @@ export function HistoryView() {
     [data.exercises],
   );
 
-  if (data.sessions.length === 0) {
-    return (
-      <div className="view">
-        <h1>History</h1>
-        <p className="muted subtitle">
-          No workouts logged yet. Finish a session and it'll show up here.
-        </p>
-      </div>
-    );
-  }
-
   return (
     <div className="view">
       <h1>History</h1>
+      <MonthCalendar />
+      {data.sessions.length === 0 ? (
+        <p className="muted subtitle">
+          No workouts logged yet. Finish a session and it'll show up here.
+        </p>
+      ) : (
       <div className="history-list">
         {data.sessions.map((s) => {
           const date = new Date(s.date);
@@ -75,6 +71,7 @@ export function HistoryView() {
           );
         })}
       </div>
+      )}
     </div>
   );
 }
