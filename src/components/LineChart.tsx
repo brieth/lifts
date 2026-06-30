@@ -1,13 +1,16 @@
 interface Props {
   values: number[];
+  /** Optional cumulative-mean series (same length as values), drawn in white. */
+  mean?: number[];
   labels?: string[];
   color?: string;
 }
 
 const fmtNum = (n: number) => Math.round(n).toLocaleString();
+const MEAN_COLOR = '#ffffff';
 
 /** Lightweight dependency-free SVG line chart with axis gridlines and labels. */
-export function LineChart({ values, labels, color = '#2dd4bf' }: Props) {
+export function LineChart({ values, mean, labels, color = '#2dd4bf' }: Props) {
   if (values.length === 0) {
     return <div className="chart-empty">No data yet</div>;
   }
@@ -19,8 +22,10 @@ export function LineChart({ values, labels, color = '#2dd4bf' }: Props) {
   const padT = 12;
   const padB = 22;
 
-  const max = Math.max(...values);
-  const min = Math.min(...values);
+  // Scale over both series so the mean line always fits.
+  const all = mean && mean.length ? values.concat(mean) : values;
+  const max = Math.max(...all);
+  const min = Math.min(...all);
   const span = max - min || 1;
 
   const innerW = W - padL - padR;
@@ -32,6 +37,7 @@ export function LineChart({ values, labels, color = '#2dd4bf' }: Props) {
 
   const points = values.map((v, i) => `${x(i)},${y(v)}`).join(' ');
   const areaPoints = `${x(0)},${padT + innerH} ${points} ${x(values.length - 1)},${padT + innerH}`;
+  const meanPoints = mean && mean.length ? mean.map((v, i) => `${x(i)},${y(v)}`).join(' ') : '';
 
   // horizontal gridline values (max / middle / min), relative to the data
   const ticks = max === min ? [max] : [max, (max + min) / 2, min];
@@ -57,6 +63,20 @@ export function LineChart({ values, labels, color = '#2dd4bf' }: Props) {
       })}
 
       <polygon points={areaPoints} fill={color} opacity={0.12} />
+
+      {meanPoints && (
+        <polyline
+          points={meanPoints}
+          fill="none"
+          stroke={MEAN_COLOR}
+          strokeWidth={1.5}
+          strokeDasharray="4 3"
+          strokeLinejoin="round"
+          strokeLinecap="round"
+          opacity={0.85}
+        />
+      )}
+
       <polyline
         points={points}
         fill="none"

@@ -783,6 +783,32 @@ body {
 .chart-stats strong {
   color: var(--text);
 }
+.chart-legend {
+  display: flex;
+  gap: 14px;
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.chart-legend .lg {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.chart-legend .lg::before {
+  content: '';
+  width: 14px;
+  height: 0;
+  border-top-width: 2px;
+  border-top-style: solid;
+}
+.chart-legend .lg-data::before {
+  border-top-color: var(--accent);
+}
+.chart-legend .lg-mean::before {
+  border-top-color: #fff;
+  border-top-style: dashed;
+}
 
 .pr-list {
   display: flex;

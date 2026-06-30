@@ -39,6 +39,12 @@ export function ProgressView() {
   const history = current ? exerciseHistory(sub, current) : [];
   const values = history.map((p) => p[metric]);
   const labels = history.map((p) => new Date(p.date).toLocaleDateString());
+  // Cumulative mean up to and including each session — the "bar you're beating".
+  const meanValues = values.map((_, i) => {
+    let sum = 0;
+    for (let k = 0; k <= i; k++) sum += values[k];
+    return sum / (i + 1);
+  });
 
   return (
     <div className="view">
@@ -78,17 +84,23 @@ export function ProgressView() {
       </div>
 
       <div className="chart-wrap">
-        <LineChart values={values} labels={labels} />
+        <LineChart values={values} mean={meanValues} labels={labels} />
         {values.length > 0 && (
-          <div className="chart-stats">
-            <span>
-              <span className="cs-k">Last</span> <strong>{values[values.length - 1]}</strong>
-            </span>
-            <span>
-              <span className="cs-k">Best</span> <strong>{Math.max(...values)}</strong>
-            </span>
-            <span className="cs-n">{history.length} sessions</span>
-          </div>
+          <>
+            <div className="chart-legend">
+              <span className="lg lg-data">{METRIC_LABELS[metric]}</span>
+              <span className="lg lg-mean">Mean</span>
+            </div>
+            <div className="chart-stats">
+              <span>
+                <span className="cs-k">Last</span> <strong>{values[values.length - 1]}</strong>
+              </span>
+              <span>
+                <span className="cs-k">Best</span> <strong>{Math.max(...values)}</strong>
+              </span>
+              <span className="cs-n">{history.length} sessions</span>
+            </div>
+          </>
         )}
       </div>
 
