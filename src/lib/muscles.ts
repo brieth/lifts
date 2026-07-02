@@ -3,8 +3,8 @@ import type { Session } from '../types';
 /**
  * Muscle group each exercise is credited to (its PRIMARY mover only — we don't
  * split a set across muscles, which keeps the weekly "hard sets" count honest
- * rather than inflating it). Front delt has no direct work in this program (it
- * rides on the presses), so there's intentionally no Front Delt bucket.
+ * rather than inflating it). Front, side and rear delts all roll up into the
+ * single Delts bucket, so the front raise and rear-delt work land there too.
  */
 export type MuscleGroup = 'Chest' | 'Back' | 'Delts' | 'Triceps' | 'Biceps' | 'Legs';
 
@@ -22,32 +22,31 @@ const MUSCLE: Record<string, MuscleGroup> = {
   'barbell-incline-bench-press': 'Chest',
   'barbell-bench-press': 'Chest',
   'barbell-decline-bench-press': 'Chest',
-  'cable-crossover-fly': 'Chest',
+  'high-cable-crossover-fly': 'Chest',
   'mid-cable-crossover-fly': 'Chest',
-  'low-cable-chest-fly': 'Chest',
+  'low-cable-crossover-fly': 'Chest',
   // Back
-  'v-bar-pulldown': 'Back',
-  'cable-row': 'Back',
+  'close-grip-lat-pulldown': 'Back',
   'lat-pulldown': 'Back',
-  'reverse-grip-pull-down': 'Back',
-  'shotgun-row': 'Back',
+  'wide-grip-lat-pulldown': 'Back',
+  'high-cable-row': 'Back',
+  'mid-cable-row': 'Back',
+  'low-cable-row': 'Back',
   // Delts (front / side / rear tracked together as one group)
   'behind-the-back-cable-lateral-raise': 'Delts',
   'cable-upright-row': 'Delts',
-  'dumbbell-lateral-raise': 'Delts',
   'cable-face-pull': 'Delts',
-  'cable-rear-delt-fly': 'Delts',
-  // Triceps
+  'cable-front-raise': 'Delts',
+  // Triceps (forearm/brachioradialis rolls up into Biceps, matching the curls)
   'cable-rope-overhead-tricep-extension': 'Triceps',
-  'cable-rope-tricep-extension': 'Triceps',
-  'dumbbell-skullcrusher': 'Triceps',
-  'dumbbell-kickback': 'Triceps',
+  'cable-rope-tricep-pushdown': 'Triceps',
+  'underhand-cable-pushdown': 'Triceps',
   // Biceps
   'behind-the-back-cable-bicep-curl': 'Biceps',
   'cable-bicep-curl': 'Biceps',
+  'overhead-cable-curl': 'Biceps',
   'cable-rope-hammer-curl': 'Biceps',
-  'incline-dumbbell-curl': 'Biceps',
-  'dumbbell-spider-curl': 'Biceps',
+  'cable-reverse-curl': 'Biceps',
   // Legs (every leg-menu option)
   'machine-leg-press': 'Legs',
   'machine-lying-hamstring-curl': 'Legs',
@@ -56,6 +55,18 @@ const MUSCLE: Record<string, MuscleGroup> = {
   'machine-hip-adductor': 'Legs',
   'machine-leg-curl': 'Legs',
   'machine-leg-extension': 'Legs',
+  // Retired exercises, kept so older logged sessions still count in past-week
+  // muscle tallies (their ids predate the current program).
+  'v-bar-pulldown': 'Back',
+  'cable-row': 'Back',
+  'reverse-grip-pull-down': 'Back',
+  'shotgun-row': 'Back',
+  'dumbbell-lateral-raise': 'Delts',
+  'cable-rear-delt-fly': 'Delts',
+  'dumbbell-skullcrusher': 'Triceps',
+  'dumbbell-kickback': 'Triceps',
+  'incline-dumbbell-curl': 'Biceps',
+  'dumbbell-spider-curl': 'Biceps',
 };
 
 export function muscleFor(exerciseId: string): MuscleGroup | null {
@@ -71,8 +82,15 @@ const SECONDARY: Record<string, MuscleGroup[]> = {
   'barbell-incline-bench-press': ['Triceps', 'Delts'],
   'barbell-bench-press': ['Triceps', 'Delts'],
   'barbell-decline-bench-press': ['Triceps', 'Delts'],
-  'v-bar-pulldown': ['Biceps'],
+  // pulldowns drive the biceps; rows additionally hit the rear delts
+  'close-grip-lat-pulldown': ['Biceps'],
   'lat-pulldown': ['Biceps'],
+  'wide-grip-lat-pulldown': ['Biceps'],
+  'high-cable-row': ['Biceps', 'Delts'],
+  'mid-cable-row': ['Biceps', 'Delts'],
+  'low-cable-row': ['Biceps', 'Delts'],
+  // retired exercises, kept for older logged sessions
+  'v-bar-pulldown': ['Biceps'],
   'reverse-grip-pull-down': ['Biceps'],
   'cable-row': ['Biceps', 'Delts'],
   'shotgun-row': ['Biceps', 'Delts'],
