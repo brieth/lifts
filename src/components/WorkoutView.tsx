@@ -12,7 +12,6 @@ import {
 } from '../lib/stats';
 import { defaultOneRMFor, EMPHASES, emphasisLabel, repsFor } from '../lib/reps';
 import { sessionsForExercise } from '../lib/equipment';
-import { volumeMultiplier } from '../lib/sides';
 import { SvBadge } from './SvBadge';
 
 export function WorkoutView() {
@@ -277,13 +276,12 @@ function ExerciseHistoryModal({
   onClose: () => void;
 }) {
   const { data } = useStore();
-  const mult = volumeMultiplier(exerciseId);
   const rows = sessionsForExercise(data.sessions, exerciseId, data.currentGymId)
     .map((s) => {
       const logged = s.exercises.find((e) => e.exerciseId === exerciseId);
       const sets = logged?.sets.filter((st) => st.done && st.weight > 0 && st.reps > 0) ?? [];
       if (!sets.length) return null;
-      const volume = sets.reduce((a, st) => a + st.weight * st.reps * mult, 0);
+      const volume = sets.reduce((a, st) => a + st.weight * st.reps, 0);
       const best1RM = Math.round(
         Math.max(...sets.map((st) => estimated1RM(st.weight, st.reps))),
       );
@@ -377,9 +375,8 @@ function ExerciseCard({
 }) {
   const phWeights = weightPlaceholders(ex.sets, suggestedWeight);
   const phReps = repPlaceholders(ex.sets, targetReps);
-  const volMult = volumeMultiplier(ex.exerciseId);
-  const volLogged = loggedVolume(ex.sets) * volMult;
-  const volPlanned = plannedVolume(ex.sets, phWeights, phReps) * volMult;
+  const volLogged = loggedVolume(ex.sets);
+  const volPlanned = plannedVolume(ex.sets, phWeights, phReps);
   const strLogged = bestEstimated1RM(ex.sets, true);
   const strPlanned = plannedStrength(ex.sets, phWeights, phReps);
 

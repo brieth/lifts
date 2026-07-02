@@ -19,38 +19,6 @@ function uid(): string {
 
 const DEFAULT_GYM: Gym = { id: 'gym-default', name: 'My Gym' };
 
-/**
- * One-time exercise-id migration for exercises that were only RENAMED (same
- * movement, id brought in line with a cleaned-up display name). Their logged
- * history carries over to the new id. Movements that genuinely changed are
- * intentionally NOT listed here — they orphan and start fresh, so a different
- * exercise's numbers never contaminate a new one's PRs/suggestions.
- */
-const ID_MIGRATION: Record<string, string> = {
-  'cable-crossover-fly': 'high-cable-crossover-fly',
-  'low-cable-chest-fly': 'low-cable-crossover-fly',
-  'cable-rope-tricep-extension': 'cable-rope-tricep-pushdown',
-};
-
-const migrateId = (id: string): string => ID_MIGRATION[id] ?? id;
-
-function migrateSessionIds<T extends Session>(sessions: T[]): T[] {
-  return sessions.map((s) => ({
-    ...s,
-    exercises: s.exercises.map((e) => ({ ...e, exerciseId: migrateId(e.exerciseId) })),
-  }));
-}
-
-/** Merge a stored exercise list onto the seed, remapping renamed ids and de-duping. */
-function mergeExercises(base: Exercise[], stored: Exercise[] | undefined): Exercise[] {
-  const out = [...base];
-  for (const ex of stored ?? []) {
-    const id = migrateId(ex.id);
-    if (!out.some((e) => e.id === id)) out.push({ ...ex, id });
-  }
-  return out;
-}
-
 function load(): AppData {
   const fresh: AppData = {
     exercises: SEED.exercises,
@@ -66,26 +34,24 @@ function load(): AppData {
     const stored = JSON.parse(raw) as Partial<AppData>;
     // Always refresh the routine definitions from the seed (program structure),
     // while preserving the user's logged sessions and any custom exercises.
-    // Renamed exercise ids are migrated so their history follows the new id.
-    const exercises = mergeExercises(SEED.exercises, stored.exercises);
+    const exercises: Exercise[] = [...SEED.exercises];
+    for (const ex of stored.exercises ?? []) {
+      if (!exercises.some((e) => e.id === ex.id)) exercises.push(ex);
+    }
     const gyms = stored.gyms?.length ? stored.gyms : [DEFAULT_GYM];
     const currentGymId = stored.currentGymId ?? gyms[0].id;
-    // Backfill a gym on any pre-existing sessions so gym-dependent history works,
-    // and migrate any renamed exercise ids in the logged history.
-    const sessions = migrateSessionIds(
-      (stored.sessions ?? []).map((s) => (s.gymId ? s : { ...s, gymId: currentGymId })),
+    // Backfill a gym on any pre-existing sessions so gym-dependent history works.
+    const sessions = (stored.sessions ?? []).map((s) =>
+      s.gymId ? s : { ...s, gymId: currentGymId },
     );
-    // Refresh menu (leg) slot options in an in-progress workout to the current
-    // list, and migrate any renamed exercise ids.
+    // Refresh menu (leg) slot options in an in-progress workout to the current list.
     let activeSession = stored.activeSession ?? null;
     if (activeSession) {
       activeSession = {
         ...activeSession,
-        exercises: activeSession.exercises.map((e) => ({
-          ...e,
-          exerciseId: migrateId(e.exerciseId),
-          options: e.options ? LEG_OPTION_IDS : e.options,
-        })),
+        exercises: activeSession.exercises.map((e) =>
+          e.options ? { ...e, options: LEG_OPTION_IDS } : e,
+        ),
       };
     }
     return {
@@ -297,11 +263,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           }
           const gyms = incoming.gyms?.length ? incoming.gyms : [DEFAULT_GYM];
           setData({
-            // Merge onto the seed and migrate renamed ids so an old backup still
-            // lines up with the current program structure and history keys.
-            exercises: mergeExercises(SEED.exercises, incoming.exercises),
-            routines: SEED.routines,
-            sessions: migrateSessionIds(incoming.sessions),
+            exercises: incoming.exercises,
+            routines: Array.isArray(incoming.routines) ? incoming.routines : SEED.routines,
+            sessions: incoming.sessions,
             activeSession: null,
             gyms,
             currentGymId: incoming.currentGymId ?? gyms[0].id,
