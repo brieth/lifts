@@ -39,7 +39,7 @@ const ROUTINE_DEFS: RoutineDef[] = [
     name: '1B',
     exercises: [
       ['high-cable-crossover-fly', 'High Cable Crossover Fly'],
-      ['high-cable-row', 'High Cable Row'],
+      ['single-arm-high-cable-row', 'Single Arm High Cable Row'],
       ['machine-lying-hamstring-curl', 'Machine Lying Hamstring Curl'],
       ['cable-rope-overhead-tricep-extension', 'Cable Rope Overhead Tricep Extension'],
       ['cable-face-pull', 'Cable Face Pull'],
@@ -61,7 +61,7 @@ const ROUTINE_DEFS: RoutineDef[] = [
     name: '2B',
     exercises: [
       ['mid-cable-crossover-fly', 'Mid Cable Crossover Fly'],
-      ['mid-cable-row', 'Mid Cable Row'],
+      ['single-arm-mid-cable-row', 'Single Arm Mid Cable Row'],
       ['machine-lying-hamstring-curl', 'Machine Lying Hamstring Curl'],
       ['cable-rope-tricep-pushdown', 'Cable Rope Tricep Pushdown'],
       ['cable-rope-hammer-curl', 'Cable Rope Hammer Curl'],
@@ -83,7 +83,7 @@ const ROUTINE_DEFS: RoutineDef[] = [
     name: '3B',
     exercises: [
       ['low-cable-crossover-fly', 'Low Cable Crossover Fly'],
-      ['low-cable-row', 'Low Cable Row'],
+      ['single-arm-low-cable-row', 'Single Arm Low Cable Row'],
       ['machine-lying-hamstring-curl', 'Machine Lying Hamstring Curl'],
       ['cable-reverse-curl', 'Cable Reverse Curl'],
       ['cable-front-raise', 'Cable Front Raise'],

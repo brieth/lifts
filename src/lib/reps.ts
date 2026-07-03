@@ -31,9 +31,9 @@ const CATEGORY: Record<string, Category> = {
   'close-grip-lat-pulldown': 'pull',
   'lat-pulldown': 'pull',
   'wide-grip-lat-pulldown': 'pull',
-  'high-cable-row': 'pull',
-  'mid-cable-row': 'pull',
-  'low-cable-row': 'pull',
+  'single-arm-high-cable-row': 'pull',
+  'single-arm-mid-cable-row': 'pull',
+  'single-arm-low-cable-row': 'pull',
   // retired pulls, kept so older history keeps sensible rep targets
   'v-bar-pulldown': 'pull',
   'reverse-grip-pull-down': 'pull',
