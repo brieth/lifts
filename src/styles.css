@@ -1112,9 +1112,9 @@ body {
     inset 0 0 0 1.5px var(--accent),
     inset 0 0 0 3px var(--surface);
 }
-/* When today isn't logged, fill the center teal so it reads as the badge too. */
+/* Not-logged today stays hollow (ring only) so the teal fill always means
+   "logged" — today then fills in once its workout is logged. */
 .cal-cell.today:not(.done) {
-  background: var(--accent);
-  color: #06201b;
+  color: var(--accent);
   font-weight: 600;
 }
