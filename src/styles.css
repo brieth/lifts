@@ -1105,7 +1105,11 @@ body {
   font-weight: 600;
 }
 .cal-cell.today:not(.done) {
-  background: var(--accent-dim);
   color: var(--accent);
   font-weight: 600;
+  /* S/V-badge look: teal ring, transparent (surface) gap, teal ring */
+  box-shadow:
+    inset 0 0 0 1.5px var(--accent),
+    inset 0 0 0 3px var(--surface),
+    inset 0 0 0 4.5px var(--accent);
 }
