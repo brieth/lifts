@@ -19,6 +19,19 @@ function uid(): string {
 
 const DEFAULT_GYM: Gym = { id: 'gym-default', name: 'My Gym' };
 
+/**
+ * One-time id migration: the three cable rows became single-arm after a
+ * workout had already been logged against the old ids, so remap that history
+ * onto the new ids. Safe to remove once it has run on the stored data.
+ */
+const ID_MIGRATION: Record<string, string> = {
+  'high-cable-row': 'single-arm-high-cable-row',
+  'mid-cable-row': 'single-arm-mid-cable-row',
+  'low-cable-row': 'single-arm-low-cable-row',
+};
+
+const migrateId = (id: string): string => ID_MIGRATION[id] ?? id;
+
 function load(): AppData {
   const fresh: AppData = {
     exercises: SEED.exercises,
@@ -36,22 +49,29 @@ function load(): AppData {
     // while preserving the user's logged sessions and any custom exercises.
     const exercises: Exercise[] = [...SEED.exercises];
     for (const ex of stored.exercises ?? []) {
-      if (!exercises.some((e) => e.id === ex.id)) exercises.push(ex);
+      const id = migrateId(ex.id);
+      if (!exercises.some((e) => e.id === id)) exercises.push({ ...ex, id });
     }
     const gyms = stored.gyms?.length ? stored.gyms : [DEFAULT_GYM];
     const currentGymId = stored.currentGymId ?? gyms[0].id;
-    // Backfill a gym on any pre-existing sessions so gym-dependent history works.
-    const sessions = (stored.sessions ?? []).map((s) =>
-      s.gymId ? s : { ...s, gymId: currentGymId },
-    );
-    // Refresh menu (leg) slot options in an in-progress workout to the current list.
+    // Backfill a gym on any pre-existing sessions so gym-dependent history works,
+    // and migrate the renamed row ids in the logged history.
+    const sessions = (stored.sessions ?? []).map((s) => ({
+      ...s,
+      gymId: s.gymId ?? currentGymId,
+      exercises: s.exercises.map((e) => ({ ...e, exerciseId: migrateId(e.exerciseId) })),
+    }));
+    // Refresh menu (leg) slot options in an in-progress workout to the current
+    // list, and migrate any renamed exercise ids.
     let activeSession = stored.activeSession ?? null;
     if (activeSession) {
       activeSession = {
         ...activeSession,
-        exercises: activeSession.exercises.map((e) =>
-          e.options ? { ...e, options: LEG_OPTION_IDS } : e,
-        ),
+        exercises: activeSession.exercises.map((e) => ({
+          ...e,
+          exerciseId: migrateId(e.exerciseId),
+          options: e.options ? LEG_OPTION_IDS : e.options,
+        })),
       };
     }
     return {
