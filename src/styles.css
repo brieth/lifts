@@ -1104,6 +1104,8 @@ body {
   color: #06201b;
   font-weight: 600;
 }
-.cal-cell.today {
-  box-shadow: inset 0 0 0 2px var(--accent-dim);
+.cal-cell.today:not(.done) {
+  background: var(--accent-dim);
+  color: var(--accent);
+  font-weight: 600;
 }
