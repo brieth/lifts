@@ -24,6 +24,16 @@ body,
   height: 100%;
 }
 
+/* Disable zoom: allow scrolling (pan) but no pinch/double-tap zoom, and stop
+   iOS/Android from auto-resizing text. Paired with the no-scaling viewport meta
+   and the gesture guards in main.tsx. */
+html,
+body {
+  touch-action: pan-x pan-y;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 body {
   background: var(--bg);
   color: var(--text);
