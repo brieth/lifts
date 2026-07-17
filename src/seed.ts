@@ -85,8 +85,8 @@ const ROUTINE_DEFS: RoutineDef[] = [
       ['cable-low-crossover-fly', 'Cable Low Crossover Fly'],
       ['cable-single-arm-low-row', 'Cable Single Arm Low Row'],
       ['machine-lying-hamstring-curl', 'Machine Lying Hamstring Curl'],
-      ['cable-reverse-curl', 'Cable Reverse Curl'],
       ['cable-low-overhead-tricep-extension', 'Cable Low Overhead Tricep Extension'],
+      ['cable-reverse-curl', 'Cable Reverse Curl'],
     ],
   },
 ];
