@@ -27,13 +27,13 @@ const CATEGORY: Record<string, Category> = {
   'barbell-bench-press': 'compound',
   'barbell-decline-bench-press': 'compound',
   'machine-leg-press': 'compound',
-  // pulls — pulldowns (width) and cable rows (thickness)
+  // pulls — pulldowns (width) and single-arm cable rows (thickness)
   'close-grip-lat-pulldown': 'pull',
   'lat-pulldown': 'pull',
   'wide-grip-lat-pulldown': 'pull',
-  'single-arm-high-cable-row': 'pull',
-  'single-arm-mid-cable-row': 'pull',
-  'single-arm-low-cable-row': 'pull',
+  'cable-single-arm-high-row': 'pull',
+  'cable-single-arm-mid-row': 'pull',
+  'cable-single-arm-low-row': 'pull',
   // retired pulls, kept so older history keeps sensible rep targets
   'v-bar-pulldown': 'pull',
   'reverse-grip-pull-down': 'pull',

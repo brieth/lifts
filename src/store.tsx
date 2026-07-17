@@ -19,6 +19,56 @@ function uid(): string {
 
 const DEFAULT_GYM: Gym = { id: 'gym-default', name: 'My Gym' };
 
+/**
+ * One-time exercise-id migration to the implement-first naming scheme. Remaps
+ * logged history (and any in-progress session) from the old ids onto the new
+ * ones so nothing is stranded, and folds in a few even-older ids in case an
+ * earlier rename hadn't fully applied. The front raise is intentionally NOT
+ * remapped — it's a different movement from the extension that replaced it, so
+ * its history stays under its own id. Safe to remove once it has run.
+ */
+const ID_MIGRATION: Record<string, string> = {
+  'behind-the-back-cable-bicep-curl': 'cable-behind-the-back-bicep-curl',
+  'behind-the-back-cable-lateral-raise': 'cable-behind-the-back-lateral-raise',
+  'high-cable-crossover-fly': 'cable-high-crossover-fly',
+  'mid-cable-crossover-fly': 'cable-mid-crossover-fly',
+  'low-cable-crossover-fly': 'cable-low-crossover-fly',
+  'single-arm-high-cable-row': 'cable-single-arm-high-row',
+  'single-arm-mid-cable-row': 'cable-single-arm-mid-row',
+  'single-arm-low-cable-row': 'cable-single-arm-low-row',
+  'cable-rope-overhead-tricep-extension': 'cable-high-overhead-tricep-extension',
+  'cable-rope-tricep-pushdown': 'cable-tricep-pushdown',
+  'cable-rope-hammer-curl': 'cable-hammer-curl',
+  'underhand-cable-pushdown': 'cable-underhand-tricep-pushdown',
+  'overhead-cable-curl': 'cable-overhead-bicep-curl',
+  // even-older ids, in case a prior rename didn't fully persist
+  'mid-cable-row': 'cable-single-arm-mid-row',
+  'high-cable-row': 'cable-single-arm-high-row',
+  'low-cable-row': 'cable-single-arm-low-row',
+  'cable-crossover-fly': 'cable-high-crossover-fly',
+  'low-cable-chest-fly': 'cable-low-crossover-fly',
+  'cable-rope-tricep-extension': 'cable-tricep-pushdown',
+};
+
+const migrateId = (id: string): string => ID_MIGRATION[id] ?? id;
+
+function migrateSessionIds<T extends Session>(sessions: T[]): T[] {
+  return sessions.map((s) => ({
+    ...s,
+    exercises: s.exercises.map((e) => ({ ...e, exerciseId: migrateId(e.exerciseId) })),
+  }));
+}
+
+/** Merge a stored exercise list onto the seed, remapping renamed ids and de-duping. */
+function mergeExercises(base: Exercise[], stored: Exercise[] | undefined): Exercise[] {
+  const out = [...base];
+  for (const ex of stored ?? []) {
+    const id = migrateId(ex.id);
+    if (!out.some((e) => e.id === id)) out.push({ ...ex, id });
+  }
+  return out;
+}
+
 function load(): AppData {
   const fresh: AppData = {
     exercises: SEED.exercises,
@@ -34,24 +84,26 @@ function load(): AppData {
     const stored = JSON.parse(raw) as Partial<AppData>;
     // Always refresh the routine definitions from the seed (program structure),
     // while preserving the user's logged sessions and any custom exercises.
-    const exercises: Exercise[] = [...SEED.exercises];
-    for (const ex of stored.exercises ?? []) {
-      if (!exercises.some((e) => e.id === ex.id)) exercises.push(ex);
-    }
+    // Renamed exercise ids are migrated so their logged history follows the id.
+    const exercises = mergeExercises(SEED.exercises, stored.exercises);
     const gyms = stored.gyms?.length ? stored.gyms : [DEFAULT_GYM];
     const currentGymId = stored.currentGymId ?? gyms[0].id;
-    // Backfill a gym on any pre-existing sessions so gym-dependent history works.
-    const sessions = (stored.sessions ?? []).map((s) =>
-      s.gymId ? s : { ...s, gymId: currentGymId },
+    // Backfill a gym on any pre-existing sessions so gym-dependent history works,
+    // and migrate any renamed exercise ids in the logged history.
+    const sessions = migrateSessionIds(
+      (stored.sessions ?? []).map((s) => (s.gymId ? s : { ...s, gymId: currentGymId })),
     );
-    // Refresh menu (leg) slot options in an in-progress workout to the current list.
+    // Refresh menu (leg) slot options in an in-progress workout to the current
+    // list, and migrate any renamed exercise ids.
     let activeSession = stored.activeSession ?? null;
     if (activeSession) {
       activeSession = {
         ...activeSession,
-        exercises: activeSession.exercises.map((e) =>
-          e.options ? { ...e, options: LEG_OPTION_IDS } : e,
-        ),
+        exercises: activeSession.exercises.map((e) => ({
+          ...e,
+          exerciseId: migrateId(e.exerciseId),
+          options: e.options ? LEG_OPTION_IDS : e.options,
+        })),
       };
     }
     return {
@@ -263,9 +315,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           }
           const gyms = incoming.gyms?.length ? incoming.gyms : [DEFAULT_GYM];
           setData({
-            exercises: incoming.exercises,
-            routines: Array.isArray(incoming.routines) ? incoming.routines : SEED.routines,
-            sessions: incoming.sessions,
+            // Merge onto the seed and migrate renamed ids so an old backup still
+            // lines up with the current program structure and history keys.
+            exercises: mergeExercises(SEED.exercises, incoming.exercises),
+            routines: SEED.routines,
+            sessions: migrateSessionIds(incoming.sessions),
             activeSession: null,
             gyms,
             currentGymId: incoming.currentGymId ?? gyms[0].id,
