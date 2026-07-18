@@ -47,6 +47,11 @@ const EQUIPMENT: Record<string, Equipment> = {
   'cable-reverse-curl': 'cable',
   'cable-overhead-bicep-curl': 'cable',
   'cable-face-pull': 'cable',
+  // cable abs (trailing menu)
+  'cable-crunch': 'cable',
+  'cable-high-woodchopper': 'cable',
+  'cable-low-woodchopper': 'cable',
+  'cable-oblique-crunch': 'cable',
   // cables — retired exercises, kept so older logged history still classifies
   // as gym-dependent (their sessions predate the current program).
   'cable-front-raise': 'cable',

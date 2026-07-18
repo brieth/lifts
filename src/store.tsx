@@ -9,7 +9,7 @@ import type {
   Session,
   SetEntry,
 } from './types';
-import { LEG_OPTION_IDS, SEED } from './seed';
+import { AB_OPTION_IDS, LEG_OPTION_IDS, SEED } from './seed';
 
 const STORAGE_KEY = 'lifts.data.v1';
 
@@ -44,15 +44,27 @@ function load(): AppData {
     const sessions = (stored.sessions ?? []).map((s) =>
       s.gymId ? s : { ...s, gymId: currentGymId },
     );
-    // Refresh menu (leg) slot options in an in-progress workout to the current list.
+    // Refresh menu slot options in an in-progress workout to the current lists,
+    // keyed by menu type, and append the ab menu if the session predates it.
     let activeSession = stored.activeSession ?? null;
     if (activeSession) {
-      activeSession = {
-        ...activeSession,
-        exercises: activeSession.exercises.map((e) =>
-          e.options ? { ...e, options: LEG_OPTION_IDS } : e,
-        ),
-      };
+      const isAbSlot = (e: LoggedExercise) =>
+        !!e.options && e.options.some((id) => AB_OPTION_IDS.includes(id));
+      const exercises = activeSession.exercises.map((e) =>
+        e.options ? { ...e, options: isAbSlot(e) ? AB_OPTION_IDS : LEG_OPTION_IDS } : e,
+      );
+      if (!exercises.some(isAbSlot)) {
+        exercises.push({
+          exerciseId: '',
+          options: AB_OPTION_IDS,
+          sets: [
+            { weight: 0, reps: 0, done: false },
+            { weight: 0, reps: 0, done: false },
+            { weight: 0, reps: 0, done: false },
+          ],
+        });
+      }
+      activeSession = { ...activeSession, exercises };
     }
     return {
       exercises,

@@ -12,6 +12,7 @@ import {
 } from '../lib/stats';
 import { defaultOneRMFor, EMPHASES, emphasisLabel, repsFor } from '../lib/reps';
 import { sessionsForExercise } from '../lib/equipment';
+import { AB_OPTION_IDS } from '../seed';
 import { SvBadge } from './SvBadge';
 
 export function WorkoutView() {
@@ -230,6 +231,9 @@ function ActiveSession() {
           const options = ex.options
             ?.map((id) => ({ id, name: exerciseName(id) }))
             .sort((a, b) => a.name.localeCompare(b.name));
+          const menuLabel = ex.options?.some((id) => AB_OPTION_IDS.includes(id))
+            ? 'Select ab exercise…'
+            : 'Select leg exercise…';
           return (
             <ExerciseCard
               key={`${exIdx}`}
@@ -241,6 +245,7 @@ function ActiveSession() {
               mean={meanExercisePoint(hist, ex.exerciseId)}
               best={bestExercisePoint(hist, ex.exerciseId)}
               options={options}
+              menuLabel={menuLabel}
               onSelect={(id) => changeExercise(exIdx, id)}
               onShowHistory={() => setHistoryFor(ex.exerciseId)}
               onChange={(setIdx, patch) => setSetValue(exIdx, setIdx, patch)}
@@ -353,6 +358,7 @@ function ExerciseCard({
   mean,
   best,
   options,
+  menuLabel,
   onSelect,
   onShowHistory,
   onChange,
@@ -367,6 +373,7 @@ function ExerciseCard({
   mean: { volume: number; best1RM: number } | null;
   best: { volume: number; best1RM: number } | null;
   options?: { id: string; name: string }[];
+  menuLabel?: string;
   onSelect: (id: string) => void;
   onShowHistory: () => void;
   onChange: (setIdx: number, patch: Partial<SetEntry>) => void;
@@ -420,7 +427,7 @@ function ExerciseCard({
             value={ex.exerciseId}
             onChange={(e) => onSelect(e.target.value)}
           >
-            <option value="">Select leg exercise…</option>
+            <option value="">{menuLabel ?? 'Select exercise…'}</option>
             {options.map((o) => (
               <option key={o.id} value={o.id}>
                 {o.name}

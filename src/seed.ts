@@ -109,12 +109,25 @@ const LEG_OPTIONS: ExRef[] = [
 ];
 export const LEG_OPTION_IDS = LEG_OPTIONS.map(([id]) => id);
 
+/**
+ * The trailing "ab slot" is a cable-ab menu appended to the END of every
+ * workout (the leg slot sits in the middle). Listed alphabetically by name.
+ * Pick one (or several) each session, or none.
+ */
+const AB_OPTIONS: ExRef[] = [
+  ['cable-crunch', 'Cable Crunch'],
+  ['cable-high-woodchopper', 'Cable High Woodchopper'],
+  ['cable-low-woodchopper', 'Cable Low Woodchopper'],
+  ['cable-oblique-crunch', 'Cable Oblique Crunch'],
+];
+export const AB_OPTION_IDS = AB_OPTIONS.map(([id]) => id);
+
 function buildSeed(): { exercises: Exercise[]; routines: Routine[] } {
   const exerciseMap = new Map<string, Exercise>();
   const routines: Routine[] = [];
 
-  // Register every leg-menu option so each has a name and its own history.
-  for (const [id, name] of LEG_OPTIONS) {
+  // Register every leg- and ab-menu option so each has a name and its own history.
+  for (const [id, name] of [...LEG_OPTIONS, ...AB_OPTIONS]) {
     if (!exerciseMap.has(id)) exerciseMap.set(id, { id, name });
   }
 
@@ -129,6 +142,13 @@ function buildSeed(): { exercises: Exercise[]; routines: Routine[] } {
       // The leg slot (its default is one of the leg options) becomes a menu.
       if (LEG_OPTION_IDS.includes(id)) re.options = LEG_OPTION_IDS;
       return re;
+    });
+    // Append the cable-ab menu to the end of every workout (starts unpicked).
+    exercises.push({
+      exerciseId: AB_OPTION_IDS[0],
+      targetSets: DEFAULT_SETS,
+      targetReps: DEFAULT_REPS,
+      options: AB_OPTION_IDS,
     });
     routines.push({ id: def.id, name: def.name, exercises });
   }
