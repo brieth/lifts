@@ -170,6 +170,24 @@ function ActiveSession() {
     });
   }
 
+  function handleFinish() {
+    // Count planned sets that aren't checked off, across selected exercises only
+    // (empty menu slots don't count). These would be silently dropped on finish.
+    const unlogged = session.exercises.reduce(
+      (n, e) => (e.exerciseId ? n + e.sets.filter((s) => !s.done).length : n),
+      0,
+    );
+    if (unlogged > 0) {
+      const setWord = unlogged === 1 ? 'set' : 'sets';
+      const verb = unlogged === 1 ? "isn't" : "aren't";
+      const ok = window.confirm(
+        `${unlogged} ${setWord} ${verb} logged and won't be saved. Finish anyway?`,
+      );
+      if (!ok) return;
+    }
+    finishSession();
+  }
+
   function changeExercise(exIdx: number, exerciseId: string) {
     updateActive((s) => {
       const slot = s.exercises[exIdx];
@@ -256,7 +274,7 @@ function ActiveSession() {
         })}
       </div>
 
-      <button className="btn primary block finish" onClick={finishSession}>
+      <button className="btn primary block finish" onClick={handleFinish}>
         Finish workout
       </button>
 
