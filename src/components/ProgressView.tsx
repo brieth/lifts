@@ -17,12 +17,26 @@ export function ProgressView() {
   const [metric, setMetric] = useState<Metric>('best1RM');
   const [selected, setSelected] = useState<string | null>(null);
 
-  // exercises that have any logged data, alphabetical
+  // ids reachable in the current program: every routine slot plus all of its
+  // menu options (leg + ab menus), so phased-out exercises are excluded.
+  const currentIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const r of data.routines) {
+      for (const e of r.exercises) {
+        if (e.exerciseId) ids.add(e.exerciseId);
+        for (const id of e.options ?? []) ids.add(id);
+      }
+    }
+    return ids;
+  }, [data.routines]);
+
+  // exercises that both have logged data and still exist in the routine, alphabetical
   const tracked = useMemo(() => {
     const ids = new Set<string>();
-    for (const s of data.sessions) for (const e of s.exercises) ids.add(e.exerciseId);
+    for (const s of data.sessions)
+      for (const e of s.exercises) if (currentIds.has(e.exerciseId)) ids.add(e.exerciseId);
     return [...ids].sort((a, b) => exerciseName(a).localeCompare(exerciseName(b)));
-  }, [data.sessions, exerciseName]);
+  }, [data.sessions, currentIds, exerciseName]);
 
   const current = selected ?? tracked[0] ?? null;
 
