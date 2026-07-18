@@ -6,7 +6,7 @@ import type { Session } from '../types';
  * rather than inflating it). Front, side and rear delts all roll up into the
  * single Delts bucket, so the front raise and rear-delt work land there too.
  */
-export type MuscleGroup = 'Chest' | 'Back' | 'Delts' | 'Triceps' | 'Biceps' | 'Legs';
+export type MuscleGroup = 'Chest' | 'Back' | 'Delts' | 'Triceps' | 'Biceps' | 'Legs' | 'Abs';
 
 export const MUSCLE_GROUPS: MuscleGroup[] = [
   'Chest',
@@ -15,6 +15,7 @@ export const MUSCLE_GROUPS: MuscleGroup[] = [
   'Triceps',
   'Biceps',
   'Legs',
+  'Abs',
 ];
 
 const MUSCLE: Record<string, MuscleGroup> = {
@@ -47,6 +48,11 @@ const MUSCLE: Record<string, MuscleGroup> = {
   'cable-overhead-bicep-curl': 'Biceps',
   'cable-hammer-curl': 'Biceps',
   'cable-reverse-curl': 'Biceps',
+  // Abs (every cable-ab-menu option)
+  'cable-crunch': 'Abs',
+  'cable-high-woodchopper': 'Abs',
+  'cable-low-woodchopper': 'Abs',
+  'cable-oblique-crunch': 'Abs',
   // Legs (every leg-menu option)
   'machine-leg-press': 'Legs',
   'machine-lying-hamstring-curl': 'Legs',
