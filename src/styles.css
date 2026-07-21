@@ -682,6 +682,21 @@ body {
   border-top: 1px solid var(--border);
   padding-top: 12px;
 }
+.history-date-edit {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.history-date-edit input {
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+}
 .history-exercise {
   margin-bottom: 10px;
 }

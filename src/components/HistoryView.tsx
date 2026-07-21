@@ -3,13 +3,26 @@ import { useStore } from '../store';
 import { sessionVolume } from '../lib/stats';
 import { MonthCalendar } from './MonthCalendar';
 
+/** Stored ISO timestamp -> the YYYY-MM-DD a <input type="date"> expects (local). */
+function toDateInput(iso: string): string {
+  const d = new Date(iso);
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
 export function HistoryView() {
-  const { data, deleteSession, updateSessionExercise } = useStore();
+  const { data, deleteSession, updateSessionExercise, updateSessionDate } = useStore();
 
   // all exercises, sorted by name, for the edit dropdowns
   const exerciseOptions = useMemo(
     () => [...data.exercises].sort((a, b) => a.name.localeCompare(b.name)),
     [data.exercises],
+  );
+
+  // newest first; re-sorts live when a date is edited (ISO sorts chronologically)
+  const sessions = useMemo(
+    () => [...data.sessions].sort((a, b) => b.date.localeCompare(a.date)),
+    [data.sessions],
   );
 
   return (
@@ -22,7 +35,7 @@ export function HistoryView() {
         </p>
       ) : (
       <div className="history-list">
-        {data.sessions.map((s) => {
+        {sessions.map((s) => {
           const date = new Date(s.date);
           const sets = s.exercises.reduce((n, e) => n + e.sets.length, 0);
           return (
@@ -41,6 +54,21 @@ export function HistoryView() {
                 </div>
               </summary>
               <div className="history-body">
+                <label className="history-date-edit">
+                  <span className="muted small">Date</span>
+                  <input
+                    type="date"
+                    value={toDateInput(s.date)}
+                    onChange={(ev) => {
+                      if (!ev.target.value) return;
+                      const [y, m, day] = ev.target.value.split('-').map(Number);
+                      // Keep the original time-of-day; only move the calendar date.
+                      const nd = new Date(s.date);
+                      nd.setFullYear(y, m - 1, day);
+                      updateSessionDate(s.id, nd.toISOString());
+                    }}
+                  />
+                </label>
                 {s.exercises.map((e, i) => (
                   <div key={i} className="history-exercise">
                     <select

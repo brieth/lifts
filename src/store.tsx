@@ -89,6 +89,7 @@ interface Store {
   addExerciseToActive: (exerciseId: string) => void;
   deleteSession: (id: string) => void;
   updateSessionExercise: (sessionId: string, exIdx: number, exerciseId: string) => void;
+  updateSessionDate: (sessionId: string, dateISO: string) => void;
   upsertExercise: (name: string, id?: string) => Exercise;
   addGym: (name: string) => Gym;
   setCurrentGym: (id: string) => void;
@@ -210,6 +211,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
                 }
               : s,
           ),
+        }));
+      },
+
+      updateSessionDate(sessionId, dateISO) {
+        setData((d) => ({
+          ...d,
+          sessions: d.sessions.map((s) => (s.id === sessionId ? { ...s, date: dateISO } : s)),
         }));
       },
 
