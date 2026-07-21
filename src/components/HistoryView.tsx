@@ -180,7 +180,7 @@ export function HistoryView() {
                 setEditing(null);
               }}
             >
-              Delete set
+              Delete
             </button>
           </div>
         </div>

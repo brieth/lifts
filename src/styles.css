@@ -758,8 +758,10 @@ body {
   flex-direction: column;
   gap: 5px;
   flex: 1;
+  min-width: 0; /* let the field shrink so the input can't overflow the modal */
 }
 .set-edit-field input {
+  width: 100%;
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: 8px;
