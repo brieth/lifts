@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useStore } from '../store';
 import { sessionVolume } from '../lib/stats';
 import { MonthCalendar } from './MonthCalendar';
@@ -11,7 +11,17 @@ function toDateInput(iso: string): string {
 }
 
 export function HistoryView() {
-  const { data, deleteSession, updateSessionExercise, updateSessionDate } = useStore();
+  const {
+    data,
+    deleteSession,
+    updateSessionExercise,
+    updateSessionDate,
+    updateSessionSet,
+    deleteSessionSet,
+  } = useStore();
+
+  // which set is currently open for editing, as `${sessionId}:${exIdx}:${setIdx}`
+  const [editingSet, setEditingSet] = useState<string | null>(null);
 
   // all exercises, sorted by name, for the edit dropdowns
   const exerciseOptions = useMemo(
@@ -85,11 +95,64 @@ export function HistoryView() {
                       ))}
                     </select>
                     <div className="history-sets">
-                      {e.sets.map((st, j) => (
-                        <span key={j} className="history-set">
-                          {st.weight}×{st.reps}
-                        </span>
-                      ))}
+                      {e.sets.map((st, j) => {
+                        const key = `${s.id}:${i}:${j}`;
+                        if (editingSet === key) {
+                          return (
+                            <span key={j} className="history-set editing">
+                              <input
+                                type="number"
+                                inputMode="decimal"
+                                className="hs-input"
+                                value={st.weight || ''}
+                                placeholder="0"
+                                aria-label="Weight"
+                                onChange={(ev) =>
+                                  updateSessionSet(s.id, i, j, { weight: Number(ev.target.value) })
+                                }
+                              />
+                              <span className="hs-x">×</span>
+                              <input
+                                type="number"
+                                inputMode="numeric"
+                                className="hs-input"
+                                value={st.reps || ''}
+                                placeholder="0"
+                                aria-label="Reps"
+                                onChange={(ev) =>
+                                  updateSessionSet(s.id, i, j, { reps: Number(ev.target.value) })
+                                }
+                              />
+                              <button
+                                className="hs-del"
+                                aria-label="Delete set"
+                                onClick={() => {
+                                  deleteSessionSet(s.id, i, j);
+                                  setEditingSet(null);
+                                }}
+                              >
+                                Delete
+                              </button>
+                              <button
+                                className="hs-done"
+                                aria-label="Done editing set"
+                                onClick={() => setEditingSet(null)}
+                              >
+                                ✓
+                              </button>
+                            </span>
+                          );
+                        }
+                        return (
+                          <button
+                            key={j}
+                            className="history-set"
+                            onClick={() => setEditingSet(key)}
+                          >
+                            {st.weight}×{st.reps}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 ))}

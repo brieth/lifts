@@ -90,6 +90,13 @@ interface Store {
   deleteSession: (id: string) => void;
   updateSessionExercise: (sessionId: string, exIdx: number, exerciseId: string) => void;
   updateSessionDate: (sessionId: string, dateISO: string) => void;
+  updateSessionSet: (
+    sessionId: string,
+    exIdx: number,
+    setIdx: number,
+    patch: Partial<SetEntry>,
+  ) => void;
+  deleteSessionSet: (sessionId: string, exIdx: number, setIdx: number) => void;
   upsertExercise: (name: string, id?: string) => Exercise;
   addGym: (name: string) => Gym;
   setCurrentGym: (id: string) => void;
@@ -219,6 +226,43 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           ...d,
           sessions: d.sessions.map((s) => (s.id === sessionId ? { ...s, date: dateISO } : s)),
         }));
+      },
+
+      updateSessionSet(sessionId, exIdx, setIdx, patch) {
+        setData((d) => ({
+          ...d,
+          sessions: d.sessions.map((s) =>
+            s.id === sessionId
+              ? {
+                  ...s,
+                  exercises: s.exercises.map((e, i) =>
+                    i === exIdx
+                      ? { ...e, sets: e.sets.map((st, j) => (j === setIdx ? { ...st, ...patch } : st)) }
+                      : e,
+                  ),
+                }
+              : s,
+          ),
+        }));
+      },
+
+      deleteSessionSet(sessionId, exIdx, setIdx) {
+        setData((d) => {
+          const sessions = d.sessions
+            .map((s) => {
+              if (s.id !== sessionId) return s;
+              const exercises = s.exercises
+                .map((e, i) =>
+                  i === exIdx ? { ...e, sets: e.sets.filter((_, j) => j !== setIdx) } : e,
+                )
+                // an exercise with no sets left is removed entirely
+                .filter((e) => e.sets.length > 0);
+              return { ...s, exercises };
+            })
+            // a session with no exercises left is removed entirely
+            .filter((s) => s.exercises.length > 0);
+          return { ...d, sessions };
+        });
       },
 
       upsertExercise(name, id) {

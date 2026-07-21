@@ -743,6 +743,50 @@ body {
   font-size: 13px;
   font-variant-numeric: tabular-nums;
   color: var(--muted);
+  font-family: inherit;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+.history-set.editing {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 4px;
+  cursor: default;
+}
+.hs-input {
+  width: 40px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  padding: 2px;
+}
+.hs-x {
+  color: var(--muted);
+}
+.hs-del,
+.hs-done {
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 3px 5px;
+  border-radius: 4px;
+}
+.hs-del {
+  color: var(--danger);
+}
+.hs-done {
+  color: var(--accent);
+  font-size: 14px;
 }
 
 /* ---------- progress ---------- */
