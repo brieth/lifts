@@ -13,6 +13,7 @@ function toDateInput(iso: string): string {
 export function HistoryView() {
   const {
     data,
+    exerciseName,
     deleteSession,
     updateSessionExercise,
     updateSessionDate,
@@ -20,8 +21,18 @@ export function HistoryView() {
     deleteSessionSet,
   } = useStore();
 
-  // which set is currently open for editing, as `${sessionId}:${exIdx}:${setIdx}`
-  const [editingSet, setEditingSet] = useState<string | null>(null);
+  // which set is open in the edit popup (null = closed)
+  const [editing, setEditing] = useState<{
+    sessionId: string;
+    exIdx: number;
+    setIdx: number;
+  } | null>(null);
+
+  const editSet =
+    editing &&
+    data.sessions
+      .find((s) => s.id === editing.sessionId)
+      ?.exercises[editing.exIdx]?.sets[editing.setIdx];
 
   // all exercises, sorted by name, for the edit dropdowns
   const exerciseOptions = useMemo(
@@ -95,64 +106,15 @@ export function HistoryView() {
                       ))}
                     </select>
                     <div className="history-sets">
-                      {e.sets.map((st, j) => {
-                        const key = `${s.id}:${i}:${j}`;
-                        if (editingSet === key) {
-                          return (
-                            <span key={j} className="history-set editing">
-                              <input
-                                type="number"
-                                inputMode="decimal"
-                                className="hs-input"
-                                value={st.weight || ''}
-                                placeholder="0"
-                                aria-label="Weight"
-                                onChange={(ev) =>
-                                  updateSessionSet(s.id, i, j, { weight: Number(ev.target.value) })
-                                }
-                              />
-                              <span className="hs-x">×</span>
-                              <input
-                                type="number"
-                                inputMode="numeric"
-                                className="hs-input"
-                                value={st.reps || ''}
-                                placeholder="0"
-                                aria-label="Reps"
-                                onChange={(ev) =>
-                                  updateSessionSet(s.id, i, j, { reps: Number(ev.target.value) })
-                                }
-                              />
-                              <button
-                                className="hs-del"
-                                aria-label="Delete set"
-                                onClick={() => {
-                                  deleteSessionSet(s.id, i, j);
-                                  setEditingSet(null);
-                                }}
-                              >
-                                Delete
-                              </button>
-                              <button
-                                className="hs-done"
-                                aria-label="Done editing set"
-                                onClick={() => setEditingSet(null)}
-                              >
-                                ✓
-                              </button>
-                            </span>
-                          );
-                        }
-                        return (
-                          <button
-                            key={j}
-                            className="history-set"
-                            onClick={() => setEditingSet(key)}
-                          >
-                            {st.weight}×{st.reps}
-                          </button>
-                        );
-                      })}
+                      {e.sets.map((st, j) => (
+                        <button
+                          key={j}
+                          className="history-set"
+                          onClick={() => setEditing({ sessionId: s.id, exIdx: i, setIdx: j })}
+                        >
+                          {st.weight}×{st.reps}
+                        </button>
+                      ))}
                     </div>
                   </div>
                 ))}
@@ -164,6 +126,64 @@ export function HistoryView() {
           );
         })}
       </div>
+      )}
+
+      {editing && editSet && (
+        <div className="modal-overlay" onClick={() => setEditing(null)}>
+          <div className="modal" onClick={(ev) => ev.stopPropagation()}>
+            <div className="modal-head">
+              <span className="modal-title">
+                {exerciseName(
+                  data.sessions.find((s) => s.id === editing.sessionId)!.exercises[editing.exIdx]
+                    .exerciseId,
+                )}
+              </span>
+              <button className="btn ghost small" onClick={() => setEditing(null)}>
+                Close
+              </button>
+            </div>
+            <div className="muted small">Set {editing.setIdx + 1}</div>
+            <div className="set-edit">
+              <label className="set-edit-field">
+                <span className="muted small">Weight</span>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  value={editSet.weight || ''}
+                  placeholder="0"
+                  onChange={(ev) =>
+                    updateSessionSet(editing.sessionId, editing.exIdx, editing.setIdx, {
+                      weight: Number(ev.target.value),
+                    })
+                  }
+                />
+              </label>
+              <label className="set-edit-field">
+                <span className="muted small">Reps</span>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  value={editSet.reps || ''}
+                  placeholder="0"
+                  onChange={(ev) =>
+                    updateSessionSet(editing.sessionId, editing.exIdx, editing.setIdx, {
+                      reps: Number(ev.target.value),
+                    })
+                  }
+                />
+              </label>
+            </div>
+            <button
+              className="btn ghost small danger"
+              onClick={() => {
+                deleteSessionSet(editing.sessionId, editing.exIdx, editing.setIdx);
+                setEditing(null);
+              }}
+            >
+              Delete set
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

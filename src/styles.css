@@ -748,45 +748,27 @@ body {
   appearance: none;
   -webkit-appearance: none;
 }
-.history-set.editing {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  padding: 2px 4px;
-  cursor: default;
+.set-edit {
+  display: flex;
+  gap: 12px;
+  margin: 12px 0 16px;
 }
-.hs-input {
-  width: 40px;
-  background: var(--bg);
+.set-edit-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+}
+.set-edit-field input {
+  background: var(--surface-2);
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: 8px;
+  padding: 10px;
   color: var(--text);
   font-family: inherit;
-  font-size: 13px;
-  font-variant-numeric: tabular-nums;
+  font-size: 16px;
   text-align: center;
-  padding: 2px;
-}
-.hs-x {
-  color: var(--muted);
-}
-.hs-del,
-.hs-done {
-  border: none;
-  background: transparent;
-  font-family: inherit;
-  font-size: 12px;
-  line-height: 1;
-  cursor: pointer;
-  padding: 3px 5px;
-  border-radius: 4px;
-}
-.hs-del {
-  color: var(--danger);
-}
-.hs-done {
-  color: var(--accent);
-  font-size: 14px;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ---------- progress ---------- */
