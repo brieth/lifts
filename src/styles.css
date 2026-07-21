@@ -682,20 +682,22 @@ body {
   border-top: 1px solid var(--border);
   padding-top: 12px;
 }
-.history-date-edit {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 14px;
+.history-date {
+  position: relative;
+  display: inline-block;
+  border-bottom: 1px dotted var(--border);
 }
-.history-date-edit input {
-  font-family: inherit;
-  font-size: 14px;
-  color: var(--text);
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 6px 10px;
+/* Transparent, tappable native date input laid exactly over the readable date. */
+.history-date-native {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  opacity: 0;
+  cursor: pointer;
 }
 .history-exercise {
   margin-bottom: 10px;

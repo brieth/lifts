@@ -44,31 +44,33 @@ export function HistoryView() {
                 <div>
                   <div className="history-name">{s.name}</div>
                   <div className="muted small">
-                    {date.toLocaleDateString(undefined, {
-                      weekday: 'short',
-                      month: 'short',
-                      day: 'numeric',
-                    })}{' '}
+                    <span className="history-date">
+                      {date.toLocaleDateString(undefined, {
+                        weekday: 'short',
+                        month: 'short',
+                        day: 'numeric',
+                      })}
+                      {/* transparent native picker over the readable text; editing
+                          keeps the original time-of-day and only moves the date. */}
+                      <input
+                        type="date"
+                        className="history-date-native"
+                        value={toDateInput(s.date)}
+                        onClick={(ev) => ev.stopPropagation()}
+                        onChange={(ev) => {
+                          if (!ev.target.value) return;
+                          const [y, m, day] = ev.target.value.split('-').map(Number);
+                          const nd = new Date(s.date);
+                          nd.setFullYear(y, m - 1, day);
+                          updateSessionDate(s.id, nd.toISOString());
+                        }}
+                      />
+                    </span>{' '}
                     · {sets} sets · {Math.round(sessionVolume(s)).toLocaleString()} lb volume
                   </div>
                 </div>
               </summary>
               <div className="history-body">
-                <label className="history-date-edit">
-                  <span className="muted small">Date</span>
-                  <input
-                    type="date"
-                    value={toDateInput(s.date)}
-                    onChange={(ev) => {
-                      if (!ev.target.value) return;
-                      const [y, m, day] = ev.target.value.split('-').map(Number);
-                      // Keep the original time-of-day; only move the calendar date.
-                      const nd = new Date(s.date);
-                      nd.setFullYear(y, m - 1, day);
-                      updateSessionDate(s.id, nd.toISOString());
-                    }}
-                  />
-                </label>
                 {s.exercises.map((e, i) => (
                   <div key={i} className="history-exercise">
                     <select
