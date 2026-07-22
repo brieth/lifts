@@ -145,7 +145,7 @@ export function HistoryView() {
             <div className="muted small">Set {editing.setIdx + 1}</div>
             <div className="set-edit">
               <label className="set-edit-field">
-                <span className="muted small">Weight</span>
+                <span className="set-edit-label">lb</span>
                 <input
                   type="number"
                   inputMode="decimal"
@@ -159,7 +159,7 @@ export function HistoryView() {
                 />
               </label>
               <label className="set-edit-field">
-                <span className="muted small">Reps</span>
+                <span className="set-edit-label">Reps</span>
                 <input
                   type="number"
                   inputMode="numeric"

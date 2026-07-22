@@ -760,6 +760,14 @@ body {
   flex: 1;
   min-width: 0; /* let the field shrink so the input can't overflow the modal */
 }
+/* Match the workout tab's set-header labels: centered, uppercase, muted. */
+.set-edit-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  text-align: center;
+}
 .set-edit-field input {
   width: 100%;
   background: var(--surface-2);
