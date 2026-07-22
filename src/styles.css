@@ -749,36 +749,12 @@ body {
   -webkit-appearance: none;
 }
 .set-edit {
-  display: flex;
-  gap: 12px;
   margin: 12px 0 16px;
 }
-.set-edit-field {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  flex: 1;
-  min-width: 0; /* let the field shrink so the input can't overflow the modal */
-}
-/* Match the workout tab's set-header labels: centered, uppercase, muted. */
-.set-edit-label {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--muted);
-  text-align: center;
-}
-.set-edit-field input {
-  width: 100%;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 10px;
-  color: var(--text);
-  font-family: inherit;
-  font-size: 16px;
-  text-align: center;
-  font-variant-numeric: tabular-nums;
+/* Reuse the workout tab's set grid, minus the check/remove columns. */
+.set-header.compact,
+.set-row.compact {
+  grid-template-columns: 34px 1fr 1fr;
 }
 
 /* ---------- progress ---------- */

@@ -142,10 +142,14 @@ export function HistoryView() {
                 Close
               </button>
             </div>
-            <div className="muted small">Set {editing.setIdx + 1}</div>
             <div className="set-edit">
-              <label className="set-edit-field">
-                <span className="set-edit-label">lb</span>
+              <div className="set-header compact">
+                <span>Set</span>
+                <span>lb</span>
+                <span>Reps</span>
+              </div>
+              <div className="set-row compact">
+                <span className="set-num">{editing.setIdx + 1}</span>
                 <input
                   type="number"
                   inputMode="decimal"
@@ -157,9 +161,6 @@ export function HistoryView() {
                     })
                   }
                 />
-              </label>
-              <label className="set-edit-field">
-                <span className="set-edit-label">Reps</span>
                 <input
                   type="number"
                   inputMode="numeric"
@@ -171,7 +172,7 @@ export function HistoryView() {
                     })
                   }
                 />
-              </label>
+              </div>
             </div>
             <button
               className="btn ghost small danger"
