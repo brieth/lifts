@@ -1,11 +1,14 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../store';
-import { exerciseHistory } from '../lib/stats';
+import { exerciseHistory, overallSeries } from '../lib/stats';
 import { sessionsForExercise } from '../lib/equipment';
 import { LineChart } from './LineChart';
 import { WeeklyMuscles } from './WeeklyMuscles';
 
 type Metric = 'best1RM' | 'volume';
+
+// Sentinel id for the aggregate "Overall" series (a whole-body strength/volume index).
+const OVERALL = '__overall__';
 
 const METRIC_LABELS: Record<Metric, string> = {
   best1RM: 'Strength',
@@ -38,7 +41,9 @@ export function ProgressView() {
     return [...ids].sort((a, b) => exerciseName(a).localeCompare(exerciseName(b)));
   }, [data.sessions, currentIds, exerciseName]);
 
-  const current = selected ?? tracked[0] ?? null;
+  // Overall is the default; individual exercises follow it in the dropdown.
+  const options = [OVERALL, ...tracked];
+  const current = selected ?? OVERALL;
 
   if (tracked.length === 0) {
     return (
@@ -49,8 +54,13 @@ export function ProgressView() {
     );
   }
 
-  const sub = current ? sessionsForExercise(data.sessions, current, data.currentGymId) : [];
-  const history = current ? exerciseHistory(sub, current) : [];
+  const history =
+    current === OVERALL
+      ? overallSeries(data.sessions, [...currentIds], data.currentGymId)
+      : exerciseHistory(
+          sessionsForExercise(data.sessions, current, data.currentGymId),
+          current,
+        );
   const values = history.map((p) => p[metric]);
   const labels = history.map((p) => new Date(p.date).toLocaleDateString());
   // Running (cumulative) mean through each session, including that session — no
@@ -82,10 +92,10 @@ export function ProgressView() {
         </div>
       )}
 
-      <select className="select" value={current ?? ''} onChange={(e) => setSelected(e.target.value)}>
-        {tracked.map((id) => (
+      <select className="select" value={current} onChange={(e) => setSelected(e.target.value)}>
+        {options.map((id) => (
           <option key={id} value={id}>
-            {exerciseName(id)}
+            {id === OVERALL ? 'Overall' : exerciseName(id)}
           </option>
         ))}
       </select>

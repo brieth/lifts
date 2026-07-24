@@ -1,4 +1,5 @@
 import type { Session, ID } from '../types';
+import { sessionsForExercise } from './equipment';
 
 /** Epley estimated 1-rep max. */
 export function estimated1RM(weight: number, reps: number): number {
@@ -132,6 +133,48 @@ export function bestEstimated1RM(
     best = Math.max(best, estimated1RM(s.weight, s.reps));
   }
   return Math.round(best);
+}
+
+/**
+ * Whole-body index. At each workout date, sum across `exerciseIds` of each
+ * exercise's most-recent best-1RM and most-recent session volume as of that
+ * date. Each exercise is looked up in its own gym scope (cables/machines are
+ * gym-relative, free weights global). Only exercises with logged history
+ * contribute, and each counts from its first performance onward, so the line
+ * steps up as new exercises enter the rotation.
+ */
+export function overallSeries(
+  sessions: Session[],
+  exerciseIds: ID[],
+  currentGymId: string | null,
+): ExercisePoint[] {
+  const perEx = exerciseIds
+    .map((id) => exerciseHistory(sessionsForExercise(sessions, id, currentGymId), id))
+    .filter((h) => h.length > 0);
+
+  const dates = [...new Set(perEx.flatMap((h) => h.map((p) => p.date)))].sort((a, b) =>
+    a.localeCompare(b),
+  );
+
+  return dates.map((date) => {
+    let best1RM = 0;
+    let volume = 0;
+    let topSet = 0;
+    for (const h of perEx) {
+      // latest performance at or before this date (h is oldest-first)
+      let latest: ExercisePoint | null = null;
+      for (const p of h) {
+        if (p.date <= date) latest = p;
+        else break;
+      }
+      if (latest) {
+        best1RM += latest.best1RM;
+        volume += latest.volume;
+        topSet += latest.topSet;
+      }
+    }
+    return { date, topSet, best1RM: Math.round(best1RM), volume };
+  });
 }
 
 export function sessionVolume(session: Session): number {
