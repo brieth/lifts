@@ -1,5 +1,6 @@
 import type { Session, ID } from '../types';
 import { sessionsForExercise } from './equipment';
+import { limbFactor } from './laterality';
 
 /** Epley estimated 1-rep max. */
 export function estimated1RM(weight: number, reps: number): number {
@@ -149,10 +150,13 @@ export function overallSeries(
   currentGymId: string | null,
 ): ExercisePoint[] {
   const perEx = exerciseIds
-    .map((id) => exerciseHistory(sessionsForExercise(sessions, id, currentGymId), id))
-    .filter((h) => h.length > 0);
+    .map((id) => ({
+      factor: limbFactor(id), // per-limb movements count double in the aggregate
+      history: exerciseHistory(sessionsForExercise(sessions, id, currentGymId), id),
+    }))
+    .filter((e) => e.history.length > 0);
 
-  const dates = [...new Set(perEx.flatMap((h) => h.map((p) => p.date)))].sort((a, b) =>
+  const dates = [...new Set(perEx.flatMap((e) => e.history.map((p) => p.date)))].sort((a, b) =>
     a.localeCompare(b),
   );
 
@@ -160,20 +164,20 @@ export function overallSeries(
     let best1RM = 0;
     let volume = 0;
     let topSet = 0;
-    for (const h of perEx) {
-      // latest performance at or before this date (h is oldest-first)
+    for (const { factor, history } of perEx) {
+      // latest performance at or before this date (history is oldest-first)
       let latest: ExercisePoint | null = null;
-      for (const p of h) {
+      for (const p of history) {
         if (p.date <= date) latest = p;
         else break;
       }
       if (latest) {
-        best1RM += latest.best1RM;
-        volume += latest.volume;
-        topSet += latest.topSet;
+        best1RM += latest.best1RM * factor;
+        volume += latest.volume * factor;
+        topSet += latest.topSet * factor;
       }
     }
-    return { date, topSet, best1RM: Math.round(best1RM), volume };
+    return { date, topSet, best1RM: Math.round(best1RM), volume: Math.round(volume) };
   });
 }
 
