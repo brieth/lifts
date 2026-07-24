@@ -99,7 +99,6 @@ const DEFAULT_REPS = 10;
  * alphabetically by name. The routine's own leg exercise stays the default.
  */
 const LEG_OPTIONS: ExRef[] = [
-  ['machine-glute-bridge', 'Machine Glute Bridge'],
   ['machine-hip-abductor', 'Machine Hip Abductor'],
   ['machine-hip-adductor', 'Machine Hip Adductor'],
   ['machine-leg-curl', 'Machine Leg Curl'],
