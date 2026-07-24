@@ -54,9 +54,13 @@ export function ProgressView() {
     );
   }
 
+  // Overall hides its first cycle of workouts: those points are the coverage
+  // ramp (each exercise entering the basket steps the line up), which skews the
+  // y-axis. Only show Overall once a full routine cycle has been logged.
+  const OVERALL_WARMUP = 5;
   const history =
     current === OVERALL
-      ? overallSeries(data.sessions, [...currentIds], data.currentGymId)
+      ? overallSeries(data.sessions, [...currentIds], data.currentGymId).slice(OVERALL_WARMUP)
       : exerciseHistory(
           sessionsForExercise(data.sessions, current, data.currentGymId),
           current,
