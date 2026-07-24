@@ -100,7 +100,7 @@ export function LineChart({ values, mean, labels, color = '#2dd4bf' }: Props) {
         <circle key={i} cx={x(i)} cy={y(v)} r={2.5} fill={color}>
           <title>
             {labels?.[i] ? `${labels[i]}: ` : ''}
-            {v}
+            {fmtNum(v)}
           </title>
         </circle>
       ))}

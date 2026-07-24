@@ -118,10 +118,12 @@ export function ProgressView() {
             </div>
             <div className="chart-stats">
               <span>
-                <span className="cs-k">Last</span> <strong>{values[values.length - 1]}</strong>
+                <span className="cs-k">Last</span>{' '}
+                <strong>{values[values.length - 1].toLocaleString()}</strong>
               </span>
               <span>
-                <span className="cs-k">Best</span> <strong>{Math.max(...values)}</strong>
+                <span className="cs-k">Best</span>{' '}
+                <strong>{Math.max(...values).toLocaleString()}</strong>
               </span>
               <span className="cs-n">{history.length} sessions</span>
             </div>

@@ -339,7 +339,7 @@ function ExerciseHistoryModal({
                   <span className="modal-row-stats">
                     <span className="kv">
                       <SvBadge letter="S" />
-                      {r.best1RM}
+                      {r.best1RM.toLocaleString()}
                     </span>
                     <span className="kv">
                       <SvBadge letter="V" />
