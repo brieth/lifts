@@ -19,6 +19,20 @@ export function WeeklyMuscles() {
     return s;
   }, [offset]);
 
+  // Earliest week that has data — the back button stops here instead of scrolling
+  // into empty weeks forever. 0 (no earlier navigation) when there's no history.
+  const minOffset = useMemo(() => {
+    if (data.sessions.length === 0) return 0;
+    let earliest = data.sessions[0].date;
+    for (const s of data.sessions) if (s.date < earliest) earliest = s.date;
+    const earliestWeek = weekStart(new Date(earliest));
+    const thisWeek = weekStart(new Date());
+    const weeks = Math.round(
+      (thisWeek.getTime() - earliestWeek.getTime()) / (7 * 24 * 60 * 60 * 1000),
+    );
+    return -weeks;
+  }, [data.sessions]);
+
   // The active session only contributes to the current week's planned/logged.
   const active = offset === 0 ? data.activeSession : null;
   const tally = useMemo(
@@ -35,7 +49,12 @@ export function WeeklyMuscles() {
   return (
     <div className="weekly">
       <div className="week-nav">
-        <button className="week-arrow" onClick={() => setOffset((o) => o - 1)} aria-label="Previous week">
+        <button
+          className="week-arrow"
+          onClick={() => setOffset((o) => Math.max(minOffset, o - 1))}
+          disabled={offset <= minOffset}
+          aria-label="Previous week"
+        >
           ‹
         </button>
         <div className="week-range">
