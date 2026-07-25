@@ -1,20 +1,20 @@
 interface Props {
   values: number[];
   /**
-   * Optional mean series (same length as values), drawn in white. Entries may be
-   * null (e.g. the first session has no prior mean) and are skipped.
+   * Optional reference series (same length as values), drawn as a dashed white
+   * line. Entries may be null and are skipped.
    */
-  mean?: (number | null)[];
+  reference?: (number | null)[];
   /** Per-point labels — used for point tooltips only (no x-axis text). */
   labels?: string[];
   color?: string;
 }
 
 const fmtNum = (n: number) => Math.round(n).toLocaleString();
-const MEAN_COLOR = '#ffffff';
+const REFERENCE_COLOR = '#ffffff';
 
 /** Lightweight dependency-free SVG line chart with axis gridlines and labels. */
-export function LineChart({ values, mean, labels, color = '#2dd4bf' }: Props) {
+export function LineChart({ values, reference, labels, color = '#2dd4bf' }: Props) {
   if (values.length === 0) {
     return <div className="chart-empty">No data yet</div>;
   }
@@ -30,9 +30,9 @@ export function LineChart({ values, mean, labels, color = '#2dd4bf' }: Props) {
   const padT = 4;
   const padB = 4;
 
-  // Scale over both series so the mean line always fits.
-  const meanNums = mean ? mean.filter((v): v is number => v != null) : [];
-  const all = meanNums.length ? values.concat(meanNums) : values;
+  // Scale over both series so the reference line always fits.
+  const refNums = reference ? reference.filter((v): v is number => v != null) : [];
+  const all = refNums.length ? values.concat(refNums) : values;
   const max = Math.max(...all);
   const min = Math.min(...all);
   const span = max - min || 1;
@@ -40,17 +40,17 @@ export function LineChart({ values, mean, labels, color = '#2dd4bf' }: Props) {
   const innerW = W - padL - padR;
   const innerH = H - padT - padB;
 
-  // The mean series may carry one extra (forward) point, so x-spacing spans the
-  // longer of the two series.
-  const count = Math.max(values.length, mean ? mean.length : 0);
+  // The reference series may carry one extra (forward) point, so x-spacing spans
+  // the longer of the two series.
+  const count = Math.max(values.length, reference ? reference.length : 0);
   const x = (i: number) =>
     count <= 1 ? padL + innerW / 2 : padL + (i / (count - 1)) * innerW;
   const y = (v: number) => padT + innerH - ((v - min) / span) * innerH;
 
   const points = values.map((v, i) => `${x(i)},${y(v)}`).join(' ');
   const areaPoints = `${x(0)},${padT + innerH} ${points} ${x(values.length - 1)},${padT + innerH}`;
-  const meanPoints = mean
-    ? mean
+  const refPoints = reference
+    ? reference
         .map((v, i) => (v == null ? null : `${x(i)},${y(v)}`))
         .filter((p): p is string => p != null)
         .join(' ')
@@ -75,11 +75,11 @@ export function LineChart({ values, mean, labels, color = '#2dd4bf' }: Props) {
 
       <polygon points={areaPoints} fill={color} opacity={0.12} />
 
-      {meanPoints && (
+      {refPoints && (
         <polyline
-          points={meanPoints}
+          points={refPoints}
           fill="none"
-          stroke={MEAN_COLOR}
+          stroke={REFERENCE_COLOR}
           strokeWidth={1.5}
           strokeDasharray="4 3"
           strokeLinejoin="round"

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../store';
-import { exerciseHistory, overallSeries } from '../lib/stats';
+import { exerciseHistory, overallSeries, rollingQ3 } from '../lib/stats';
 import { sessionsForExercise } from '../lib/equipment';
 import { LineChart } from './LineChart';
 import { WeeklyMuscles } from './WeeklyMuscles';
@@ -54,26 +54,18 @@ export function ProgressView() {
     );
   }
 
-  // Overall hides its first cycle of workouts: those points are the coverage
-  // ramp (each exercise entering the basket steps the line up), which skews the
-  // y-axis. Only show Overall once a full routine cycle has been logged.
-  const OVERALL_WARMUP = 5;
   const history =
     current === OVERALL
-      ? overallSeries(data.sessions, [...currentIds], data.currentGymId).slice(OVERALL_WARMUP)
+      ? overallSeries(data.sessions, [...currentIds], data.currentGymId)
       : exerciseHistory(
           sessionsForExercise(data.sessions, current, data.currentGymId),
           current,
         );
   const values = history.map((p) => p[metric]);
   const labels = history.map((p) => new Date(p.date).toLocaleDateString());
-  // Running (cumulative) mean through each session, including that session — no
-  // lag, so the mean line starts at the first point and tracks the average to date.
-  const meanValues: (number | null)[] = values.map((_, i) => {
-    let sum = 0;
-    for (let k = 0; k <= i; k++) sum += values[k];
-    return sum / (i + 1);
-  });
+  // Rolling Q3: a competitive, outlier-resistant reference line (top quarter of
+  // the trailing window), replacing the old cumulative mean.
+  const q3Values = rollingQ3(values);
 
   return (
     <div className="view">
@@ -113,12 +105,12 @@ export function ProgressView() {
       </div>
 
       <div className="chart-wrap">
-        <LineChart values={values} mean={meanValues} labels={labels} />
+        <LineChart values={values} reference={q3Values} labels={labels} />
         {values.length > 0 && (
           <>
             <div className="chart-legend">
               <span className="lg lg-data">{METRIC_LABELS[metric]}</span>
-              <span className="lg lg-mean">Mean</span>
+              <span className="lg lg-mean">Q3</span>
             </div>
             <div className="chart-stats">
               <span>

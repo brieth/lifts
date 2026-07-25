@@ -6,7 +6,7 @@ import {
   bestExercisePoint,
   estimated1RM,
   lastExercisePoint,
-  meanExercisePoint,
+  q3ExercisePoint,
   recentEstimated1RM,
   weightForReps,
 } from '../lib/stats';
@@ -260,7 +260,7 @@ function ActiveSession() {
               targetReps={targetReps}
               suggestedWeight={suggestedWeight}
               last={lastExercisePoint(hist, ex.exerciseId)}
-              mean={meanExercisePoint(hist, ex.exerciseId)}
+              q3={q3ExercisePoint(hist, ex.exerciseId)}
               best={bestExercisePoint(hist, ex.exerciseId)}
               options={options}
               menuLabel={menuLabel}
@@ -373,7 +373,7 @@ function ExerciseCard({
   targetReps,
   suggestedWeight,
   last,
-  mean,
+  q3,
   best,
   options,
   menuLabel,
@@ -388,7 +388,7 @@ function ExerciseCard({
   targetReps: number;
   suggestedWeight: number;
   last: { volume: number; best1RM: number } | null;
-  mean: { volume: number; best1RM: number } | null;
+  q3: { volume: number; best1RM: number } | null;
   best: { volume: number; best1RM: number } | null;
   options?: { id: string; name: string }[];
   menuLabel?: string;
@@ -470,7 +470,7 @@ function ExerciseCard({
           <span>Logged</span>
           <span>Planned</span>
           <span>Last</span>
-          <span>Mean</span>
+          <span>Q3</span>
           <span>Best</span>
         </div>
         <div className="ex-stats-row">
@@ -478,7 +478,7 @@ function ExerciseCard({
           <span className="a">{fmt(strLogged)}</span>
           <span>{fmt(strPlanned)}</span>
           <span>{fmt(last?.best1RM)}</span>
-          <span>{fmt(mean?.best1RM)}</span>
+          <span>{fmt(q3?.best1RM)}</span>
           <span>{fmt(best?.best1RM)}</span>
         </div>
         <div className="ex-stats-row">
@@ -486,7 +486,7 @@ function ExerciseCard({
           <span className="a">{fmt(volLogged)}</span>
           <span>{fmt(volPlanned)}</span>
           <span>{fmt(last?.volume)}</span>
-          <span>{fmt(mean?.volume)}</span>
+          <span>{fmt(q3?.volume)}</span>
           <span>{fmt(best?.volume)}</span>
         </div>
       </div>

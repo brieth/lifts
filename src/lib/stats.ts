@@ -95,17 +95,43 @@ export function lastExercisePoint(
   return { volume: p.volume, best1RM: p.best1RM };
 }
 
-/** Mean logged volume and mean est. 1RM per session for an exercise, or null. */
-export function meanExercisePoint(
+/** Linear-interpolated quantile (q in [0,1]) of a numeric sample. 0 if empty. */
+function quantile(sample: number[], q: number): number {
+  if (sample.length === 0) return 0;
+  const s = [...sample].sort((a, b) => a - b);
+  const rank = q * (s.length - 1);
+  const lo = Math.floor(rank);
+  const hi = Math.ceil(rank);
+  if (lo === hi) return s[lo];
+  return s[lo] + (rank - lo) * (s[hi] - s[lo]);
+}
+
+/** Trailing window (sessions) for the rolling-Q3 reference line. */
+export const Q3_WINDOW = 12;
+
+/**
+ * Rolling third-quartile (75th percentile): each point is the Q3 of the trailing
+ * `window` values up to and including it. A competitive, outlier-resistant
+ * reference that keeps pace as you improve (unlike a cumulative mean).
+ */
+export function rollingQ3(values: number[], window = Q3_WINDOW): number[] {
+  return values.map((_, i) => {
+    const start = Math.max(0, i - window + 1);
+    return Math.round(quantile(values.slice(start, i + 1), 0.75));
+  });
+}
+
+/** Rolling-Q3 (last Q3_WINDOW sessions) volume and est. 1RM for an exercise. */
+export function q3ExercisePoint(
   sessions: Session[],
   exerciseId: ID,
 ): { volume: number; best1RM: number } | null {
   const history = exerciseHistory(sessions, exerciseId);
   if (!history.length) return null;
-  const n = history.length;
+  const w = history.slice(-Q3_WINDOW);
   return {
-    volume: Math.round(history.reduce((a, p) => a + p.volume, 0) / n),
-    best1RM: Math.round(history.reduce((a, p) => a + p.best1RM, 0) / n),
+    volume: Math.round(quantile(w.map((p) => p.volume), 0.75)),
+    best1RM: Math.round(quantile(w.map((p) => p.best1RM), 0.75)),
   };
 }
 
@@ -140,9 +166,13 @@ export function bestEstimated1RM(
  * Whole-body index. At each workout date, sum across `exerciseIds` of each
  * exercise's most-recent best-1RM and most-recent session volume as of that
  * date. Each exercise is looked up in its own gym scope (cables/machines are
- * gym-relative, free weights global). Only exercises with logged history
- * contribute, and each counts from its first performance onward, so the line
- * steps up as new exercises enter the rotation.
+ * gym-relative, free weights global).
+ *
+ * An exercise's value is back-filled to dates BEFORE its first performance,
+ * using that first value. This keeps the basket constant over time, so adding
+ * an exercise shifts the whole line up by a constant rather than creating a
+ * step. The only thing that moves the line is a real change in some exercise's
+ * most-recent number, i.e. actual progress.
  */
 export function overallSeries(
   sessions: Session[],
@@ -171,11 +201,11 @@ export function overallSeries(
         if (p.date <= date) latest = p;
         else break;
       }
-      if (latest) {
-        best1RM += latest.best1RM * factor;
-        volume += latest.volume * factor;
-        topSet += latest.topSet * factor;
-      }
+      // Before this exercise's first performance, back-fill its first value.
+      const point = latest ?? history[0];
+      best1RM += point.best1RM * factor;
+      volume += point.volume * factor;
+      topSet += point.topSet * factor;
     }
     return { date, topSet, best1RM: Math.round(best1RM), volume: Math.round(volume) };
   });
