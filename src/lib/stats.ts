@@ -107,7 +107,7 @@ function quantile(sample: number[], q: number): number {
 }
 
 /** Trailing window (sessions) for the rolling reference line. */
-export const ROLL_WINDOW = 12;
+export const ROLL_WINDOW = 9;
 
 /**
  * Rolling mean: each point is the average of the trailing `window` values up to
