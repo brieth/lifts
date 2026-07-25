@@ -35,7 +35,7 @@ export function exerciseHistory(sessions: Session[], exerciseId: ID): ExercisePo
       best1RM = Math.max(best1RM, estimated1RM(s.weight, s.reps));
       volume += s.weight * s.reps;
     }
-    points.push({ date: session.date, topSet, best1RM: Math.round(best1RM), volume });
+    points.push({ date: session.date, topSet, best1RM: Math.round(best1RM), volume: Math.round(volume) });
   }
   return points;
 }

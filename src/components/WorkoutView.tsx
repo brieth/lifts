@@ -302,7 +302,7 @@ function ExerciseHistoryModal({
       const logged = s.exercises.find((e) => e.exerciseId === exerciseId);
       const sets = logged?.sets.filter((st) => st.done && st.weight > 0 && st.reps > 0) ?? [];
       if (!sets.length) return null;
-      const volume = sets.reduce((a, st) => a + st.weight * st.reps, 0);
+      const volume = Math.round(sets.reduce((a, st) => a + st.weight * st.reps, 0));
       const best1RM = Math.round(
         Math.max(...sets.map((st) => estimated1RM(st.weight, st.reps))),
       );
