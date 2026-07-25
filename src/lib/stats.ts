@@ -106,29 +106,61 @@ function quantile(sample: number[], q: number): number {
   return s[lo] + (rank - lo) * (s[hi] - s[lo]);
 }
 
-/** Trailing window (sessions) for the rolling-Q3 reference line. */
-export const Q3_WINDOW = 12;
+/** Trailing window (sessions) for the rolling reference line. */
+export const ROLL_WINDOW = 12;
+
+/**
+ * Rolling mean: each point is the average of the trailing `window` values up to
+ * and including it. A gettable "floor" reference that sits below Best, so it
+ * stays a beatable consolation target on off days.
+ */
+export function rollingMean(values: number[], window = ROLL_WINDOW): number[] {
+  return values.map((_, i) => {
+    const w = values.slice(Math.max(0, i - window + 1), i + 1);
+    return Math.round(w.reduce((a, b) => a + b, 0) / w.length);
+  });
+}
+
+/** Rolling-mean (last ROLL_WINDOW sessions) volume and est. 1RM for an exercise. */
+export function meanExercisePoint(
+  sessions: Session[],
+  exerciseId: ID,
+): { volume: number; best1RM: number } | null {
+  const history = exerciseHistory(sessions, exerciseId);
+  if (!history.length) return null;
+  const w = history.slice(-ROLL_WINDOW);
+  const n = w.length;
+  return {
+    volume: Math.round(w.reduce((a, p) => a + p.volume, 0) / n),
+    best1RM: Math.round(w.reduce((a, p) => a + p.best1RM, 0) / n),
+  };
+}
+
+/*
+ * Q3 helpers, kept available in case we switch the reference line back to a
+ * rolling third-quartile. Not currently wired into the UI.
+ */
 
 /**
  * Rolling third-quartile (75th percentile): each point is the Q3 of the trailing
  * `window` values up to and including it. A competitive, outlier-resistant
- * reference that keeps pace as you improve (unlike a cumulative mean).
+ * reference that keeps pace as you improve.
  */
-export function rollingQ3(values: number[], window = Q3_WINDOW): number[] {
+export function rollingQ3(values: number[], window = ROLL_WINDOW): number[] {
   return values.map((_, i) => {
     const start = Math.max(0, i - window + 1);
     return Math.round(quantile(values.slice(start, i + 1), 0.75));
   });
 }
 
-/** Rolling-Q3 (last Q3_WINDOW sessions) volume and est. 1RM for an exercise. */
+/** Rolling-Q3 (last ROLL_WINDOW sessions) volume and est. 1RM for an exercise. */
 export function q3ExercisePoint(
   sessions: Session[],
   exerciseId: ID,
 ): { volume: number; best1RM: number } | null {
   const history = exerciseHistory(sessions, exerciseId);
   if (!history.length) return null;
-  const w = history.slice(-Q3_WINDOW);
+  const w = history.slice(-ROLL_WINDOW);
   return {
     volume: Math.round(quantile(w.map((p) => p.volume), 0.75)),
     best1RM: Math.round(quantile(w.map((p) => p.best1RM), 0.75)),

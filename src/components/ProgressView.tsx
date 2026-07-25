@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../store';
-import { exerciseHistory, overallSeries, rollingQ3 } from '../lib/stats';
+import { exerciseHistory, overallSeries, rollingMean } from '../lib/stats';
 import { sessionsForExercise } from '../lib/equipment';
 import { LineChart } from './LineChart';
 import { WeeklyMuscles } from './WeeklyMuscles';
@@ -63,9 +63,9 @@ export function ProgressView() {
         );
   const values = history.map((p) => p[metric]);
   const labels = history.map((p) => new Date(p.date).toLocaleDateString());
-  // Rolling Q3: a competitive, outlier-resistant reference line (top quarter of
-  // the trailing window), replacing the old cumulative mean.
-  const q3Values = rollingQ3(values);
+  // Rolling mean over the trailing window: a gettable "floor" reference that
+  // sits below Best, so it stays a beatable target on off days.
+  const meanValues = rollingMean(values);
 
   return (
     <div className="view">
@@ -105,12 +105,12 @@ export function ProgressView() {
       </div>
 
       <div className="chart-wrap">
-        <LineChart values={values} reference={q3Values} labels={labels} />
+        <LineChart values={values} reference={meanValues} labels={labels} />
         {values.length > 0 && (
           <>
             <div className="chart-legend">
               <span className="lg lg-data">{METRIC_LABELS[metric]}</span>
-              <span className="lg lg-mean">Q3</span>
+              <span className="lg lg-mean">Mean</span>
             </div>
             <div className="chart-stats">
               <span>

@@ -5,7 +5,7 @@ import {
   bestEstimated1RM,
   bestExercisePoint,
   estimated1RM,
-  q3ExercisePoint,
+  meanExercisePoint,
   recentEstimated1RM,
   weightForReps,
 } from '../lib/stats';
@@ -258,7 +258,7 @@ function ActiveSession() {
               name={exerciseName(ex.exerciseId)}
               targetReps={targetReps}
               suggestedWeight={suggestedWeight}
-              q3={q3ExercisePoint(hist, ex.exerciseId)}
+              mean={meanExercisePoint(hist, ex.exerciseId)}
               best={bestExercisePoint(hist, ex.exerciseId)}
               options={options}
               menuLabel={menuLabel}
@@ -370,7 +370,7 @@ function ExerciseCard({
   name,
   targetReps,
   suggestedWeight,
-  q3,
+  mean,
   best,
   options,
   menuLabel,
@@ -384,7 +384,7 @@ function ExerciseCard({
   name: string;
   targetReps: number;
   suggestedWeight: number;
-  q3: { volume: number; best1RM: number } | null;
+  mean: { volume: number; best1RM: number } | null;
   best: { volume: number; best1RM: number } | null;
   options?: { id: string; name: string }[];
   menuLabel?: string;
@@ -465,21 +465,21 @@ function ExerciseCard({
           <span />
           <span>Logged</span>
           <span>Planned</span>
-          <span>Q3</span>
+          <span>Mean</span>
           <span>Best</span>
         </div>
         <div className="ex-stats-row">
           <span className="k"><SvBadge letter="S" /></span>
           <span className="a">{fmt(strLogged)}</span>
           <span>{fmt(strPlanned)}</span>
-          <span>{fmt(q3?.best1RM)}</span>
+          <span>{fmt(mean?.best1RM)}</span>
           <span>{fmt(best?.best1RM)}</span>
         </div>
         <div className="ex-stats-row">
           <span className="k"><SvBadge letter="V" /></span>
           <span className="a">{fmt(volLogged)}</span>
           <span>{fmt(volPlanned)}</span>
-          <span>{fmt(q3?.volume)}</span>
+          <span>{fmt(mean?.volume)}</span>
           <span>{fmt(best?.volume)}</span>
         </div>
       </div>
