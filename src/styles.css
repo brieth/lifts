@@ -451,7 +451,7 @@ body {
 }
 .ex-stats-row {
   display: grid;
-  grid-template-columns: 26px repeat(5, 1fr);
+  grid-template-columns: 26px repeat(4, 1fr);
   align-items: center;
   padding: 3px 0;
 }

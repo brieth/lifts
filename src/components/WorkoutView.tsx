@@ -5,7 +5,6 @@ import {
   bestEstimated1RM,
   bestExercisePoint,
   estimated1RM,
-  lastExercisePoint,
   q3ExercisePoint,
   recentEstimated1RM,
   weightForReps,
@@ -259,7 +258,6 @@ function ActiveSession() {
               name={exerciseName(ex.exerciseId)}
               targetReps={targetReps}
               suggestedWeight={suggestedWeight}
-              last={lastExercisePoint(hist, ex.exerciseId)}
               q3={q3ExercisePoint(hist, ex.exerciseId)}
               best={bestExercisePoint(hist, ex.exerciseId)}
               options={options}
@@ -372,7 +370,6 @@ function ExerciseCard({
   name,
   targetReps,
   suggestedWeight,
-  last,
   q3,
   best,
   options,
@@ -387,7 +384,6 @@ function ExerciseCard({
   name: string;
   targetReps: number;
   suggestedWeight: number;
-  last: { volume: number; best1RM: number } | null;
   q3: { volume: number; best1RM: number } | null;
   best: { volume: number; best1RM: number } | null;
   options?: { id: string; name: string }[];
@@ -469,7 +465,6 @@ function ExerciseCard({
           <span />
           <span>Logged</span>
           <span>Planned</span>
-          <span>Last</span>
           <span>Q3</span>
           <span>Best</span>
         </div>
@@ -477,7 +472,6 @@ function ExerciseCard({
           <span className="k"><SvBadge letter="S" /></span>
           <span className="a">{fmt(strLogged)}</span>
           <span>{fmt(strPlanned)}</span>
-          <span>{fmt(last?.best1RM)}</span>
           <span>{fmt(q3?.best1RM)}</span>
           <span>{fmt(best?.best1RM)}</span>
         </div>
@@ -485,7 +479,6 @@ function ExerciseCard({
           <span className="k"><SvBadge letter="V" /></span>
           <span className="a">{fmt(volLogged)}</span>
           <span>{fmt(volPlanned)}</span>
-          <span>{fmt(last?.volume)}</span>
           <span>{fmt(q3?.volume)}</span>
           <span>{fmt(best?.volume)}</span>
         </div>
