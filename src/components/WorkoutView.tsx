@@ -499,6 +499,7 @@ function ExerciseCard({
             inputMode="decimal"
             value={s.weight || ''}
             placeholder={String(phWeights[i])}
+            onFocus={(e) => e.currentTarget.select()}
             onChange={(e) => onChange(i, { weight: Number(e.target.value), autoWeight: false })}
           />
           <input
@@ -506,6 +507,7 @@ function ExerciseCard({
             inputMode="numeric"
             value={s.reps || ''}
             placeholder={String(phReps[i])}
+            onFocus={(e) => e.currentTarget.select()}
             onChange={(e) => onChange(i, { reps: Number(e.target.value), autoReps: false })}
           />
           <button

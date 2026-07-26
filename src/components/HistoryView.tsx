@@ -155,6 +155,7 @@ export function HistoryView() {
                   inputMode="decimal"
                   value={editSet.weight || ''}
                   placeholder="0"
+                  onFocus={(ev) => ev.currentTarget.select()}
                   onChange={(ev) =>
                     updateSessionSet(editing.sessionId, editing.exIdx, editing.setIdx, {
                       weight: Number(ev.target.value),
@@ -166,6 +167,7 @@ export function HistoryView() {
                   inputMode="numeric"
                   value={editSet.reps || ''}
                   placeholder="0"
+                  onFocus={(ev) => ev.currentTarget.select()}
                   onChange={(ev) =>
                     updateSessionSet(editing.sessionId, editing.exIdx, editing.setIdx, {
                       reps: Number(ev.target.value),
