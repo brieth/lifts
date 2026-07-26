@@ -163,7 +163,11 @@ export function weeklyMuscleTally(
     }
   }
 
-  if (active && inWeek(active.date)) {
+  // An in-progress session is happening now, so it always counts toward the
+  // current week regardless of its start timestamp (it is only passed in for
+  // the current week). Without this, a workout started just before the Sunday
+  // boundary would be misattributed to last week and vanish from this week.
+  if (active) {
     for (const ex of active.exercises) {
       const done = ex.sets.filter((st) => st.done && st.weight > 0 && st.reps > 0).length;
       const planned = ex.sets.filter((st) => !st.done).length;
