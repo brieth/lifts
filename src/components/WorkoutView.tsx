@@ -13,6 +13,7 @@ import { defaultOneRMFor, EMPHASES, emphasisLabel, repsFor } from '../lib/reps';
 import { sessionsForExercise } from '../lib/equipment';
 import { AB_OPTION_IDS } from '../seed';
 import { SvBadge } from './SvBadge';
+import { NumField } from './NumField';
 
 export function WorkoutView() {
   const { data, startSession } = useStore();
@@ -494,21 +495,17 @@ function ExerciseCard({
       {ex.sets.map((s, i) => (
         <div key={i} className={`set-row ${s.done ? 'done' : ''}`}>
           <span className="set-num">{i + 1}</span>
-          <input
-            type="number"
+          <NumField
             inputMode="decimal"
-            value={s.weight || ''}
+            value={s.weight}
             placeholder={String(phWeights[i])}
-            onFocus={(e) => e.currentTarget.select()}
-            onChange={(e) => onChange(i, { weight: Number(e.target.value), autoWeight: false })}
+            onValue={(n) => onChange(i, { weight: n, autoWeight: false })}
           />
-          <input
-            type="number"
+          <NumField
             inputMode="numeric"
-            value={s.reps || ''}
+            value={s.reps}
             placeholder={String(phReps[i])}
-            onFocus={(e) => e.currentTarget.select()}
-            onChange={(e) => onChange(i, { reps: Number(e.target.value), autoReps: false })}
+            onValue={(n) => onChange(i, { reps: n, autoReps: false })}
           />
           <button
             className={`check ${s.done ? 'on' : ''}`}

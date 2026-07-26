@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useStore } from '../store';
 import { sessionVolume } from '../lib/stats';
 import { MonthCalendar } from './MonthCalendar';
+import { NumField } from './NumField';
 
 /** Stored ISO timestamp -> the YYYY-MM-DD a <input type="date"> expects (local). */
 function toDateInput(iso: string): string {
@@ -150,28 +151,20 @@ export function HistoryView() {
               </div>
               <div className="set-row compact">
                 <span className="set-num">{editing.setIdx + 1}</span>
-                <input
-                  type="number"
+                <NumField
                   inputMode="decimal"
-                  value={editSet.weight || ''}
+                  value={editSet.weight}
                   placeholder="0"
-                  onFocus={(ev) => ev.currentTarget.select()}
-                  onChange={(ev) =>
-                    updateSessionSet(editing.sessionId, editing.exIdx, editing.setIdx, {
-                      weight: Number(ev.target.value),
-                    })
+                  onValue={(n) =>
+                    updateSessionSet(editing.sessionId, editing.exIdx, editing.setIdx, { weight: n })
                   }
                 />
-                <input
-                  type="number"
+                <NumField
                   inputMode="numeric"
-                  value={editSet.reps || ''}
+                  value={editSet.reps}
                   placeholder="0"
-                  onFocus={(ev) => ev.currentTarget.select()}
-                  onChange={(ev) =>
-                    updateSessionSet(editing.sessionId, editing.exIdx, editing.setIdx, {
-                      reps: Number(ev.target.value),
-                    })
+                  onValue={(n) =>
+                    updateSessionSet(editing.sessionId, editing.exIdx, editing.setIdx, { reps: n })
                   }
                 />
               </div>
