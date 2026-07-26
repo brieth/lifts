@@ -1,11 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useStore } from '../store';
 import { exerciseHistory, overallSeries, rollingMean } from '../lib/stats';
 import { sessionsForExercise } from '../lib/equipment';
 import { LineChart } from './LineChart';
 import { WeeklyMuscles } from './WeeklyMuscles';
 
-type Metric = 'best1RM' | 'volume';
+export type Metric = 'best1RM' | 'volume';
 
 // Sentinel id for the aggregate "Overall" series (a whole-body strength/volume index).
 const OVERALL = '__overall__';
@@ -15,10 +15,20 @@ const METRIC_LABELS: Record<Metric, string> = {
   volume: 'Volume',
 };
 
-export function ProgressView() {
+// View state (selected exercise + metric) is owned by the parent Shell so it
+// survives tab switches, which unmount/remount this component.
+export function ProgressView({
+  metric,
+  setMetric,
+  selected,
+  setSelected,
+}: {
+  metric: Metric;
+  setMetric: (m: Metric) => void;
+  selected: string | null;
+  setSelected: (s: string | null) => void;
+}) {
   const { data, exerciseName, setCurrentGym } = useStore();
-  const [metric, setMetric] = useState<Metric>('best1RM');
-  const [selected, setSelected] = useState<string | null>(null);
 
   // ids reachable in the current program: every routine slot plus all of its
   // menu options (leg + ab menus), so phased-out exercises are excluded.

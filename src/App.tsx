@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { StoreProvider, useStore } from './store';
 import { WorkoutView } from './components/WorkoutView';
 import { HistoryView } from './components/HistoryView';
-import { ProgressView } from './components/ProgressView';
+import { ProgressView, type Metric } from './components/ProgressView';
 import { RoutinesView } from './components/RoutinesView';
 
 type Tab = 'workout' | 'history' | 'progress' | 'routine';
@@ -16,6 +16,9 @@ const TABS: { id: Tab; label: string; icon: string }[] = [
 
 function Shell() {
   const [tab, setTab] = useState<Tab>('workout');
+  // Progress view state lives here so it persists across tab switches.
+  const [progressMetric, setProgressMetric] = useState<Metric>('best1RM');
+  const [progressExercise, setProgressExercise] = useState<string | null>(null);
   const { data } = useStore();
   const active = !!data.activeSession;
 
@@ -24,7 +27,14 @@ function Shell() {
       <main className="content">
         {tab === 'workout' && <WorkoutView />}
         {tab === 'history' && <HistoryView />}
-        {tab === 'progress' && <ProgressView />}
+        {tab === 'progress' && (
+          <ProgressView
+            metric={progressMetric}
+            setMetric={setProgressMetric}
+            selected={progressExercise}
+            setSelected={setProgressExercise}
+          />
+        )}
         {tab === 'routine' && <RoutinesView />}
       </main>
 
