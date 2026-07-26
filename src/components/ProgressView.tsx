@@ -54,15 +54,9 @@ export function ProgressView({
   // Overall is the default; individual exercises follow it in the dropdown.
   const options = [OVERALL, ...tracked];
   const current = selected ?? OVERALL;
-
-  if (tracked.length === 0) {
-    return (
-      <div className="view">
-        <h1>Progress</h1>
-        <p className="muted subtitle">Log some workouts to see your weekly volume and strength curves.</p>
-      </div>
-    );
-  }
+  // The chart needs finished-session history; the weekly muscle panel below
+  // works off the active session too, so it always renders (even mid-first-workout).
+  const hasHistory = tracked.length > 0;
 
   const history =
     current === OVERALL
@@ -98,44 +92,50 @@ export function ProgressView({
         </div>
       )}
 
-      <select className="select" value={current} onChange={(e) => setSelected(e.target.value)}>
-        {options.map((id) => (
-          <option key={id} value={id}>
-            {id === OVERALL ? 'Overall' : exerciseName(id)}
-          </option>
-        ))}
-      </select>
+      {hasHistory ? (
+        <>
+          <select className="select" value={current} onChange={(e) => setSelected(e.target.value)}>
+            {options.map((id) => (
+              <option key={id} value={id}>
+                {id === OVERALL ? 'Overall' : exerciseName(id)}
+              </option>
+            ))}
+          </select>
 
-      <div className="metric-toggle">
-        {(Object.keys(METRIC_LABELS) as Metric[]).map((m) => (
-          <button key={m} className={m === metric ? 'active' : ''} onClick={() => setMetric(m)}>
-            {METRIC_LABELS[m]}
-          </button>
-        ))}
-      </div>
+          <div className="metric-toggle">
+            {(Object.keys(METRIC_LABELS) as Metric[]).map((m) => (
+              <button key={m} className={m === metric ? 'active' : ''} onClick={() => setMetric(m)}>
+                {METRIC_LABELS[m]}
+              </button>
+            ))}
+          </div>
 
-      <div className="chart-wrap">
-        <LineChart values={values} reference={meanValues} labels={labels} />
-        {values.length > 0 && (
-          <>
-            <div className="chart-legend">
-              <span className="lg lg-data">{METRIC_LABELS[metric]}</span>
-              <span className="lg lg-mean">Mean</span>
-            </div>
-            <div className="chart-stats">
-              <span>
-                <span className="cs-k">Last</span>{' '}
-                <strong>{values[values.length - 1].toLocaleString()}</strong>
-              </span>
-              <span>
-                <span className="cs-k">Best</span>{' '}
-                <strong>{Math.max(...values).toLocaleString()}</strong>
-              </span>
-              <span className="cs-n">{history.length} sessions</span>
-            </div>
-          </>
-        )}
-      </div>
+          <div className="chart-wrap">
+            <LineChart values={values} reference={meanValues} labels={labels} />
+            {values.length > 0 && (
+              <>
+                <div className="chart-legend">
+                  <span className="lg lg-data">{METRIC_LABELS[metric]}</span>
+                  <span className="lg lg-mean">Mean</span>
+                </div>
+                <div className="chart-stats">
+                  <span>
+                    <span className="cs-k">Last</span>{' '}
+                    <strong>{values[values.length - 1].toLocaleString()}</strong>
+                  </span>
+                  <span>
+                    <span className="cs-k">Best</span>{' '}
+                    <strong>{Math.max(...values).toLocaleString()}</strong>
+                  </span>
+                  <span className="cs-n">{history.length} sessions</span>
+                </div>
+              </>
+            )}
+          </div>
+        </>
+      ) : (
+        <p className="muted subtitle">Finish a workout to see your volume and strength curves.</p>
+      )}
 
       <WeeklyMuscles />
     </div>
