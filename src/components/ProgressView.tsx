@@ -127,15 +127,6 @@ export function ProgressView({
             ))}
           </div>
 
-          {goal != null && (
-            <button
-              className={showGoal ? 'goal-toggle active' : 'goal-toggle'}
-              onClick={() => setShowGoal((s) => !s)}
-            >
-              Goal {goal.toLocaleString()}
-            </button>
-          )}
-
           <div className="chart-wrap">
             <LineChart
               values={values}
@@ -148,6 +139,14 @@ export function ProgressView({
                 <div className="chart-legend">
                   <span className="lg lg-data">{METRIC_LABELS[metric]}</span>
                   <span className="lg lg-mean">Mean</span>
+                  {goal != null && (
+                    <button
+                      className={showGoal ? 'goal-toggle active' : 'goal-toggle'}
+                      onClick={() => setShowGoal((s) => !s)}
+                    >
+                      Goal {goal.toLocaleString()}
+                    </button>
+                  )}
                 </div>
                 <div className="chart-stats">
                   <span>

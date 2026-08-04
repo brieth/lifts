@@ -757,16 +757,18 @@ body {
   grid-template-columns: 34px 1fr 1fr;
 }
 
+/* Sits at the right end of the chart legend row. */
 .goal-toggle {
-  margin-top: 8px;
+  margin-left: auto;
   background: transparent;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 6px;
   color: var(--muted);
   font-family: inherit;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
-  padding: 5px 11px;
+  line-height: 1;
+  padding: 3px 8px;
   cursor: pointer;
 }
 .goal-toggle.active {
@@ -969,6 +971,7 @@ body {
 }
 .chart-legend {
   display: flex;
+  align-items: center;
   gap: 14px;
   margin-top: 14px;
   font-size: 12px;
