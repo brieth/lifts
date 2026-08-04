@@ -4,13 +4,15 @@ import { WorkoutView } from './components/WorkoutView';
 import { HistoryView } from './components/HistoryView';
 import { ProgressView, type Metric } from './components/ProgressView';
 import { RoutinesView } from './components/RoutinesView';
+import { BodyView } from './components/BodyView';
 
-type Tab = 'workout' | 'history' | 'progress' | 'routine';
+type Tab = 'workout' | 'history' | 'progress' | 'body' | 'routine';
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: 'workout', label: 'Workout', icon: '🏋️' },
   { id: 'history', label: 'History', icon: '📅' },
   { id: 'progress', label: 'Progress', icon: '📈' },
+  { id: 'body', label: 'Body', icon: '🧍' },
   { id: 'routine', label: 'Routine', icon: '📋' },
 ];
 
@@ -35,6 +37,7 @@ function Shell() {
             setSelected={setProgressExercise}
           />
         )}
+        {tab === 'body' && <BodyView />}
         {tab === 'routine' && <RoutinesView />}
       </main>
 

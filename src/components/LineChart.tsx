@@ -10,7 +10,15 @@ interface Props {
   color?: string;
 }
 
-const fmtNum = (n: number) => Math.round(n).toLocaleString();
+/**
+ * Axis/tooltip formatting. Narrow ranges (body composition, light isolations)
+ * need a decimal or the tick labels collapse into duplicates; wide ones read
+ * better as whole numbers.
+ */
+const fmtNum = (n: number, span = Infinity) =>
+  span < 10
+    ? n.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+    : Math.round(n).toLocaleString();
 const REFERENCE_COLOR = '#ffffff';
 
 /** Lightweight dependency-free SVG line chart with axis gridlines and labels. */
@@ -67,7 +75,7 @@ export function LineChart({ values, reference, labels, color = '#2dd4bf' }: Prop
           <g key={k}>
             <line x1={padL} y1={ty} x2={W - padR} y2={ty} stroke="var(--border)" strokeWidth={1} />
             <text x={0} y={ty} textAnchor="start" dominantBaseline="central" className="chart-axis">
-              {fmtNum(tv)}
+              {fmtNum(tv, max - min)}
             </text>
           </g>
         );
@@ -100,7 +108,7 @@ export function LineChart({ values, reference, labels, color = '#2dd4bf' }: Prop
         <circle key={i} cx={x(i)} cy={y(v)} r={2.5} fill={color}>
           <title>
             {labels?.[i] ? `${labels[i]}: ` : ''}
-            {fmtNum(v)}
+            {fmtNum(v, max - min)}
           </title>
         </circle>
       ))}
