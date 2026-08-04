@@ -2,7 +2,9 @@ import { useState } from 'react';
 import {
   BODY_READINGS,
   ffmi,
+  FFMI_GOAL,
   HEIGHT_LABEL,
+  LEAN_GOAL,
   type BodyReading,
   type Insight,
   type Segments,
@@ -113,6 +115,7 @@ function SegmentTable({ title, seg, unit }: { title: string; seg: Segments; unit
 
 export function BodyView() {
   const [metric, setMetric] = useState<Metric>('leanBodyMass');
+  const [showGoal, setShowGoal] = useState(false);
   const readings = BODY_READINGS;
 
   if (readings.length === 0) {
@@ -131,6 +134,9 @@ export function BodyView() {
   const values = readings.map((r) => r[metric]);
   const labels = readings.map((r) => fmtDate(r.date));
   const active = METRICS.find((m) => m.id === metric)!;
+  // Only lean mass gets a target. Fat mass and body fat depend on whether you're
+  // cutting, and a bare weight target says nothing about what the weight is.
+  const goal = metric === 'leanBodyMass' ? LEAN_GOAL : undefined;
 
   return (
     <div className="view">
@@ -177,7 +183,7 @@ export function BodyView() {
           dir="up"
         />
         <StatCard
-          label="FFMI"
+          label={`FFMI / ${FFMI_GOAL}`}
           value={num(ffmi(latest))}
           unit=""
           delta={d(ffmi)}
@@ -198,7 +204,18 @@ export function BodyView() {
       </div>
 
       <div className="chart-wrap">
-        <LineChart values={values} labels={labels} />
+        <LineChart values={values} labels={labels} goal={showGoal ? goal : undefined} />
+        <div className="chart-legend">
+          <span className="lg lg-data">{active.label}</span>
+          {goal != null && (
+            <button
+              className={showGoal ? 'goal-toggle active' : 'goal-toggle'}
+              onClick={() => setShowGoal((s) => !s)}
+            >
+              Goal {goal.toLocaleString()}
+            </button>
+          )}
+        </div>
         <div className="chart-stats">
           <span>
             <span className="cs-k">Latest</span>{' '}

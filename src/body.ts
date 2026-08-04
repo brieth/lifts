@@ -77,6 +77,19 @@ export function ffmi(r: BodyReading): number {
   return leanKg / (HEIGHT_M * HEIGHT_M);
 }
 
+/**
+ * FFMI at which development generally reads as clearly muscular. Untrained men
+ * sit near 18-19, trained lifters 21-23, and the natural ceiling is around 25.
+ *
+ * This is the sturdier of the two targets in the app. The bench goal has to
+ * translate muscle into a lift, and limb leverage swings that by roughly 15%
+ * either way. FFMI skips that step and measures lean tissue directly.
+ */
+export const FFMI_GOAL = 23;
+
+/** Lean mass (lb) corresponding to FFMI_GOAL at this height. */
+export const LEAN_GOAL = Math.round(FFMI_GOAL * HEIGHT_M * HEIGHT_M * 2.20462);
+
 /** Oldest first. */
 export const BODY_READINGS: BodyReading[] = [
   {
