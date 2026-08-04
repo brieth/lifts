@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BODY_READINGS, ffmi, type BodyReading, type Segments } from '../body';
+import { BODY_READINGS, ffmi, type BodyReading, type Insight, type Segments } from '../body';
 import { LineChart } from './LineChart';
 
 type Metric = 'weight' | 'leanBodyMass' | 'bodyFatMass' | 'bodyFatPct';
@@ -59,6 +59,19 @@ function StatCard({
         <small>{unit}</small>
       </strong>
       <Delta value={delta} dir={dir} unit={unit} />
+    </div>
+  );
+}
+
+function InsightBlock({ insight }: { insight: Insight }) {
+  return (
+    <div className="insight">
+      <p className="insight-headline">{insight.headline}</p>
+      {insight.points.map((p, i) => (
+        <p key={i} className="insight-point">
+          {p}
+        </p>
+      ))}
     </div>
   );
 }
@@ -193,6 +206,13 @@ export function BodyView() {
         </div>
       </div>
 
+      {latest.insight && (
+        <>
+          <h2 className="section">Analysis</h2>
+          <InsightBlock insight={latest.insight} />
+        </>
+      )}
+
       {latest.segmentalLean && (
         <SegmentTable title="Segmental lean" seg={latest.segmentalLean} unit="lb" />
       )}
@@ -237,7 +257,7 @@ export function BodyView() {
                   </div>
                 ))}
               </div>
-              {r.note && <p className="muted small body-note">{r.note}</p>}
+              {r.insight && <InsightBlock insight={r.insight} />}
             </div>
           </details>
         ))}

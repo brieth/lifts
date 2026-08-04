@@ -852,9 +852,32 @@ body {
 .body-detail-row:last-child {
   border-bottom: none;
 }
-.body-note {
-  margin: 10px 0 0;
-  font-style: italic;
+.insight {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 10px;
+  padding: 14px;
+}
+.history-body .insight {
+  margin-top: 12px;
+  background: var(--surface-2);
+}
+.insight-headline {
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent);
+  line-height: 1.4;
+}
+.insight-point {
+  margin: 0 0 10px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text);
+}
+.insight-point:last-child {
+  margin-bottom: 0;
 }
 
 /* ---------- progress ---------- */

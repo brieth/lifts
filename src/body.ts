@@ -23,6 +23,18 @@ export interface Segments {
   leftLeg: number;
 }
 
+/**
+ * Written evaluation of a scan, kept alongside the numbers so the reasoning
+ * is readable in the app rather than living in a chat log. Each one judges the
+ * scan against the readings before it where there are any.
+ */
+export interface Insight {
+  /** One-line verdict. */
+  headline: string;
+  /** Supporting analysis, one paragraph per entry. */
+  points: string[];
+}
+
 export interface BodyReading {
   /** ISO date of the scan (local calendar day). */
   date: string;
@@ -49,7 +61,7 @@ export interface BodyReading {
   fitnessScore?: number;
   segmentalLean?: Segments;
   segmentalFat?: Segments;
-  note?: string;
+  insight?: Insight;
 }
 
 /** Height used for FFMI. 5 ft 11 in. */
@@ -83,7 +95,15 @@ export const BODY_READINGS: BodyReading[] = [
     fitnessScore: 84,
     segmentalLean: { rightArm: 8.4, leftArm: 8.8, trunk: 65.0, rightLeg: 22.0, leftLeg: 22.0 },
     segmentalFat: { rightArm: 0.4, leftArm: 0.4, trunk: 8.6, rightLeg: 2.9, leftLeg: 2.9 },
-    note: 'Pre-effort baseline. Lean and light.',
+    insight: {
+      headline: 'Lean and light. Needed mass, not fat loss.',
+      points: [
+        'Genuinely lean at 11.2% body fat. Fat mass of 17.9 lb sat below the machine\'s own normal floor, so the reading flagged it as under rather than healthy-low. Skeletal muscle of 80.5 lb landed near the top of the general-population band, meaning reasonably developed for a non-lifter but not for someone training seriously.',
+        'FFMI of 19.8 places this above an untrained average of roughly 18 to 19, and below the 21 to 23 range typical of a consistently trained lifter. Combined with the low fat, this is the classic starting point where the constraint is total mass rather than composition.',
+        'Arms were already the thinnest link. Both arms together carried 17.2 lb of lean tissue against 65.0 lb in the trunk. The 8.8 versus 8.4 left-side edge is within ordinary variation and not worth acting on.',
+        'The correct read at this point was to eat in a surplus and add size. Nothing here justified a cut. What follows shows that the direction was right and the rate was not.',
+      ],
+    },
   },
   {
     date: '2026-06-18',
@@ -104,6 +124,16 @@ export const BODY_READINGS: BodyReading[] = [
     smi: 8.5,
     segmentalLean: { rightArm: 8.14, leftArm: 8.05, trunk: 63.1, rightLeg: 22.31, leftLeg: 22.18 },
     segmentalFat: { rightArm: 1.8, leftArm: 1.8, trunk: 18.5, rightLeg: 4.9, leftLeg: 4.9 },
-    note: 'Two days before the first logged Sandwich session. Baseline for the consistent phase.',
+    insight: {
+      headline: '18 lb gained over 19 months, 16.5 of it fat. Lean mass essentially flat.',
+      points: [
+        'The split is the headline. Weight rose 18.1 lb, fat mass rose 16.5 lb, and lean body mass moved 1.6 lb. Roughly 91% of the gain was fat. Skeletal muscle moved 1.5 lb over the same window, which agrees.',
+        'A second number corroborates it independently. BMR rose only 16 kcal, from 1756 to 1772. Basal rate tracks lean tissue closely, so a near-flat BMR is what you would expect if very little muscle was added. Two separately derived figures pointing the same way is stronger evidence than either alone.',
+        'The fat went central. The trunk holds 18.5 lb of the 34.4 lb total, and the machine rates trunk fat at 185% of ideal against 118 to 121% for the arms and legs. That distribution is typical, and it is also the one that works hardest against a visible taper, since it thickens the waist and buries the abdominal wall.',
+        'Nothing here is a health concern. Visceral fat of 6 sits under the threshold of 10, ECW/TBW of 0.368 indicates normal fluid balance, and SMI of 8.5 is far clear of any muscle-loss flag. This is a composition problem, not a medical one.',
+        'Treat the segmental comparison with caution. This scan came from an InBody 570 running 5, 50 and 500 kHz, while the 2024 scan used a different unit at 20 and 100 kHz. Gross composition shifts of this size are far too large to be device error, but the limb-by-limb numbers should not be read as trends across the two sheets.',
+        'Most importantly, this is not a verdict on the current program. The window covers the fragmented on-and-off period plus the fast bulk, and it closes two days before the first logged Sandwich session. It measures what came before the consistent phase, not the consistent phase itself.',
+      ],
+    },
   },
 ];
