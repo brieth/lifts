@@ -757,9 +757,13 @@ body {
   grid-template-columns: 34px 1fr 1fr;
 }
 
-/* Sits at the right end of the chart legend row. */
+/* Pinned to the right of the chart legend and taken out of flow, so its taller
+   box can't stretch the legend row or anything above it. */
 .goal-toggle {
-  margin-left: auto;
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
   background: transparent;
   border: 1px solid var(--border);
   border-radius: 6px;
@@ -970,6 +974,7 @@ body {
   color: var(--text);
 }
 .chart-legend {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 14px;
