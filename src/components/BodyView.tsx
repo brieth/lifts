@@ -1,5 +1,12 @@
 import { useState } from 'react';
-import { BODY_READINGS, ffmi, type BodyReading, type Insight, type Segments } from '../body';
+import {
+  BODY_READINGS,
+  ffmi,
+  HEIGHT_LABEL,
+  type BodyReading,
+  type Insight,
+  type Segments,
+} from '../body';
 import { LineChart } from './LineChart';
 
 type Metric = 'weight' | 'leanBodyMass' | 'bodyFatMass' | 'bodyFatPct';
@@ -234,6 +241,7 @@ export function BodyView() {
                 {(
                   [
                     ['Source', r.source],
+                    ['Height', HEIGHT_LABEL],
                     ['Weight', `${num(r.weight)} lb`],
                     ['Lean body mass', `${num(r.leanBodyMass)} lb`],
                     ['Skeletal muscle', `${num(r.skeletalMuscleMass)} lb`],

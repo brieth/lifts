@@ -64,8 +64,12 @@ export interface BodyReading {
   insight?: Insight;
 }
 
-/** Height used for FFMI. 5 ft 11 in. */
+/**
+ * Height, used for FFMI (the only stat derived here that needs it). Confirmed
+ * by both printouts: the 2024 sheet records 180 cm, the 2026 sheet 5 ft 11.0 in.
+ */
 export const HEIGHT_M = 1.8034;
+export const HEIGHT_LABEL = `5'11" (180 cm)`;
 
 /** Fat-free mass index: lean mass (kg) / height (m)^2. */
 export function ffmi(r: BodyReading): number {
