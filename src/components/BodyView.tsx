@@ -135,10 +135,9 @@ export function BodyView() {
   return (
     <div className="view">
       <h1>Body</h1>
-      <p className="muted subtitle">
-        Last scan {fmtDate(latest.date)} · {latest.source}
-        {prev && <> · {Math.round((+new Date(latest.date) - +new Date(prev.date)) / 86400000)} days
-          since previous</>}
+      <p className="muted subtitle session-meta">
+        <span className="range-chip">{fmtDate(latest.date)}</span>
+        <span className="range-chip">{latest.source}</span>
       </p>
 
       <div className="body-stats">
