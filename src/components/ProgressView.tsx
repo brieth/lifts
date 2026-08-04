@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useStore } from '../store';
 import { exerciseHistory, overallSeries, rollingMean } from '../lib/stats';
 import { sessionsForExercise } from '../lib/equipment';
@@ -9,6 +9,20 @@ export type Metric = 'best1RM' | 'volume';
 
 // Sentinel id for the aggregate "Overall" series (a whole-body strength/volume index).
 const OVERALL = '__overall__';
+
+/**
+ * Estimated 1RM at which a lift correlates with visibly muscular development.
+ * Anchored to FFMI ~23 (about 165 lb of lean mass at 5'11"), which lands around
+ * 1.4x bodyweight on bench at roughly 200 lb.
+ *
+ * Only defined for the flat barbell bench press: it's a standardized movement
+ * with real population data behind it. Cable and machine loads vary too much
+ * between gyms for a threshold to mean anything, and volume isn't a physique
+ * correlate at all, so no other exercise or metric gets a line.
+ */
+const STRENGTH_GOALS: Record<string, number> = {
+  'barbell-bench-press': 285,
+};
 
 const METRIC_LABELS: Record<Metric, string> = {
   best1RM: 'Strength',
@@ -29,6 +43,7 @@ export function ProgressView({
   setSelected: (s: string | null) => void;
 }) {
   const { data, exerciseName, setCurrentGym } = useStore();
+  const [showGoal, setShowGoal] = useState(false);
 
   // ids reachable in the current program: every routine slot plus all of its
   // menu options (leg + ab menus), so phased-out exercises are excluded.
@@ -70,6 +85,8 @@ export function ProgressView({
   // Rolling mean over the trailing window: a gettable "floor" reference that
   // sits below Best, so it stays a beatable target on off days.
   const meanValues = rollingMean(values);
+  // Goal line is strength-only, and only for lifts with a defensible threshold.
+  const goal = metric === 'best1RM' ? STRENGTH_GOALS[current] : undefined;
 
   return (
     <div className="view">
@@ -110,8 +127,22 @@ export function ProgressView({
             ))}
           </div>
 
+          {goal != null && (
+            <button
+              className={showGoal ? 'goal-toggle active' : 'goal-toggle'}
+              onClick={() => setShowGoal((s) => !s)}
+            >
+              Goal {goal.toLocaleString()}
+            </button>
+          )}
+
           <div className="chart-wrap">
-            <LineChart values={values} reference={meanValues} labels={labels} />
+            <LineChart
+              values={values}
+              reference={meanValues}
+              labels={labels}
+              goal={showGoal ? goal : undefined}
+            />
             {values.length > 0 && (
               <>
                 <div className="chart-legend">

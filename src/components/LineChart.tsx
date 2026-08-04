@@ -7,6 +7,11 @@ interface Props {
   reference?: (number | null)[];
   /** Per-point labels — used for point tooltips only (no x-axis text). */
   labels?: string[];
+  /**
+   * Optional horizontal target line. Included in the y-scale, so switching it on
+   * compresses the data to show the gap; switching it off restores detail.
+   */
+  goal?: number;
   color?: string;
 }
 
@@ -20,9 +25,10 @@ const fmtNum = (n: number, span = Infinity) =>
     ? n.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
     : Math.round(n).toLocaleString();
 const REFERENCE_COLOR = '#ffffff';
+const GOAL_COLOR = '#f4b942';
 
 /** Lightweight dependency-free SVG line chart with axis gridlines and labels. */
-export function LineChart({ values, reference, labels, color = '#2dd4bf' }: Props) {
+export function LineChart({ values, reference, labels, goal, color = '#2dd4bf' }: Props) {
   if (values.length === 0) {
     return <div className="chart-empty">No data yet</div>;
   }
@@ -40,7 +46,7 @@ export function LineChart({ values, reference, labels, color = '#2dd4bf' }: Prop
 
   // Scale over both series so the reference line always fits.
   const refNums = reference ? reference.filter((v): v is number => v != null) : [];
-  const all = refNums.length ? values.concat(refNums) : values;
+  const all = values.concat(refNums, goal != null ? [goal] : []);
   const max = Math.max(...all);
   const min = Math.min(...all);
   const span = max - min || 1;
@@ -82,6 +88,29 @@ export function LineChart({ values, reference, labels, color = '#2dd4bf' }: Prop
       })}
 
       <polygon points={areaPoints} fill={color} opacity={0.12} />
+
+      {goal != null && (
+        <g>
+          <line
+            x1={padL}
+            y1={y(goal)}
+            x2={W - padR}
+            y2={y(goal)}
+            stroke={GOAL_COLOR}
+            strokeWidth={1.5}
+            strokeDasharray="6 4"
+            opacity={0.9}
+          />
+          <text
+            x={W - padR}
+            y={y(goal) - 4}
+            textAnchor="end"
+            className="chart-goal-label"
+          >
+            goal {fmtNum(goal, max - min)}
+          </text>
+        </g>
+      )}
 
       {refPoints && (
         <polyline
