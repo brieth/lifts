@@ -20,7 +20,7 @@ const METRICS: { id: Metric; label: string; unit: string }[] = [
   { id: 'bodyFatPct', label: 'Body Fat', unit: '%' },
 ];
 
-/** Which way is progress, so deltas can be coloured honestly. */
+/** Which way is progress, so deltas can be colored honestly. */
 type Dir = 'up' | 'down' | 'neutral';
 
 const fmtDate = (iso: string) =>
@@ -66,7 +66,7 @@ const STATS: StatDef[] = [
     value: (r) => r.weight,
     explain: [
       'Your total body weight. Everything, all at once.',
-      'On its own it says nothing about what that weight is made of, which is why the delta here is never coloured good or bad. Two people at 177 lb can look completely different depending on the split between muscle and fat.',
+      'On its own it says nothing about what that weight is made of, which is why the delta here is never colored good or bad. Two people at 177 lb can look completely different depending on the split between muscle and fat.',
       'Its real use is confirming whether you are eating at maintenance. If weight holds steady while you train hard, your calories are roughly balanced. If it climbs, you are in a surplus whether you intended one or not.',
     ],
   },
