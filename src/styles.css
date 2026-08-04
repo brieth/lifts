@@ -802,6 +802,23 @@ body {
   align-items: center;
   gap: 3px;
   text-align: center;
+  font-family: inherit;
+  color: inherit;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+.stat-explain-value {
+  margin: 0 0 14px;
+  font-size: 26px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+}
+.stat-explain-value small {
+  font-size: 14px;
+  color: var(--muted);
+  margin-left: 3px;
 }
 .body-stat-label {
   font-size: 10px;

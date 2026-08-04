@@ -47,28 +47,107 @@ function Delta({ value, dir, unit }: { value: number | null; dir: Dir; unit: str
   );
 }
 
-function StatCard({
-  label,
-  value,
-  unit,
-  delta,
-  dir,
-}: {
+/** A headline stat, with a plain-language explanation shown on tap. */
+interface StatDef {
   label: string;
-  value: string;
   unit: string;
-  delta: number | null;
   dir: Dir;
+  value: (r: BodyReading) => number;
+  /** Decimal places for display. */
+  dp?: number;
+  explain: string[];
+}
+
+const STATS: StatDef[] = [
+  {
+    label: 'Weight',
+    unit: 'lb',
+    dir: 'neutral',
+    value: (r) => r.weight,
+    explain: [
+      'Your total body weight. Everything, all at once.',
+      'On its own it says nothing about what that weight is made of, which is why the delta here is never coloured good or bad. Two people at 177 lb can look completely different depending on the split between muscle and fat.',
+      'Its real use is confirming whether you are eating at maintenance. If weight holds steady while you train hard, your calories are roughly balanced. If it climbs, you are in a surplus whether you intended one or not.',
+    ],
+  },
+  {
+    label: 'Lean mass',
+    unit: 'lb',
+    dir: 'up',
+    value: (r) => r.leanBodyMass,
+    explain: [
+      'Everything in your body that is not fat: muscle, organs, bone, and the water held in all of it. Also called fat-free mass.',
+      'This is the number that matters most for looking muscular, because it is the tissue you are trying to add. Organs and bone barely change, so movement in this number is mostly muscle.',
+      'The catch is that it is heavily influenced by hydration. A single scan carries roughly 4 lb of error, so ignore any change smaller than that unless repeated scans point the same way.',
+    ],
+  },
+  {
+    label: 'Fat mass',
+    unit: 'lb',
+    dir: 'down',
+    value: (r) => r.bodyFatMass,
+    explain: [
+      'The total weight of fat on your body, in pounds.',
+      'This is more useful for tracking than the body fat percentage, because it isolates a single variable. If this number falls, you lost fat. Nothing else can explain it.',
+    ],
+  },
+  {
+    label: 'Body fat',
+    unit: '%',
+    dir: 'down',
+    value: (r) => r.bodyFatPct,
+    explain: [
+      'Your fat mass expressed as a share of your total weight.',
+      'It matters because it determines whether the muscle you have is actually visible. Definition, abdominal separation, and vascularity are all functions of this number rather than of how much muscle you carry.',
+      'Read it carefully though, because it is a ratio and moves whenever either side changes. Gaining muscle lowers your body fat percentage without you losing a single pound of fat. That is why fat mass above is the cleaner number to track.',
+    ],
+  },
+  {
+    label: 'Muscle (SMM)',
+    unit: 'lb',
+    dir: 'up',
+    value: (r) => r.skeletalMuscleMass,
+    explain: [
+      'Skeletal muscle mass: only the muscle attached to your skeleton, which is the tissue you actually train.',
+      'It is narrower than lean mass, which also counts organs, bone and water. Skeletal muscle is normally a bit over half of your lean mass.',
+      'In principle this is the most directly relevant number in the whole panel. In practice it is derived from the same impedance reading as lean mass, so it carries the same hydration error and moves in step with it.',
+    ],
+  },
+  {
+    label: `FFMI / ${FFMI_GOAL}`,
+    unit: '',
+    dir: 'up',
+    value: ffmi,
+    dp: 1,
+    explain: [
+      'Fat-free mass index. Your lean mass divided by your height squared. Think of it as BMI, except it counts only lean tissue.',
+      'This exists because BMI cannot tell muscle from fat. Your BMI of 24.8 reads as perfectly normal, but it is treating 34 lb of fat as though it were the same thing as muscle. FFMI throws the fat out and asks one question: how much lean tissue do you carry for your height?',
+      'The scale for men runs roughly 18 to 19 for untrained, 20 to 21 for someone who trains and looks fit, 22 to 23 for clearly muscular, 24 to 25 near the natural ceiling, and 26 or above usually indicating enhancement.',
+      `The goal of ${FFMI_GOAL} shown here is the level where the look you are after tends to appear, and it works out to ${LEAN_GOAL} lb of lean mass at your height. It is the sturdiest target in the app, because unlike a lift it cannot be reached through better technique.`,
+    ],
+  },
+];
+
+function StatCard({
+  def,
+  latest,
+  delta,
+  onOpen,
+}: {
+  def: StatDef;
+  latest: BodyReading;
+  delta: number | null;
+  onOpen: () => void;
 }) {
   return (
-    <div className="body-stat">
-      <span className="body-stat-label">{label}</span>
+    <button className="body-stat" onClick={onOpen}>
+      <span className="body-stat-label">{def.label}</span>
       <strong className="body-stat-value">
-        {value}
-        <small>{unit}</small>
+        {num(def.value(latest), def.dp ?? 1)}
+        <small>{def.unit}</small>
       </strong>
-      <Delta value={delta} dir={dir} unit={unit} />
-    </div>
+      <Delta value={delta} dir={def.dir} unit={def.unit} />
+    </button>
   );
 }
 
@@ -116,6 +195,7 @@ function SegmentTable({ title, seg, unit }: { title: string; seg: Segments; unit
 export function BodyView() {
   const [metric, setMetric] = useState<Metric>('leanBodyMass');
   const [showGoal, setShowGoal] = useState(false);
+  const [explain, setExplain] = useState<number | null>(null);
   const readings = BODY_READINGS;
 
   if (readings.length === 0) {
@@ -147,48 +227,15 @@ export function BodyView() {
       </p>
 
       <div className="body-stats">
-        <StatCard
-          label="Weight"
-          value={num(latest.weight)}
-          unit="lb"
-          delta={d((r) => r.weight)}
-          dir="neutral"
-        />
-        <StatCard
-          label="Lean mass"
-          value={num(latest.leanBodyMass)}
-          unit="lb"
-          delta={d((r) => r.leanBodyMass)}
-          dir="up"
-        />
-        <StatCard
-          label="Fat mass"
-          value={num(latest.bodyFatMass)}
-          unit="lb"
-          delta={d((r) => r.bodyFatMass)}
-          dir="down"
-        />
-        <StatCard
-          label="Body fat"
-          value={num(latest.bodyFatPct)}
-          unit="%"
-          delta={d((r) => r.bodyFatPct)}
-          dir="down"
-        />
-        <StatCard
-          label="Muscle (SMM)"
-          value={num(latest.skeletalMuscleMass)}
-          unit="lb"
-          delta={d((r) => r.skeletalMuscleMass)}
-          dir="up"
-        />
-        <StatCard
-          label={`FFMI / ${FFMI_GOAL}`}
-          value={num(ffmi(latest))}
-          unit=""
-          delta={d(ffmi)}
-          dir="up"
-        />
+        {STATS.map((s, i) => (
+          <StatCard
+            key={s.label}
+            def={s}
+            latest={latest}
+            delta={d(s.value)}
+            onOpen={() => setExplain(i)}
+          />
+        ))}
       </div>
 
       <div className="metric-toggle">
@@ -218,7 +265,7 @@ export function BodyView() {
         </div>
         <div className="chart-stats">
           <span>
-            <span className="cs-k">Latest</span>{' '}
+            <span className="cs-k">Last</span>{' '}
             <strong>
               {num(values[values.length - 1])} {active.unit}
             </strong>
@@ -286,6 +333,28 @@ export function BodyView() {
           </details>
         ))}
       </div>
+
+      {explain != null && (
+        <div className="modal-overlay" onClick={() => setExplain(null)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-head">
+              <span className="modal-title">{STATS[explain].label}</span>
+              <button className="btn ghost small" onClick={() => setExplain(null)}>
+                Close
+              </button>
+            </div>
+            <p className="stat-explain-value">
+              {num(STATS[explain].value(latest), STATS[explain].dp ?? 1)}
+              <small>{STATS[explain].unit}</small>
+            </p>
+            {STATS[explain].explain.map((p, i) => (
+              <p key={i} className="insight-point">
+                {p}
+              </p>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

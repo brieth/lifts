@@ -89,27 +89,20 @@ export function LineChart({ values, reference, labels, goal, color = '#2dd4bf' }
 
       <polygon points={areaPoints} fill={color} opacity={0.12} />
 
+      {/* No text label: the goal sits at the top of the scale, so a label above
+          the line clips off the viewBox. The toggle button and the top axis
+          tick both already show the value. */}
       {goal != null && (
-        <g>
-          <line
-            x1={padL}
-            y1={y(goal)}
-            x2={W - padR}
-            y2={y(goal)}
-            stroke={GOAL_COLOR}
-            strokeWidth={1.5}
-            strokeDasharray="6 4"
-            opacity={0.9}
-          />
-          <text
-            x={W - padR}
-            y={y(goal) - 4}
-            textAnchor="end"
-            className="chart-goal-label"
-          >
-            goal {fmtNum(goal, max - min)}
-          </text>
-        </g>
+        <line
+          x1={padL}
+          y1={y(goal)}
+          x2={W - padR}
+          y2={y(goal)}
+          stroke={GOAL_COLOR}
+          strokeWidth={1.5}
+          strokeDasharray="6 4"
+          opacity={0.9}
+        />
       )}
 
       {refPoints && (
