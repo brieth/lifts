@@ -186,18 +186,6 @@ export function BodyView() {
         />
       </div>
 
-      {latest.segmentalLean && (
-        <SegmentTable title="Segmental lean" seg={latest.segmentalLean} unit="lb" />
-      )}
-
-      {latest.insight && (
-        <>
-          <h2 className="section">Analysis</h2>
-          <InsightBlock insight={latest.insight} />
-        </>
-      )}
-
-      <h2 className="section">Trend</h2>
       <div className="metric-toggle">
         {METRICS.map((m) => (
           <button
@@ -224,6 +212,17 @@ export function BodyView() {
           </span>
         </div>
       </div>
+
+      {latest.segmentalLean && (
+        <SegmentTable title="Segmental lean" seg={latest.segmentalLean} unit="lb" />
+      )}
+
+      {latest.insight && (
+        <>
+          <h2 className="section">Analysis</h2>
+          <InsightBlock insight={latest.insight} />
+        </>
+      )}
 
       <h2 className="section">Scans</h2>
       <div className="history-list">
