@@ -10,6 +10,7 @@ import {
   type Segments,
 } from '../body';
 import { LineChart } from './LineChart';
+import { useBackToClose } from '../lib/useBackToClose';
 
 type Metric = 'weight' | 'leanBodyMass' | 'bodyFatMass' | 'bodyFatPct';
 
@@ -196,6 +197,7 @@ export function BodyView() {
   const [metric, setMetric] = useState<Metric>('leanBodyMass');
   const [showGoal, setShowGoal] = useState(false);
   const [explain, setExplain] = useState<number | null>(null);
+  useBackToClose(explain !== null, () => setExplain(null));
   const readings = BODY_READINGS;
 
   if (readings.length === 0) {

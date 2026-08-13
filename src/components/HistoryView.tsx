@@ -3,6 +3,7 @@ import { useStore } from '../store';
 import { sessionVolume } from '../lib/stats';
 import { MonthCalendar } from './MonthCalendar';
 import { NumField } from './NumField';
+import { useBackToClose } from '../lib/useBackToClose';
 
 /** Stored ISO timestamp -> the YYYY-MM-DD a <input type="date"> expects (local). */
 function toDateInput(iso: string): string {
@@ -28,6 +29,7 @@ export function HistoryView() {
     exIdx: number;
     setIdx: number;
   } | null>(null);
+  useBackToClose(editing !== null, () => setEditing(null));
 
   const editSet =
     editing &&

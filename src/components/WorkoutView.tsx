@@ -11,6 +11,7 @@ import {
 } from '../lib/stats';
 import { defaultOneRMFor, EMPHASES, emphasisLabel, repsFor } from '../lib/reps';
 import { sessionsForExercise } from '../lib/equipment';
+import { useBackToClose } from '../lib/useBackToClose';
 import { AB_OPTION_IDS } from '../seed';
 import { SvBadge } from './SvBadge';
 import { NumField } from './NumField';
@@ -132,6 +133,7 @@ function round5(n: number): number {
 function ActiveSession() {
   const { data, exerciseName, updateActive, finishSession, cancelSession } = useStore();
   const [historyFor, setHistoryFor] = useState<string | null>(null);
+  useBackToClose(historyFor !== null, () => setHistoryFor(null));
   const session = data.activeSession!;
   const emphasis: Emphasis = session.emphasis ?? 'medium';
   const gymName = data.gyms.find((g) => g.id === session.gymId)?.name ?? null;
