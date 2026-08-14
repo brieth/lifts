@@ -730,6 +730,19 @@ body {
 .history-exercise-select:focus {
   outline: none;
 }
+.retired-tag {
+  display: inline-block;
+  margin: 0 0 5px 8px;
+  padding: 1px 6px;
+  border-radius: 5px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  vertical-align: middle;
+}
 .history-sets {
   display: flex;
   flex-wrap: wrap;

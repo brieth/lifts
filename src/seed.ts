@@ -156,3 +156,22 @@ function buildSeed(): { exercises: Exercise[]; routines: Routine[] } {
 }
 
 export const SEED = buildSeed();
+
+/**
+ * Every exercise id reachable in the current program, including every leg- and
+ * ab-menu option.
+ *
+ * Exercises from earlier versions of the routine still sit in logged history,
+ * and they are deliberately excluded from every derived metric so the numbers
+ * describe the program as it stands. History still shows what was actually
+ * performed; it just doesn't feed the totals.
+ */
+export const CURRENT_EXERCISE_IDS: ReadonlySet<string> = new Set(
+  SEED.routines
+    .flatMap((r) => r.exercises.flatMap((e) => [e.exerciseId, ...(e.options ?? [])]))
+    .filter(Boolean),
+);
+
+export function isCurrentExercise(id: string): boolean {
+  return CURRENT_EXERCISE_IDS.has(id);
+}

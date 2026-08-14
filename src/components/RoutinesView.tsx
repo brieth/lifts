@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { useStore } from '../store';
+import { AB_OPTION_IDS, LEG_OPTION_IDS } from '../seed';
 
 export function RoutinesView() {
   const { data, exerciseName, resetAll, exportData, importData, addGym, renameGym, deleteGym, setCurrentGym } =
@@ -51,6 +52,30 @@ export function RoutinesView() {
                 .map((re, i) => (
                   <li key={`${re.exerciseId}-${i}`}>
                     <span className="re-name">{exerciseName(re.exerciseId)}</span>
+                  </li>
+                ))}
+            </ol>
+          </div>
+        ))}
+
+        {/* The two pick-one menus. They're filtered out of the workout lists
+            above (every workout carries a leg slot and an ab slot), so they're
+            listed once here instead of repeated six times. */}
+        {[
+          { name: 'Legs', note: 'middle of every workout', ids: LEG_OPTION_IDS },
+          { name: 'Abs', note: 'end of every workout', ids: AB_OPTION_IDS },
+        ].map((menu) => (
+          <div key={menu.name} className="routine-detail">
+            <div className="routine-detail-head">
+              <span className="routine-detail-name">{menu.name}</span>
+              <span className="muted small">{menu.note}</span>
+            </div>
+            <ol className="routine-exercises">
+              {[...menu.ids]
+                .sort((a, b) => exerciseName(a).localeCompare(exerciseName(b)))
+                .map((id) => (
+                  <li key={id}>
+                    <span className="re-name">{exerciseName(id)}</span>
                   </li>
                 ))}
             </ol>

@@ -1,6 +1,7 @@
 import type { Session, ID } from '../types';
 import { sessionsForExercise } from './equipment';
 import { limbFactor } from './laterality';
+import { isCurrentExercise } from '../seed';
 
 /** Epley estimated 1-rep max. */
 export function estimated1RM(weight: number, reps: number): number {
@@ -38,38 +39,6 @@ export function exerciseHistory(sessions: Session[], exerciseId: ID): ExercisePo
     points.push({ date: session.date, topSet, best1RM: Math.round(best1RM), volume: Math.round(volume) });
   }
   return points;
-}
-
-export interface PR {
-  exerciseId: ID;
-  weight: number;
-  reps: number;
-  est1RM: number;
-  date: string;
-}
-
-/** Best estimated-1RM set for each exercise across all sessions. */
-export function personalRecords(sessions: Session[]): Map<ID, PR> {
-  const prs = new Map<ID, PR>();
-  for (const session of sessions) {
-    for (const logged of session.exercises) {
-      for (const s of logged.sets) {
-        if (!s.done || s.weight <= 0 || s.reps <= 0) continue;
-        const est = estimated1RM(s.weight, s.reps);
-        const cur = prs.get(logged.exerciseId);
-        if (!cur || est > cur.est1RM) {
-          prs.set(logged.exerciseId, {
-            exerciseId: logged.exerciseId,
-            weight: s.weight,
-            reps: s.reps,
-            est1RM: Math.round(est),
-            date: session.date,
-          });
-        }
-      }
-    }
-  }
-  return prs;
 }
 
 /** Most recent session's best estimated 1RM for an exercise, or null. */
@@ -252,10 +221,12 @@ export function overallSeries(
 export function sessionVolume(session: Session): number {
   let total = 0;
   for (const logged of session.exercises) {
+    // Retired exercises are excluded from every derived number.
+    if (!isCurrentExercise(logged.exerciseId)) continue;
     const factor = limbFactor(logged.exerciseId);
     for (const s of logged.sets) {
       if (s.done) total += s.weight * s.reps * factor;
     }
   }
-  return total;
+  return Math.round(total);
 }

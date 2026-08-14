@@ -4,6 +4,7 @@ import { sessionVolume } from '../lib/stats';
 import { MonthCalendar } from './MonthCalendar';
 import { NumField } from './NumField';
 import { useBackToClose } from '../lib/useBackToClose';
+import { isCurrentExercise } from '../seed';
 
 /** Stored ISO timestamp -> the YYYY-MM-DD a <input type="date"> expects (local). */
 function toDateInput(iso: string): string {
@@ -108,6 +109,11 @@ export function HistoryView() {
                         </option>
                       ))}
                     </select>
+                    {/* Dropped from the routine, so it's shown for the record but
+                        excluded from the volume total above and every other metric. */}
+                    {!isCurrentExercise(e.exerciseId) && (
+                      <span className="retired-tag">not counted</span>
+                    )}
                     <div className="history-sets">
                       {e.sets.map((st, j) => (
                         <button

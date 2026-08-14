@@ -1,4 +1,5 @@
 import type { Session } from '../types';
+import { isCurrentExercise } from '../seed';
 
 /**
  * Muscle group each exercise is credited to (its PRIMARY mover only — we don't
@@ -61,8 +62,8 @@ const MUSCLE: Record<string, MuscleGroup> = {
   'machine-hip-adductor': 'Legs',
   'machine-leg-curl': 'Legs',
   'machine-leg-extension': 'Legs',
-  // Retired exercises, kept so older logged sessions still count in past-week
-  // muscle tallies (their ids predate the current program).
+  // Retired exercises. These no longer count toward any tally (see credit()),
+  // but the mappings stay so their names and grouping resolve in History.
   'v-bar-pulldown': 'Back',
   'cable-row': 'Back',
   'reverse-grip-pull-down': 'Back',
@@ -129,6 +130,9 @@ function blankTally(): Tally {
 
 function credit(out: Tally, exerciseId: string, key: keyof MuscleTally, sets: number): void {
   if (sets <= 0) return;
+  // Exercises dropped from the routine don't count toward any tally, even in
+  // the past weeks where they were actually performed.
+  if (!isCurrentExercise(exerciseId)) return;
   const primary = muscleFor(exerciseId);
   if (!primary) return;
   out[primary][key] += sets;

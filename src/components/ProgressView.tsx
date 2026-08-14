@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useStore } from '../store';
 import { exerciseHistory, overallSeries, rollingMean } from '../lib/stats';
 import { sessionsForExercise } from '../lib/equipment';
+import { CURRENT_EXERCISE_IDS, isCurrentExercise } from '../seed';
 import { LineChart } from './LineChart';
 import { WeeklyMuscles } from './WeeklyMuscles';
 
@@ -45,26 +46,13 @@ export function ProgressView({
   const { data, exerciseName, setCurrentGym } = useStore();
   const [showGoal, setShowGoal] = useState(false);
 
-  // ids reachable in the current program: every routine slot plus all of its
-  // menu options (leg + ab menus), so phased-out exercises are excluded.
-  const currentIds = useMemo(() => {
-    const ids = new Set<string>();
-    for (const r of data.routines) {
-      for (const e of r.exercises) {
-        if (e.exerciseId) ids.add(e.exerciseId);
-        for (const id of e.options ?? []) ids.add(id);
-      }
-    }
-    return ids;
-  }, [data.routines]);
-
   // exercises that both have logged data and still exist in the routine, alphabetical
   const tracked = useMemo(() => {
     const ids = new Set<string>();
     for (const s of data.sessions)
-      for (const e of s.exercises) if (currentIds.has(e.exerciseId)) ids.add(e.exerciseId);
+      for (const e of s.exercises) if (isCurrentExercise(e.exerciseId)) ids.add(e.exerciseId);
     return [...ids].sort((a, b) => exerciseName(a).localeCompare(exerciseName(b)));
-  }, [data.sessions, currentIds, exerciseName]);
+  }, [data.sessions, exerciseName]);
 
   // Overall is the default; individual exercises follow it in the dropdown.
   const options = [OVERALL, ...tracked];
@@ -75,7 +63,7 @@ export function ProgressView({
 
   const history =
     current === OVERALL
-      ? overallSeries(data.sessions, [...currentIds], data.currentGymId)
+      ? overallSeries(data.sessions, [...CURRENT_EXERCISE_IDS], data.currentGymId)
       : exerciseHistory(
           sessionsForExercise(data.sessions, current, data.currentGymId),
           current,
