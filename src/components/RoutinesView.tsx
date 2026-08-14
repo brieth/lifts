@@ -62,13 +62,12 @@ export function RoutinesView() {
             above (every workout carries a leg slot and an ab slot), so they're
             listed once here instead of repeated six times. */}
         {[
-          { name: 'Legs', note: 'middle of every workout', ids: LEG_OPTION_IDS },
-          { name: 'Abs', note: 'end of every workout', ids: AB_OPTION_IDS },
+          { name: 'Legs', ids: LEG_OPTION_IDS },
+          { name: 'Abs', ids: AB_OPTION_IDS },
         ].map((menu) => (
           <div key={menu.name} className="routine-detail">
             <div className="routine-detail-head">
               <span className="routine-detail-name">{menu.name}</span>
-              <span className="muted small">{menu.note}</span>
             </div>
             <ol className="routine-exercises">
               {[...menu.ids]
