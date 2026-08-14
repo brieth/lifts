@@ -19,8 +19,7 @@ interface RoutineDef {
 /**
  * The 200 lb Minimalist routine, exercises only.
  *  - Barbell instead of Smith machine.
- *  - Machine Leg Press in the middle of every A workout.
- *  - Machine Lying Hamstring Curl in the middle of every B workout.
+ *  - A leg-menu slot in the middle of every workout, an ab-menu slot at the end.
  */
 const ROUTINE_DEFS: RoutineDef[] = [
   {
@@ -40,7 +39,7 @@ const ROUTINE_DEFS: RoutineDef[] = [
     exercises: [
       ['cable-high-crossover-fly', 'Cable High Crossover Fly'],
       ['cable-single-arm-high-row', 'Cable Single Arm High Row'],
-      ['machine-lying-hamstring-curl', 'Machine Lying Hamstring Curl'],
+      ['machine-leg-curl', 'Machine Leg Curl'],
       ['cable-high-overhead-tricep-extension', 'Cable High Overhead Tricep Extension'],
       ['cable-face-pull', 'Cable Face Pull'],
     ],
@@ -62,7 +61,7 @@ const ROUTINE_DEFS: RoutineDef[] = [
     exercises: [
       ['cable-mid-crossover-fly', 'Cable Mid Crossover Fly'],
       ['cable-single-arm-mid-row', 'Cable Single Arm Mid Row'],
-      ['machine-lying-hamstring-curl', 'Machine Lying Hamstring Curl'],
+      ['machine-leg-curl', 'Machine Leg Curl'],
       ['cable-tricep-pushdown', 'Cable Tricep Pushdown'],
       ['cable-hammer-curl', 'Cable Hammer Curl'],
     ],
@@ -84,7 +83,7 @@ const ROUTINE_DEFS: RoutineDef[] = [
     exercises: [
       ['cable-low-crossover-fly', 'Cable Low Crossover Fly'],
       ['cable-single-arm-low-row', 'Cable Single Arm Low Row'],
-      ['machine-lying-hamstring-curl', 'Machine Lying Hamstring Curl'],
+      ['machine-leg-curl', 'Machine Leg Curl'],
       ['cable-low-overhead-tricep-extension', 'Cable Low Overhead Tricep Extension'],
       ['cable-reverse-curl', 'Cable Reverse Curl'],
     ],
@@ -96,7 +95,12 @@ const DEFAULT_REPS = 10;
 
 /**
  * The center "leg slot" is a menu the user picks from each workout. Listed
- * alphabetically by name. The routine's own leg exercise stays the default.
+ * alphabetically by name.
+ *
+ * The id a workout carries in ROUTINE_DEFS is only what marks that slot as a
+ * menu; it is never used as a selection, since startSession() blanks menu slots
+ * so one gets picked fresh each session. So it must always be an id in this
+ * list, or the slot silently becomes a fixed exercise.
  */
 const LEG_OPTIONS: ExRef[] = [
   ['machine-hip-abductor', 'Machine Hip Abductor'],
@@ -104,7 +108,6 @@ const LEG_OPTIONS: ExRef[] = [
   ['machine-leg-curl', 'Machine Leg Curl'],
   ['machine-leg-extension', 'Machine Leg Extension'],
   ['machine-leg-press', 'Machine Leg Press'],
-  ['machine-lying-hamstring-curl', 'Machine Lying Hamstring Curl'],
 ];
 export const LEG_OPTION_IDS = LEG_OPTIONS.map(([id]) => id);
 

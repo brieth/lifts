@@ -56,7 +56,6 @@ const MUSCLE: Record<string, MuscleGroup> = {
   'cable-oblique-crunch': 'Abs',
   // Legs (every leg-menu option)
   'machine-leg-press': 'Legs',
-  'machine-lying-hamstring-curl': 'Legs',
   'machine-glute-bridge': 'Legs',
   'machine-hip-abductor': 'Legs',
   'machine-hip-adductor': 'Legs',
@@ -68,6 +67,7 @@ const MUSCLE: Record<string, MuscleGroup> = {
   'cable-row': 'Back',
   'reverse-grip-pull-down': 'Back',
   'shotgun-row': 'Back',
+  'machine-lying-hamstring-curl': 'Legs',
   'cable-front-raise': 'Delts',
   'dumbbell-lateral-raise': 'Delts',
   'cable-rear-delt-fly': 'Delts',
