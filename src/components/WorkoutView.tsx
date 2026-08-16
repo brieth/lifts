@@ -12,7 +12,7 @@ import {
 } from '../lib/stats';
 import { defaultOneRMFor, EMPHASES, emphasisLabel, repsFor } from '../lib/reps';
 import { useBackToClose } from '../lib/useBackToClose';
-import { conversionFor, findStation, fromForce, toForce } from '../lib/stations';
+import { conversionFor, findStation, fromForce, stationsFor, toForce } from '../lib/stations';
 import { AB_OPTION_IDS } from '../seed';
 import { SvBadge } from './SvBadge';
 import { NumField } from './NumField';
@@ -255,7 +255,7 @@ function ActiveSession() {
               menuLabel={menuLabel}
               unit={unit}
               conv={conv}
-              stations={allStations}
+              stations={stationsFor(ex.exerciseId, allStations, ex.stationId)}
               onSelectStation={(id) => setActiveStation(exIdx, id)}
               onSelect={(id) => changeExercise(exIdx, id)}
               onShowHistory={() => setHistoryFor(ex.exerciseId)}

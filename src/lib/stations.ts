@@ -1,4 +1,5 @@
 import type { Calibration, Session, Station } from '../types';
+import { isBarbellExercise } from '../seed';
 
 /**
  * Converting between what a machine's stack says and the force you actually
@@ -101,6 +102,30 @@ export function fromForce(force: number, conv: Conversion = IDENTITY): number {
 
 export function findStation(stations: Station[], id?: string): Station | undefined {
   return id ? stations.find((s) => s.id === id) : undefined;
+}
+
+function isBuiltinStation(id: string): boolean {
+  return BUILTIN_STATIONS.some((s) => s.id === id);
+}
+
+/**
+ * The stations worth offering for one exercise.
+ *
+ * The two sets don't mix: a barbell lift can only happen on a barbell, and a
+ * calibrated cable station describes a machine no barbell lift is performed on.
+ * A station already tagged on the exercise is always kept, so changing which
+ * exercise a logged slot holds can't strand its station outside the list.
+ */
+export function stationsFor(
+  exerciseId: string,
+  stations: Station[],
+  selectedId?: string,
+): Station[] {
+  const barbell = isBarbellExercise(exerciseId);
+  const list = stations.filter((s) => isBuiltinStation(s.id) === barbell);
+  const current = selectedId ? stations.find((s) => s.id === selectedId) : undefined;
+  if (current && !list.includes(current)) list.push(current);
+  return list;
 }
 
 /**

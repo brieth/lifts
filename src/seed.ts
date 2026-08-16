@@ -180,6 +180,17 @@ export function isCurrentExercise(id: string): boolean {
 }
 
 /**
+ * Free-weight barbell movements. Ids are permanent and every barbell lift is
+ * prefixed, so the prefix is the test.
+ *
+ * These are the only exercises the built-in barbell stations apply to, and the
+ * only ones a cable calibration can't apply to.
+ */
+export function isBarbellExercise(id: string): boolean {
+  return id.startsWith('barbell-');
+}
+
+/**
  * The subset that feeds the Upper Body index: the chest, back, delt, bicep, and
  * tricep lifts.
  *

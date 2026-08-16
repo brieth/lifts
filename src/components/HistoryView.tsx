@@ -6,7 +6,7 @@ import { NumField } from './NumField';
 import { useBackToClose } from '../lib/useBackToClose';
 import { isCurrentExercise } from '../seed';
 import { StationPicker } from './Stations';
-import { findStation } from '../lib/stations';
+import { findStation, stationsFor } from '../lib/stations';
 
 /** Stored ISO timestamp -> the YYYY-MM-DD a <input type="date"> expects (local). */
 function toDateInput(iso: string): string {
@@ -120,7 +120,7 @@ export function HistoryView() {
                       <span className="retired-tag">not counted</span>
                     )}
                     <StationPicker
-                      stations={allStations}
+                      stations={stationsFor(e.exerciseId, allStations, e.stationId)}
                       value={e.stationId}
                       onChange={(id) => updateSessionStation(s.id, i, id)}
                     />
