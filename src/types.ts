@@ -49,26 +49,45 @@ export interface Session {
   exercises: LoggedExercise[];
 }
 
+/** What's printed on a stack. Force is always stored and shown in pounds. */
+export type WeightUnit = 'lb' | 'kg';
+
+/**
+ * One measurement session on a station:
+ *   force (lb) = slope * stackWeight (station's unit) + offset (lb)
+ *
+ * Dated because a machine is not a constant. Pulleys pick up friction as they
+ * age and lose it again when someone services them, so a fit measured in June
+ * describes June. Recalibrating adds a record rather than replacing one, and
+ * each logged session converts through whichever calibration was in effect
+ * when it happened.
+ */
+export interface Calibration {
+  id: ID;
+  /** YYYY-MM-DD the measurements were taken. Empty means undated. */
+  date: string;
+  slope: number;
+  offset: number;
+  /** The (stack, measured force) pairs this was fitted from. */
+  samples?: { stack: number; force: number }[];
+}
+
 /**
  * A specific machine, identified however you like ("Planet Fitness, cable by
  * the water fountain"). Cable stacks and machines differ in pulley ratio and
  * carriage weight, so the number on the stack is not the force at the handle.
  *
- * Calibrating a station means measuring that relationship:
- *   force = slope * stackWeight + offset
- *
- * Logged weights stay exactly as you set them on the machine. The calibration
- * converts them to real force for every metric, so history stays comparable no
+ * Logged weights stay exactly as you set them on the machine. The calibrations
+ * convert them to real force for every metric, so history stays comparable no
  * matter which station you used.
  */
 export interface Station {
   id: ID;
   name: string;
-  slope: number;
-  /** Pounds, from the carriage and cable that get lifted at any setting. */
-  offset: number;
-  /** The (stack, measured force) pairs the calibration was fitted from. */
-  samples?: { stack: number; force: number }[];
+  /** The units this stack is marked in. Governs the label you type against. */
+  unit: WeightUnit;
+  /** Newest last. Empty means uncalibrated, so only the unit conversion applies. */
+  calibrations: Calibration[];
 }
 
 /** Rep emphasis for the session; maps to a per-exercise rep target. */

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../store';
-import type { Emphasis, LoggedExercise, SetEntry, Station } from '../types';
+import type { Emphasis, LoggedExercise, SetEntry, Station, WeightUnit } from '../types';
+import type { Conversion } from '../lib/stations';
 import {
   bestEstimated1RM,
   bestExercisePoint,
@@ -11,7 +12,7 @@ import {
 } from '../lib/stats';
 import { defaultOneRMFor, EMPHASES, emphasisLabel, repsFor } from '../lib/reps';
 import { useBackToClose } from '../lib/useBackToClose';
-import { findStation, fromForce, toForce } from '../lib/stations';
+import { conversionFor, findStation, fromForce, toForce } from '../lib/stations';
 import { AB_OPTION_IDS } from '../seed';
 import { SvBadge } from './SvBadge';
 import { NumField } from './NumField';
@@ -215,15 +216,16 @@ function ActiveSession() {
         {session.exercises.map((ex, exIdx) => {
           const targetReps = repsFor(ex.exerciseId, emphasis);
           const station = findStation(data.stations, ex.stationId);
+          // A workout happening now converts through the machine as it is now,
+          // which is the latest calibration on record.
+          const conv = conversionFor(station);
           // History is normalized to real force, so every past session counts
           // regardless of which machine it was performed on.
           const base1RM =
             recentEstimated1RM(forceSessions, ex.exerciseId) ?? defaultOneRMFor(ex.exerciseId);
           // Inverse-Epley gives the force for the target reps; converting back
           // through this station's calibration gives the number to set on it.
-          const suggestedWeight = round5(
-            fromForce(weightForReps(base1RM, targetReps), station),
-          );
+          const suggestedWeight = round5(fromForce(weightForReps(base1RM, targetReps), conv));
           const options = ex.options
             ?.map((id) => ({ id, name: exerciseName(id) }))
             .sort((a, b) => a.name.localeCompare(b.name));
@@ -241,7 +243,8 @@ function ActiveSession() {
               best={bestExercisePoint(forceSessions, ex.exerciseId)}
               options={options}
               menuLabel={menuLabel}
-              station={station}
+              unit={station?.unit ?? 'lb'}
+              conv={conv}
               stations={data.stations}
               onSelectStation={(id) => setActiveStation(exIdx, id)}
               onSelect={(id) => changeExercise(exIdx, id)}
@@ -357,7 +360,8 @@ function ExerciseCard({
   best,
   options,
   menuLabel,
-  station,
+  unit,
+  conv,
   stations,
   onSelectStation,
   onSelect,
@@ -374,7 +378,9 @@ function ExerciseCard({
   best: { volume: number; best1RM: number } | null;
   options?: { id: string; name: string }[];
   menuLabel?: string;
-  station?: Station;
+  /** Units printed on this station's stack, i.e. what the weight column means. */
+  unit: WeightUnit;
+  conv: Conversion;
   stations: Station[];
   onSelectStation: (id: string | undefined) => void;
   onSelect: (id: string) => void;
@@ -387,8 +393,14 @@ function ExerciseCard({
   const phReps = repPlaceholders(ex.sets, targetReps);
   // Sets are entered in this machine's stack numbers; the stats compare against
   // history in real force, so convert before computing them.
-  const forceSets = ex.sets.map((s) => ({ ...s, weight: toForce(s.weight, station) }));
-  const forcePh = phWeights.map((w) => toForce(w, station));
+  // A blank set has to stay blank through the conversion. toForce(0) is the
+  // carriage offset, not zero, and the planned columns read any nonzero weight
+  // as entered, so converting a blank would hide the placeholder behind it.
+  const forceSets = ex.sets.map((s) => ({
+    ...s,
+    weight: s.weight > 0 ? toForce(s.weight, conv) : 0,
+  }));
+  const forcePh = phWeights.map((w) => toForce(w, conv));
   const volLogged = loggedVolume(forceSets);
   const volPlanned = plannedVolume(forceSets, forcePh, phReps);
   const strLogged = bestEstimated1RM(forceSets, true);
@@ -486,7 +498,7 @@ function ExerciseCard({
 
       <div className="set-header">
         <span>Set</span>
-        <span>lb</span>
+        <span>{unit}</span>
         <span>Reps</span>
         <span />
         <span />

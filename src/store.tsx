@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type {
   AppData,
+  Calibration,
   Emphasis,
   Exercise,
   LoggedExercise,
@@ -16,6 +17,36 @@ const STORAGE_KEY = 'lifts.data.v1';
 
 function uid(): string {
   return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+}
+
+/** Today as YYYY-MM-DD, in local time rather than UTC. */
+export function todayISODate(): string {
+  const d = new Date();
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
+/**
+ * Stations originally carried a single undated slope/offset and assumed pounds.
+ * Fold that into the calibration list as one undated record, which then applies
+ * to everything logged before the next calibration is measured.
+ */
+function migrateStation(raw: unknown): Station {
+  const s = raw as Partial<Station> & { slope?: number; offset?: number; samples?: unknown };
+  const calibrations: Calibration[] = Array.isArray(s.calibrations)
+    ? s.calibrations
+    : typeof s.slope === 'number'
+      ? [
+          {
+            id: uid(),
+            date: '',
+            slope: s.slope,
+            offset: s.offset ?? 0,
+            samples: s.samples as Calibration['samples'],
+          },
+        ]
+      : [];
+  return { id: s.id!, name: s.name ?? 'Station', unit: s.unit ?? 'lb', calibrations };
 }
 
 function load(): AppData {
@@ -66,7 +97,7 @@ function load(): AppData {
       routines: SEED.routines,
       sessions,
       activeSession,
-      stations: stored.stations ?? [],
+      stations: (stored.stations ?? []).map(migrateStation),
     };
   } catch {
     return fresh;
@@ -102,9 +133,12 @@ interface Store {
   setActiveStation: (exIdx: number, stationId: string | undefined) => void;
   /** Same, for a finished session, so past logs can be tagged retroactively. */
   updateSessionStation: (sessionId: string, exIdx: number, stationId: string | undefined) => void;
-  addStation: (station: Omit<Station, 'id'>) => Station;
+  addStation: (station: Omit<Station, 'id' | 'calibrations'>) => Station;
   updateStation: (id: string, patch: Partial<Omit<Station, 'id'>>) => void;
   deleteStation: (id: string) => void;
+  /** Records a new measurement session, or edits one already recorded. */
+  saveCalibration: (stationId: string, cal: Omit<Calibration, 'id'> & { id?: string }) => void;
+  deleteCalibration: (stationId: string, calibrationId: string) => void;
   resetAll: () => void;
   exportData: () => string;
   importData: (json: string) => boolean;
@@ -329,7 +363,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       },
 
       addStation(station) {
-        const s: Station = { ...station, id: uid(), name: station.name.trim() || 'Station' };
+        const s: Station = {
+          ...station,
+          id: uid(),
+          name: station.name.trim() || 'Station',
+          calibrations: [],
+        };
         setData((d) => ({ ...d, stations: [...d.stations, s] }));
         return s;
       },
@@ -338,6 +377,31 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         setData((d) => ({
           ...d,
           stations: d.stations.map((s) => (s.id === id ? { ...s, ...patch } : s)),
+        }));
+      },
+
+      saveCalibration(stationId, cal) {
+        setData((d) => ({
+          ...d,
+          stations: d.stations.map((s) => {
+            if (s.id !== stationId) return s;
+            const exists = cal.id && s.calibrations.some((c) => c.id === cal.id);
+            const calibrations = exists
+              ? s.calibrations.map((c) => (c.id === cal.id ? { ...c, ...cal, id: c.id } : c))
+              : [...s.calibrations, { ...cal, id: uid() }];
+            return { ...s, calibrations };
+          }),
+        }));
+      },
+
+      deleteCalibration(stationId, calibrationId) {
+        setData((d) => ({
+          ...d,
+          stations: d.stations.map((s) =>
+            s.id === stationId
+              ? { ...s, calibrations: s.calibrations.filter((c) => c.id !== calibrationId) }
+              : s,
+          ),
         }));
       },
 
@@ -385,7 +449,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             routines: Array.isArray(incoming.routines) ? incoming.routines : SEED.routines,
             sessions: incoming.sessions,
             activeSession: null,
-            stations: incoming.stations ?? [],
+            stations: (incoming.stations ?? []).map(migrateStation),
           });
           return true;
         } catch {

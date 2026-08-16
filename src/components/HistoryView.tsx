@@ -6,6 +6,7 @@ import { NumField } from './NumField';
 import { useBackToClose } from '../lib/useBackToClose';
 import { isCurrentExercise } from '../seed';
 import { StationPicker } from './Stations';
+import { findStation } from '../lib/stations';
 
 /** Stored ISO timestamp -> the YYYY-MM-DD a <input type="date"> expects (local). */
 function toDateInput(iso: string): string {
@@ -34,11 +35,12 @@ export function HistoryView() {
   } | null>(null);
   useBackToClose(editing !== null, () => setEditing(null));
 
-  const editSet =
+  const editExercise =
     editing &&
-    data.sessions
-      .find((s) => s.id === editing.sessionId)
-      ?.exercises[editing.exIdx]?.sets[editing.setIdx];
+    data.sessions.find((s) => s.id === editing.sessionId)?.exercises[editing.exIdx];
+  const editSet = editExercise?.sets[editing!.setIdx];
+  // The weight column means whatever the station's stack is marked in.
+  const editUnit = findStation(data.stations, editExercise?.stationId)?.unit ?? 'lb';
 
   // all exercises, sorted by name, for the edit dropdowns
   const exerciseOptions = useMemo(
@@ -178,7 +180,7 @@ export function HistoryView() {
             <div className="set-edit">
               <div className="set-header compact">
                 <span>Set</span>
-                <span>lb</span>
+                <span>{editUnit}</span>
                 <span>Reps</span>
               </div>
               <div className="set-row compact">

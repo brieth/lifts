@@ -855,6 +855,33 @@ body {
   font-size: 14px;
   font-weight: 600;
 }
+/* Units the stack is marked in, next to the station's name. */
+.unit-chip {
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 6px;
+  background: var(--accent-dim);
+  color: var(--accent);
+  border-radius: 6px;
+  padding: 0 6px;
+  font-size: 11px;
+  font-weight: 600;
+}
+/* Sits inside a .station-field, so it doesn't need the metric row's top gap. */
+.unit-toggle {
+  margin-top: 0;
+}
+.cal-list {
+  margin-bottom: 16px;
+}
+.cal-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
 .station-field {
   display: flex;
   flex-direction: column;

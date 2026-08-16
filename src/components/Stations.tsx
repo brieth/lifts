@@ -1,8 +1,26 @@
 import { useState } from 'react';
-import { useStore } from '../store';
-import { fitCalibration, fitError } from '../lib/stations';
+import { useStore, todayISODate } from '../store';
+import { calibrationAt, fitCalibration, fitError, latestCalibration } from '../lib/stations';
 import { useBackToClose } from '../lib/useBackToClose';
-import type { Station } from '../types';
+import type { Calibration, Station, WeightUnit } from '../types';
+
+/** "Jun 4, 2026", or "Undated" for a calibration carried over from before dates. */
+function calDate(date: string): string {
+  if (!date) return 'Undated';
+  const [y, m, d] = date.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+}
+
+/** Force is always pounds; the stack is only annotated when it isn't. */
+function equation(cal: { slope: number; offset: number }, unit: WeightUnit): string {
+  const sign = cal.offset >= 0 ? ' + ' : ' − ';
+  const stack = unit === 'lb' ? 'stack' : `stack(${unit})`;
+  return `force = ${cal.slope.toFixed(3)} × ${stack}${sign}${Math.abs(cal.offset).toFixed(1)} lb`;
+}
 
 /**
  * Inline station picker: the current station reads as plain text with a dotted
@@ -51,16 +69,21 @@ const BLANK: Sample[] = [
 /**
  * Managing calibrated machines.
  *
- * A stack number is not pounds of resistance: pulley ratio scales it and the
- * carriage adds a constant, both specific to the machine. Calibrating one means
- * measuring `force = slope * stack + offset` with a hanging scale, after which
- * every weight logged there converts to real force and history stays comparable
- * across machines.
+ * A stack number is not pounds of resistance: pulley ratio scales it, the
+ * carriage adds a constant, and the plates may be marked in kilos. Calibrating
+ * one means measuring `force = slope * stack + offset` with a hanging scale,
+ * after which every weight logged there converts to real force and history
+ * stays comparable across machines.
  */
 export function Stations() {
-  const { data, addStation, updateStation, deleteStation } = useStore();
+  const { data, deleteStation } = useStore();
   const [editing, setEditing] = useState<Station | 'new' | null>(null);
   useBackToClose(editing !== null, () => setEditing(null));
+
+  // Re-read the station being edited from the store so calibration edits show
+  // up immediately instead of against the snapshot the modal opened with.
+  const active =
+    editing && editing !== 'new' ? data.stations.find((s) => s.id === editing.id) ?? null : null;
 
   return (
     <>
@@ -73,77 +96,102 @@ export function Stations() {
       </p>
 
       <div className="gym-manage">
-        {data.stations.map((s) => (
-          <div key={s.id} className="station-row">
-            <div className="station-info">
-              <span className="station-name">{s.name}</span>
-              <span className="muted small">
-                force = {s.slope.toFixed(3)} × stack
-                {s.offset >= 0 ? ' + ' : ' − '}
-                {Math.abs(s.offset).toFixed(1)} lb
-              </span>
+        {data.stations.map((s) => {
+          const latest = latestCalibration(s);
+          return (
+            <div key={s.id} className="station-row">
+              <div className="station-info">
+                <span className="station-name">
+                  {s.name}
+                  <span className="unit-chip">{s.unit}</span>
+                </span>
+                <span className="muted small">
+                  {latest
+                    ? `${equation(latest, s.unit)} · ${calDate(latest.date)}`
+                    : s.unit === 'kg'
+                      ? 'Uncalibrated, converted as kilos'
+                      : 'Uncalibrated'}
+                </span>
+              </div>
+              <div className="gym-row-actions">
+                <button className="btn ghost small" onClick={() => setEditing(s)}>
+                  Edit
+                </button>
+                <button
+                  className="btn ghost small danger"
+                  onClick={() => {
+                    if (confirm(`Delete "${s.name}"? Sets logged there revert to unconverted.`))
+                      deleteStation(s.id);
+                  }}
+                >
+                  Delete
+                </button>
+              </div>
             </div>
-            <div className="gym-row-actions">
-              <button className="btn ghost small" onClick={() => setEditing(s)}>
-                Edit
-              </button>
-              <button
-                className="btn ghost small danger"
-                onClick={() => {
-                  if (confirm(`Delete "${s.name}"? Sets logged there revert to unconverted.`))
-                    deleteStation(s.id);
-                }}
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
         <button className="btn ghost block" onClick={() => setEditing('new')}>
           + Add station
         </button>
       </div>
 
       {editing && (
-        <CalibrationForm
-          station={editing === 'new' ? null : editing}
+        <StationForm
+          station={active}
           onClose={() => setEditing(null)}
-          onSave={(name, fit, samples) => {
-            if (editing === 'new') addStation({ name, ...fit, samples });
-            else updateStation(editing.id, { name, ...fit, samples });
-            setEditing(null);
-          }}
+          onCreated={(s) => setEditing(s)}
         />
       )}
     </>
   );
 }
 
-function CalibrationForm({
+/**
+ * Station editor: identity (name, stack units) plus the log of calibrations.
+ *
+ * Creating a station only needs a name and a unit. Measuring is a separate step
+ * because it needs a scale in hand, and because it happens again every time the
+ * machine is serviced or starts feeling different.
+ */
+function StationForm({
   station,
   onClose,
-  onSave,
+  onCreated,
 }: {
   station: Station | null;
   onClose: () => void;
-  onSave: (
-    name: string,
-    fit: { slope: number; offset: number },
-    samples: { stack: number; force: number }[],
-  ) => void;
+  onCreated: (s: Station) => void;
 }) {
+  const { addStation, updateStation, saveCalibration, deleteCalibration } = useStore();
   const [name, setName] = useState(station?.name ?? '');
-  const [samples, setSamples] = useState<Sample[]>(
-    station?.samples?.length
-      ? station.samples.map((s) => ({ stack: String(s.stack), force: String(s.force) }))
-      : BLANK,
+  const [unit, setUnit] = useState<WeightUnit>(station?.unit ?? 'lb');
+  const [measuring, setMeasuring] = useState<Calibration | 'new' | null>(null);
+  useBackToClose(measuring !== null, () => setMeasuring(null));
+
+  // Newest first for reading; the math sorts on its own.
+  const calibrations = [...(station?.calibrations ?? [])].sort((a, b) =>
+    b.date.localeCompare(a.date),
   );
 
-  const parsed = samples
-    .map((s) => ({ stack: Number(s.stack), force: Number(s.force) }))
-    .filter((s) => s.stack > 0 && s.force > 0);
-  const fit = fitCalibration(parsed);
-  const err = fit ? fitError(parsed, fit) : 0;
+  function commit() {
+    if (!name.trim()) return;
+    if (station) updateStation(station.id, { name: name.trim(), unit });
+    else onCreated(addStation({ name: name.trim(), unit }));
+  }
+
+  if (measuring && station) {
+    return (
+      <CalibrationForm
+        station={station}
+        calibration={measuring === 'new' ? null : measuring}
+        onBack={() => setMeasuring(null)}
+        onSave={(cal) => {
+          saveCalibration(station.id, cal);
+          setMeasuring(null);
+        }}
+      />
+    );
+  }
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -160,6 +208,123 @@ function CalibrationForm({
           <input value={name} onChange={(e) => setName(e.target.value)} />
         </label>
 
+        <div className="station-field">
+          <span className="set-edit-label">Stack marked in</span>
+          <div className="metric-toggle unit-toggle">
+            {(['lb', 'kg'] as WeightUnit[]).map((u) => (
+              <button key={u} className={u === unit ? 'active' : ''} onClick={() => setUnit(u)}>
+                {u}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {station ? (
+          <>
+            <h3 className="station-guide-title">Calibrations</h3>
+            <p className="muted small">
+              Pulleys pick up friction as they wear and shed it again when serviced, so a fit
+              describes the machine on the day you measured it. Add a new one instead of editing the
+              old, and every past session keeps converting through the calibration that was in
+              effect when you did it.
+            </p>
+            <div className="cal-list">
+              {calibrations.map((c) => (
+                <div key={c.id} className="cal-row">
+                  <div className="station-info">
+                    <span className="station-name">{calDate(c.date)}</span>
+                    <span className="muted small">{equation(c, unit)}</span>
+                  </div>
+                  <div className="gym-row-actions">
+                    <button className="btn ghost small" onClick={() => setMeasuring(c)}>
+                      Edit
+                    </button>
+                    <button
+                      className="btn ghost small danger"
+                      onClick={() => {
+                        if (confirm(`Delete the ${calDate(c.date)} calibration?`))
+                          deleteCalibration(station.id, c.id);
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+              {calibrations.length === 0 && (
+                <p className="muted small">
+                  {unit === 'kg'
+                    ? 'Not measured yet, so the stack number is read as kilos and converted straight to pounds.'
+                    : 'Not measured yet, so the stack number is taken at face value.'}
+                </p>
+              )}
+              <button className="btn ghost block" onClick={() => setMeasuring('new')}>
+                + Add calibration
+              </button>
+            </div>
+            <button className="btn primary block" disabled={!name.trim()} onClick={() => { commit(); onClose(); }}>
+              Save changes
+            </button>
+          </>
+        ) : (
+          <button className="btn primary block" disabled={!name.trim()} onClick={commit}>
+            Add station
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function CalibrationForm({
+  station,
+  calibration,
+  onBack,
+  onSave,
+}: {
+  station: Station;
+  calibration: Calibration | null;
+  onBack: () => void;
+  onSave: (cal: Omit<Calibration, 'id'> & { id?: string }) => void;
+}) {
+  const [date, setDate] = useState(calibration?.date || todayISODate());
+  const [samples, setSamples] = useState<Sample[]>(
+    calibration?.samples?.length
+      ? calibration.samples.map((s) => ({ stack: String(s.stack), force: String(s.force) }))
+      : BLANK,
+  );
+
+  const parsed = samples
+    .map((s) => ({ stack: Number(s.stack), force: Number(s.force) }))
+    .filter((s) => s.stack > 0 && s.force > 0);
+  const fit = fitCalibration(parsed);
+  const err = fit ? fitError(parsed, fit) : 0;
+
+  // What this measurement replaces, so an unexpected shift is visible.
+  const previous = calibrationAt(
+    { ...station, calibrations: station.calibrations.filter((c) => c.id !== calibration?.id) },
+    date,
+  );
+  const drift =
+    fit && previous && previous.slope !== 0
+      ? ((fit.slope - previous.slope) / previous.slope) * 100
+      : null;
+
+  return (
+    <div className="modal-overlay" onClick={onBack}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-head">
+          <span className="modal-title">{calibration ? 'Edit calibration' : 'New calibration'}</span>
+          <button className="btn ghost small" onClick={onBack}>
+            Back
+          </button>
+        </div>
+
+        <label className="station-field">
+          <span className="set-edit-label">Measured on</span>
+          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+        </label>
+
         <h3 className="station-guide-title">How to measure</h3>
         <ol className="station-guide">
           <li>Clip a hanging scale inline between the cable and the attachment, using a rated
@@ -173,7 +338,7 @@ function CalibrationForm({
 
         <div className="station-samples">
           <div className="station-sample head">
-            <span>Stack</span>
+            <span>Stack ({station.unit})</span>
             <span>Measured lb</span>
           </div>
           {samples.map((s, i) => (
@@ -202,18 +367,20 @@ function CalibrationForm({
 
         {fit ? (
           <div className="station-fit">
-            <p className="station-fit-eq">
-              force = {fit.slope.toFixed(3)} × stack
-              {fit.offset >= 0 ? ' + ' : ' − '}
-              {Math.abs(fit.offset).toFixed(1)} lb
-            </p>
+            <p className="station-fit-eq">{equation(fit, station.unit)}</p>
             <p className="muted small">
               {parsed.length < 3
                 ? 'Two points fit a line exactly, so this assumes the machine is linear rather than checking it. Add a third.'
                 : err < 3
                   ? `Points sit within ${err.toFixed(1)}% of the line, so the machine is linear and this holds beyond the range you measured.`
-                  : `Points deviate up to ${err.toFixed(1)}% from the line. That's more curve than expected — re-check your readings, and don't trust it far outside the range you measured.`}
+                  : `Points deviate up to ${err.toFixed(1)}% from the line. That's more curve than expected. Re-check your readings, and don't trust it far outside the range you measured.`}
             </p>
+            {drift != null && Math.abs(drift) >= 1 && (
+              <p className="muted small">
+                {Math.abs(drift).toFixed(1)}% {drift > 0 ? 'heavier' : 'lighter'} than the{' '}
+                {calDate(previous!.date)} calibration. Sessions before this date keep using that one.
+              </p>
+            )}
           </div>
         ) : (
           <p className="muted small">Enter at least two measurements to compute the calibration.</p>
@@ -221,10 +388,12 @@ function CalibrationForm({
 
         <button
           className="btn primary block"
-          disabled={!fit || !name.trim()}
-          onClick={() => fit && onSave(name.trim(), fit, parsed)}
+          disabled={!fit}
+          onClick={() =>
+            fit && onSave({ id: calibration?.id, date, slope: fit.slope, offset: fit.offset, samples: parsed })
+          }
         >
-          {station ? 'Save changes' : 'Add station'}
+          {calibration ? 'Save calibration' : 'Add calibration'}
         </button>
       </div>
     </div>
