@@ -134,7 +134,24 @@ export function HistoryView() {
                     </div>
                   </div>
                 ))}
-                <button className="btn ghost small danger" onClick={() => deleteSession(s.id)}>
+                {/* A whole workout, with no undo, so it asks first. */}
+                <button
+                  className="btn ghost small danger"
+                  onClick={() => {
+                    const label = date.toLocaleDateString(undefined, {
+                      month: 'short',
+                      day: 'numeric',
+                    });
+                    if (
+                      confirm(
+                        `Delete ${s.name} from ${label}? Its ${sets} ${
+                          sets === 1 ? 'set' : 'sets'
+                        } can't be recovered.`,
+                      )
+                    )
+                      deleteSession(s.id);
+                  }}
+                >
                   Delete
                 </button>
               </div>
