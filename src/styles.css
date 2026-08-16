@@ -811,7 +811,9 @@ body {
    over it — same treatment as the editable date in workout history. */
 .station-pick {
   position: relative;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   max-width: 100%;
   margin-top: 2px;
   font-size: 12px;
@@ -823,9 +825,8 @@ body {
   border-bottom: 1px dotted var(--border);
 }
 .station-pick .unit-chip {
-  margin-left: 5px;
   font-size: 10px;
-  padding: 0 5px;
+  padding: 1px 5px;
 }
 .station-pick.none {
   color: var(--muted);
@@ -859,24 +860,29 @@ body {
   gap: 2px;
   min-width: 0;
 }
+/* Flex so the unit chip centers on the name rather than riding its baseline. */
 .station-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 14px;
   font-weight: 600;
 }
 /* Units the stack is marked in, next to the station's name. */
 .unit-chip {
-  display: inline-block;
-  vertical-align: middle;
-  margin-left: 6px;
   background: var(--accent-dim);
   color: var(--accent);
   border-radius: 6px;
-  padding: 0 6px;
+  padding: 1px 6px;
   font-size: 11px;
+  line-height: 1.35;
   font-weight: 600;
 }
-/* Sits inside a .station-field, so it doesn't need the metric row's top gap. */
-.unit-toggle {
+/*
+ * Sits inside a .station-field, whose own gap spaces it from the label. Needs
+ * to outrank .metric-toggle's margin-top, which is defined further down.
+ */
+.station-field .metric-toggle {
   margin-top: 0;
 }
 .cal-row {
