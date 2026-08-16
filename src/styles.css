@@ -871,9 +871,6 @@ body {
 .unit-toggle {
   margin-top: 0;
 }
-.cal-list {
-  margin-bottom: 16px;
-}
 .cal-row {
   display: flex;
   align-items: center;
@@ -886,7 +883,6 @@ body {
   display: flex;
   flex-direction: column;
   gap: 5px;
-  margin-bottom: 16px;
 }
 .station-field input {
   background: var(--surface-2);
@@ -896,6 +892,35 @@ body {
   color: var(--text);
   font-family: inherit;
   font-size: 15px;
+}
+/*
+ * Station and calibration forms. Every gap comes from the flex gap so the
+ * rhythm stays even; nothing inside carries its own margin. Sections group a
+ * heading with the content it introduces, which sits tighter than the gap
+ * between sections.
+ */
+.station-modal {
+  gap: 14px;
+  overflow-y: auto;
+}
+.station-modal > *,
+.station-modal p,
+.station-modal h3,
+.station-modal ol {
+  margin: 0;
+}
+.station-modal .modal-head {
+  margin-bottom: 0;
+}
+.station-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+/* The flex gap already spaces these; .btn.block's own top margin would double it. */
+.station-modal .btn.block,
+.station-section .btn.block {
+  margin-top: 0;
 }
 .station-guide-title {
   font-size: 12px;

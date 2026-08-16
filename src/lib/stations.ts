@@ -16,6 +16,21 @@ import type { Calibration, Session, Station } from '../types';
 
 export const LB_PER_KG = 2.2046226218;
 
+/**
+ * Stations that exist everywhere and need no measuring. A barbell has no pulley
+ * and no carriage, so the plates on it ARE the force. The only thing that varies
+ * between gyms is whether they're marked in pounds or kilos, which is exactly
+ * what the unit handles. They can't be edited or deleted.
+ */
+export const BUILTIN_STATIONS: Station[] = [
+  { id: 'barbell-lb', name: 'Barbell (lb)', unit: 'lb', calibrations: [] },
+  { id: 'barbell-kg', name: 'Barbell (kg)', unit: 'kg', calibrations: [] },
+];
+
+export function isBuiltinStation(id: string): boolean {
+  return BUILTIN_STATIONS.some((s) => s.id === id);
+}
+
 /** force = slope * stack + offset, with stack in the station's own units. */
 export interface Conversion {
   slope: number;

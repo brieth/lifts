@@ -25,6 +25,7 @@ export function HistoryView() {
     updateSessionSet,
     deleteSessionSet,
     updateSessionStation,
+    allStations,
   } = useStore();
 
   // which set is open in the edit popup (null = closed)
@@ -40,7 +41,7 @@ export function HistoryView() {
     data.sessions.find((s) => s.id === editing.sessionId)?.exercises[editing.exIdx];
   const editSet = editExercise?.sets[editing!.setIdx];
   // The weight column means whatever the station's stack is marked in.
-  const editUnit = findStation(data.stations, editExercise?.stationId)?.unit ?? 'lb';
+  const editUnit = findStation(allStations, editExercise?.stationId)?.unit ?? 'lb';
 
   // all exercises, sorted by name, for the edit dropdowns
   const exerciseOptions = useMemo(
@@ -119,7 +120,7 @@ export function HistoryView() {
                       <span className="retired-tag">not counted</span>
                     )}
                     <StationPicker
-                      stations={data.stations}
+                      stations={allStations}
                       value={e.stationId}
                       onChange={(id) => updateSessionStation(s.id, i, id)}
                     />

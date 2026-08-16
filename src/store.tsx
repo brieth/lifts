@@ -11,7 +11,7 @@ import type {
   Station,
 } from './types';
 import { AB_OPTION_IDS, LEG_OPTION_IDS, SEED } from './seed';
-import { normalizeSessions } from './lib/stations';
+import { BUILTIN_STATIONS, normalizeSessions } from './lib/stations';
 
 const STORAGE_KEY = 'lifts.data.v1';
 
@@ -112,6 +112,8 @@ interface Store {
    * different machines are comparable; display and editing use data.sessions.
    */
   forceSessions: Session[];
+  /** The built-in barbells followed by the user's own, for pickers and lookups. */
+  allStations: Station[];
   exerciseName: (id: string) => string;
   startSession: (routine: Routine, emphasis?: Emphasis) => void;
   cancelSession: () => void;
@@ -162,10 +164,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const allStations = useMemo(
+    () => [...BUILTIN_STATIONS, ...data.stations],
+    [data.stations],
+  );
+
   // Weights converted to real force via each exercise's station calibration.
   const forceSessions = useMemo(
-    () => normalizeSessions(data.sessions, data.stations),
-    [data.sessions, data.stations],
+    () => normalizeSessions(data.sessions, allStations),
+    [data.sessions, allStations],
   );
 
   const store = useMemo<Store>(() => {
@@ -179,6 +186,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return {
       data,
       forceSessions,
+      allStations,
       exerciseName,
 
       startSession(routine, emphasis) {
@@ -457,7 +465,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         }
       },
     };
-  }, [data, forceSessions]);
+  }, [data, forceSessions, allStations]);
 
   return <Ctx.Provider value={store}>{children}</Ctx.Provider>;
 }

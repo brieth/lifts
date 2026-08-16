@@ -101,12 +101,18 @@ function plannedStrength(sets: SetEntry[], phWeights: number[], phReps: number[]
   return Math.round(best);
 }
 
-function round5(n: number): number {
-  return Math.round(n / 5) * 5;
+/**
+ * Round a suggestion to something you can actually set. 5 lb is the smallest
+ * step on a pound stack or a pair of pound plates; kilo gear goes in 2.5s,
+ * which is close to the same increment rather than double it.
+ */
+function roundStep(n: number, unit: WeightUnit): number {
+  const step = unit === 'kg' ? 2.5 : 5;
+  return Math.round(n / step) * step;
 }
 
 function ActiveSession() {
-  const { data, forceSessions, exerciseName, updateActive, finishSession, cancelSession, setActiveStation } =
+  const { data, forceSessions, allStations, exerciseName, updateActive, finishSession, cancelSession, setActiveStation } =
     useStore();
   const [historyFor, setHistoryFor] = useState<string | null>(null);
   useBackToClose(historyFor !== null, () => setHistoryFor(null));
@@ -215,7 +221,7 @@ function ActiveSession() {
       <div className="exercise-list">
         {session.exercises.map((ex, exIdx) => {
           const targetReps = repsFor(ex.exerciseId, emphasis);
-          const station = findStation(data.stations, ex.stationId);
+          const station = findStation(allStations, ex.stationId);
           // A workout happening now converts through the machine as it is now,
           // which is the latest calibration on record.
           const conv = conversionFor(station);
@@ -225,7 +231,11 @@ function ActiveSession() {
             recentEstimated1RM(forceSessions, ex.exerciseId) ?? defaultOneRMFor(ex.exerciseId);
           // Inverse-Epley gives the force for the target reps; converting back
           // through this station's calibration gives the number to set on it.
-          const suggestedWeight = round5(fromForce(weightForReps(base1RM, targetReps), conv));
+          const unit = station?.unit ?? 'lb';
+          const suggestedWeight = roundStep(
+            fromForce(weightForReps(base1RM, targetReps), conv),
+            unit,
+          );
           const options = ex.options
             ?.map((id) => ({ id, name: exerciseName(id) }))
             .sort((a, b) => a.name.localeCompare(b.name));
@@ -243,9 +253,9 @@ function ActiveSession() {
               best={bestExercisePoint(forceSessions, ex.exerciseId)}
               options={options}
               menuLabel={menuLabel}
-              unit={station?.unit ?? 'lb'}
+              unit={unit}
               conv={conv}
-              stations={data.stations}
+              stations={allStations}
               onSelectStation={(id) => setActiveStation(exIdx, id)}
               onSelect={(id) => changeExercise(exIdx, id)}
               onShowHistory={() => setHistoryFor(ex.exerciseId)}

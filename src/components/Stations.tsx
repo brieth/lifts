@@ -1,6 +1,13 @@
 import { useState } from 'react';
 import { useStore, todayISODate } from '../store';
-import { calibrationAt, fitCalibration, fitError, latestCalibration } from '../lib/stations';
+import {
+  BUILTIN_STATIONS,
+  calibrationAt,
+  fitCalibration,
+  fitError,
+  isBuiltinStation,
+  latestCalibration,
+} from '../lib/stations';
 import { useBackToClose } from '../lib/useBackToClose';
 import type { Calibration, Station, WeightUnit } from '../types';
 
@@ -80,6 +87,14 @@ export function Stations() {
   const [editing, setEditing] = useState<Station | 'new' | null>(null);
   useBackToClose(editing !== null, () => setEditing(null));
 
+  /** What the muted second line under a station's name says. */
+  const summary = (s: Station): string => {
+    const latest = latestCalibration(s);
+    if (latest) return `${equation(latest, s.unit)} · ${calDate(latest.date)}`;
+    if (isBuiltinStation(s.id)) return s.unit === 'kg' ? 'Plates in kilos' : 'Plates in pounds';
+    return s.unit === 'kg' ? 'Uncalibrated, converted as kilos' : 'Uncalibrated';
+  };
+
   // Re-read the station being edited from the store so calibration edits show
   // up immediately instead of against the snapshot the modal opened with.
   const active =
@@ -96,40 +111,43 @@ export function Stations() {
       </p>
 
       <div className="gym-manage">
-        {data.stations.map((s) => {
-          const latest = latestCalibration(s);
-          return (
-            <div key={s.id} className="station-row">
-              <div className="station-info">
-                <span className="station-name">
-                  {s.name}
-                  <span className="unit-chip">{s.unit}</span>
-                </span>
-                <span className="muted small">
-                  {latest
-                    ? `${equation(latest, s.unit)} · ${calDate(latest.date)}`
-                    : s.unit === 'kg'
-                      ? 'Uncalibrated, converted as kilos'
-                      : 'Uncalibrated'}
-                </span>
-              </div>
-              <div className="gym-row-actions">
-                <button className="btn ghost small" onClick={() => setEditing(s)}>
-                  Edit
-                </button>
-                <button
-                  className="btn ghost small danger"
-                  onClick={() => {
-                    if (confirm(`Delete "${s.name}"? Sets logged there revert to unconverted.`))
-                      deleteStation(s.id);
-                  }}
-                >
-                  Delete
-                </button>
-              </div>
+        {/* Barbells are exact by construction, so they're always here and fixed. */}
+        {BUILTIN_STATIONS.map((s) => (
+          <div key={s.id} className="station-row">
+            <div className="station-info">
+              <span className="station-name">
+                {s.name}
+                <span className="unit-chip">{s.unit}</span>
+              </span>
+              <span className="muted small">{summary(s)}</span>
             </div>
-          );
-        })}
+          </div>
+        ))}
+        {data.stations.map((s) => (
+          <div key={s.id} className="station-row">
+            <div className="station-info">
+              <span className="station-name">
+                {s.name}
+                <span className="unit-chip">{s.unit}</span>
+              </span>
+              <span className="muted small">{summary(s)}</span>
+            </div>
+            <div className="gym-row-actions">
+              <button className="btn ghost small" onClick={() => setEditing(s)}>
+                Edit
+              </button>
+              <button
+                className="btn ghost small danger"
+                onClick={() => {
+                  if (confirm(`Delete "${s.name}"? Sets logged there revert to unconverted.`))
+                    deleteStation(s.id);
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        ))}
         <button className="btn ghost block" onClick={() => setEditing('new')}>
           + Add station
         </button>
@@ -195,7 +213,7 @@ function StationForm({
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
+      <div className="modal station-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-head">
           <span className="modal-title">{station ? 'Edit station' : 'Add station'}</span>
           <button className="btn ghost small" onClick={onClose}>
@@ -209,7 +227,7 @@ function StationForm({
         </label>
 
         <div className="station-field">
-          <span className="set-edit-label">Stack marked in</span>
+          <span className="set-edit-label">Unit</span>
           <div className="metric-toggle unit-toggle">
             {(['lb', 'kg'] as WeightUnit[]).map((u) => (
               <button key={u} className={u === unit ? 'active' : ''} onClick={() => setUnit(u)}>
@@ -219,58 +237,58 @@ function StationForm({
           </div>
         </div>
 
-        {station ? (
-          <>
+        {station && (
+          <div className="station-section">
             <h3 className="station-guide-title">Calibrations</h3>
             <p className="muted small">
-              Pulleys pick up friction as they wear and shed it again when serviced, so a fit
-              describes the machine on the day you measured it. Add a new one instead of editing the
-              old, and every past session keeps converting through the calibration that was in
-              effect when you did it.
+              A fit describes the machine on the day you measured it. Add a new one when it changes,
+              and past sessions keep using the calibration in effect at the time.
             </p>
-            <div className="cal-list">
-              {calibrations.map((c) => (
-                <div key={c.id} className="cal-row">
-                  <div className="station-info">
-                    <span className="station-name">{calDate(c.date)}</span>
-                    <span className="muted small">{equation(c, unit)}</span>
-                  </div>
-                  <div className="gym-row-actions">
-                    <button className="btn ghost small" onClick={() => setMeasuring(c)}>
-                      Edit
-                    </button>
-                    <button
-                      className="btn ghost small danger"
-                      onClick={() => {
-                        if (confirm(`Delete the ${calDate(c.date)} calibration?`))
-                          deleteCalibration(station.id, c.id);
-                      }}
-                    >
-                      Delete
-                    </button>
-                  </div>
+            {calibrations.length === 0 && (
+              <p className="muted small">
+                {unit === 'kg'
+                  ? 'Not measured, so the stack number is read as kilos.'
+                  : 'Not measured, so the stack number is taken at face value.'}
+              </p>
+            )}
+            {calibrations.map((c) => (
+              <div key={c.id} className="cal-row">
+                <div className="station-info">
+                  <span className="station-name">{calDate(c.date)}</span>
+                  <span className="muted small">{equation(c, unit)}</span>
                 </div>
-              ))}
-              {calibrations.length === 0 && (
-                <p className="muted small">
-                  {unit === 'kg'
-                    ? 'Not measured yet, so the stack number is read as kilos and converted straight to pounds.'
-                    : 'Not measured yet, so the stack number is taken at face value.'}
-                </p>
-              )}
-              <button className="btn ghost block" onClick={() => setMeasuring('new')}>
-                + Add calibration
-              </button>
-            </div>
-            <button className="btn primary block" disabled={!name.trim()} onClick={() => { commit(); onClose(); }}>
-              Save changes
+                <div className="gym-row-actions">
+                  <button className="btn ghost small" onClick={() => setMeasuring(c)}>
+                    Edit
+                  </button>
+                  <button
+                    className="btn ghost small danger"
+                    onClick={() => {
+                      if (confirm(`Delete the ${calDate(c.date)} calibration?`))
+                        deleteCalibration(station.id, c.id);
+                    }}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
+            <button className="btn ghost block" onClick={() => setMeasuring('new')}>
+              + Add calibration
             </button>
-          </>
-        ) : (
-          <button className="btn primary block" disabled={!name.trim()} onClick={commit}>
-            Add station
-          </button>
+          </div>
         )}
+
+        <button
+          className="btn primary block"
+          disabled={!name.trim()}
+          onClick={() => {
+            commit();
+            if (station) onClose();
+          }}
+        >
+          {station ? 'Save changes' : 'Add station'}
+        </button>
       </div>
     </div>
   );
@@ -312,7 +330,7 @@ function CalibrationForm({
 
   return (
     <div className="modal-overlay" onClick={onBack}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
+      <div className="modal station-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-head">
           <span className="modal-title">{calibration ? 'Edit calibration' : 'New calibration'}</span>
           <button className="btn ghost small" onClick={onBack}>
@@ -325,16 +343,18 @@ function CalibrationForm({
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
         </label>
 
-        <h3 className="station-guide-title">How to measure</h3>
-        <ol className="station-guide">
-          <li>Clip a hanging scale inline between the cable and the attachment, using a rated
-            carabiner at each end rather than an open hook.</li>
-          <li>Tare it so the attachment&apos;s own weight reads zero.</li>
-          <li>Set the stack to a low number, pull steadily until the plates just lift, and read the
-            locked value. Don&apos;t jerk it.</li>
-          <li>Repeat at two more settings, spread out. Three points reveal whether the machine is
-            linear; two only assume it.</li>
-        </ol>
+        <div className="station-section">
+          <h3 className="station-guide-title">How to measure</h3>
+          <ol className="station-guide">
+            <li>Clip a hanging scale inline between the cable and the attachment, using a rated
+              carabiner at each end rather than an open hook.</li>
+            <li>Tare it so the attachment&apos;s own weight reads zero.</li>
+            <li>Set the stack to a low number, pull steadily until the plates just lift, and read the
+              locked value. Don&apos;t jerk it.</li>
+            <li>Repeat at two more settings, spread out. Three points reveal whether the machine is
+              linear; two only assume it.</li>
+          </ol>
+        </div>
 
         <div className="station-samples">
           <div className="station-sample head">
