@@ -46,9 +46,14 @@ export function StationPicker({
 }) {
   if (stations.length === 0) return null;
   const current = stations.find((s) => s.id === value);
+  // A native option is plain text, so it can't carry the unit chip. Stations
+  // that share a name (the two barbells) spell the unit out instead.
+  const optionLabel = (s: Station) =>
+    stations.filter((o) => o.name === s.name).length > 1 ? `${s.name} (${s.unit})` : s.name;
   return (
     <span className={current ? 'station-pick' : 'station-pick none'}>
-      {current?.name ?? 'No station'}
+      <span className="station-pick-name">{current?.name ?? 'No station'}</span>
+      {current && <span className="unit-chip">{current.unit}</span>}
       <select
         className="station-pick-native"
         value={value ?? ''}
@@ -58,7 +63,7 @@ export function StationPicker({
         <option value="">No station</option>
         {stations.map((s) => (
           <option key={s.id} value={s.id}>
-            {s.name}
+            {optionLabel(s)}
           </option>
         ))}
       </select>
@@ -339,7 +344,7 @@ function CalibrationForm({
         </div>
 
         <label className="station-field">
-          <span className="set-edit-label">Measured on</span>
+          <span className="set-edit-label">Date</span>
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
         </label>
 
