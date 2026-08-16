@@ -180,7 +180,8 @@ export function isCurrentExercise(id: string): boolean {
 }
 
 /**
- * The subset that feeds the Overall index: upper body only.
+ * The subset that feeds the Overall index: the chest, back, delt, bicep, and
+ * tricep lifts. Legs and abs sit out.
  *
  * Legs are out because leg machines are levers and cams with no inline clip
  * point, so they can't be force-calibrated the way a cable stack can. Their

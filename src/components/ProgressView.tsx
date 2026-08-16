@@ -61,8 +61,9 @@ export function ProgressView({
   const hasHistory = tracked.length > 0;
 
   // Everything below runs on force-normalized sessions, so a lift tracks as one
-  // continuous series no matter which machine it was performed on. Overall is
-  // upper body only; see OVERALL_EXERCISE_IDS for why legs and abs sit out.
+  // continuous series no matter which machine it was performed on. Overall
+  // covers chest, back, delts, and arms; see OVERALL_EXERCISE_IDS for why legs
+  // and abs sit out.
   const history =
     current === OVERALL
       ? overallSeries(forceSessions, [...OVERALL_EXERCISE_IDS])
