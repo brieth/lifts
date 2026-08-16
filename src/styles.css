@@ -718,7 +718,9 @@ body {
   padding: 0 18px 0 0;
   margin: 0 0 4px;
   cursor: pointer;
-  max-width: 100%;
+  /* Full width so the arrow pins to the right edge, consistent across rows.
+     Sizing to content would place it after the longest option instead. */
+  width: 100%;
   appearance: none;
   -webkit-appearance: none;
   background-image: linear-gradient(45deg, transparent 50%, var(--accent) 50%),

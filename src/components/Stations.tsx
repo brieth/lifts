@@ -157,11 +157,7 @@ function CalibrationForm({
 
         <label className="station-field">
           <span className="set-edit-label">Name</span>
-          <input
-            value={name}
-            placeholder="e.g. Planet Fitness, cable by water fountain"
-            onChange={(e) => setName(e.target.value)}
-          />
+          <input value={name} onChange={(e) => setName(e.target.value)} />
         </label>
 
         <h3 className="station-guide-title">How to measure</h3>
