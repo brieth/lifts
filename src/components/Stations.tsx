@@ -4,6 +4,43 @@ import { fitCalibration, fitError } from '../lib/stations';
 import { useBackToClose } from '../lib/useBackToClose';
 import type { Station } from '../types';
 
+/**
+ * Inline station picker: the current station reads as plain text with a dotted
+ * underline, with a transparent native select laid over it (same treatment as
+ * the editable date in workout history). Renders nothing when no stations
+ * exist, since there'd be nothing to choose.
+ */
+export function StationPicker({
+  stations,
+  value,
+  onChange,
+}: {
+  stations: Station[];
+  value?: string;
+  onChange: (id: string | undefined) => void;
+}) {
+  if (stations.length === 0) return null;
+  const current = stations.find((s) => s.id === value);
+  return (
+    <span className={current ? 'station-pick' : 'station-pick none'}>
+      {current?.name ?? 'No station'}
+      <select
+        className="station-pick-native"
+        value={value ?? ''}
+        onClick={(e) => e.stopPropagation()}
+        onChange={(e) => onChange(e.target.value || undefined)}
+      >
+        <option value="">No station</option>
+        {stations.map((s) => (
+          <option key={s.id} value={s.id}>
+            {s.name}
+          </option>
+        ))}
+      </select>
+    </span>
+  );
+}
+
 type Sample = { stack: string; force: string };
 const BLANK: Sample[] = [
   { stack: '', force: '' },

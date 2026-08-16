@@ -15,6 +15,7 @@ import { findStation, fromForce, toForce } from '../lib/stations';
 import { AB_OPTION_IDS } from '../seed';
 import { SvBadge } from './SvBadge';
 import { NumField } from './NumField';
+import { StationPicker } from './Stations';
 
 export function WorkoutView() {
   const { data, startSession } = useStore();
@@ -443,6 +444,13 @@ function ExerciseCard({
         ) : (
           <span className="exercise-name">{name}</span>
         )}
+        {selected && (
+          <StationPicker
+            stations={stations}
+            value={ex.stationId}
+            onChange={onSelectStation}
+          />
+        )}
       </div>
 
       {selected && (
@@ -510,25 +518,9 @@ function ExerciseCard({
           </button>
         </div>
       ))}
-      <div className="set-footer">
-        <button className="btn ghost small addset" onClick={onAddSet}>
-          + Add set
-        </button>
-        {stations.length > 0 && (
-          <select
-            className="station-select"
-            value={station?.id ?? ''}
-            onChange={(e) => onSelectStation(e.target.value || undefined)}
-          >
-            <option value="">No station</option>
-            {stations.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
-        )}
-      </div>
+      <button className="btn ghost small addset" onClick={onAddSet}>
+        + Add set
+      </button>
         </>
       )}
     </div>

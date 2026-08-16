@@ -297,9 +297,9 @@ body {
 }
 .exercise-head {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
   margin-bottom: 10px;
 }
 .exercise-card.collapsed .exercise-head {
@@ -799,28 +799,36 @@ body {
 }
 
 /* ---------- stations ---------- */
-.set-footer {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.set-footer .addset {
-  margin-right: auto;
-}
-.station-select {
-  max-width: 55%;
-  background: transparent;
-  border: none;
-  color: var(--muted);
-  font-family: inherit;
+/* Reads as text with a dotted underline, with a transparent native select laid
+   over it — same treatment as the editable date in workout history. */
+.station-pick {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  margin-top: 2px;
   font-size: 12px;
-  text-align: right;
-  text-align-last: right;
-  padding: 4px 0;
+  color: var(--accent);
+  border-bottom: 1px dotted var(--border);
   cursor: pointer;
-  appearance: none;
-  -webkit-appearance: none;
-  text-overflow: ellipsis;
+}
+.station-pick.none {
+  color: var(--muted);
+}
+.station-pick-native {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  opacity: 0;
+  cursor: pointer;
+}
+.history-exercise .station-pick {
+  display: block;
+  width: fit-content;
+  margin-bottom: 5px;
 }
 .station-row {
   display: flex;

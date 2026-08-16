@@ -100,6 +100,8 @@ interface Store {
   upsertExercise: (name: string, id?: string) => Exercise;
   /** Sets which machine an exercise in the active session was performed on. */
   setActiveStation: (exIdx: number, stationId: string | undefined) => void;
+  /** Same, for a finished session, so past logs can be tagged retroactively. */
+  updateSessionStation: (sessionId: string, exIdx: number, stationId: string | undefined) => void;
   addStation: (station: Omit<Station, 'id'>) => Station;
   updateStation: (id: string, patch: Partial<Omit<Station, 'id'>>) => void;
   deleteStation: (id: string) => void;
@@ -310,6 +312,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
               }
             : d,
         );
+      },
+
+      updateSessionStation(sessionId, exIdx, stationId) {
+        setData((d) => ({
+          ...d,
+          sessions: d.sessions.map((s) =>
+            s.id === sessionId
+              ? {
+                  ...s,
+                  exercises: s.exercises.map((e, i) => (i === exIdx ? { ...e, stationId } : e)),
+                }
+              : s,
+          ),
+        }));
       },
 
       addStation(station) {

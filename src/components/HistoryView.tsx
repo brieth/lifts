@@ -5,6 +5,7 @@ import { MonthCalendar } from './MonthCalendar';
 import { NumField } from './NumField';
 import { useBackToClose } from '../lib/useBackToClose';
 import { isCurrentExercise } from '../seed';
+import { StationPicker } from './Stations';
 
 /** Stored ISO timestamp -> the YYYY-MM-DD a <input type="date"> expects (local). */
 function toDateInput(iso: string): string {
@@ -22,6 +23,7 @@ export function HistoryView() {
     updateSessionDate,
     updateSessionSet,
     deleteSessionSet,
+    updateSessionStation,
   } = useStore();
 
   // which set is open in the edit popup (null = closed)
@@ -114,6 +116,11 @@ export function HistoryView() {
                     {!isCurrentExercise(e.exerciseId) && (
                       <span className="retired-tag">not counted</span>
                     )}
+                    <StationPicker
+                      stations={data.stations}
+                      value={e.stationId}
+                      onChange={(id) => updateSessionStation(s.id, i, id)}
+                    />
                     <div className="history-sets">
                       {e.sets.map((st, j) => (
                         <button
