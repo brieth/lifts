@@ -1,13 +1,6 @@
 import { useState } from 'react';
 import { useStore, todayISODate } from '../store';
-import {
-  BUILTIN_STATIONS,
-  calibrationAt,
-  fitCalibration,
-  fitError,
-  isBuiltinStation,
-  latestCalibration,
-} from '../lib/stations';
+import { calibrationAt, fitCalibration, fitError, latestCalibration } from '../lib/stations';
 import { useBackToClose } from '../lib/useBackToClose';
 import type { Calibration, Station, WeightUnit } from '../types';
 
@@ -96,7 +89,6 @@ export function Stations() {
   const summary = (s: Station): string => {
     const latest = latestCalibration(s);
     if (latest) return `${equation(latest, s.unit)} · ${calDate(latest.date)}`;
-    if (isBuiltinStation(s.id)) return s.unit === 'kg' ? 'Plates in kilos' : 'Plates in pounds';
     return s.unit === 'kg' ? 'Uncalibrated, converted as kilos' : 'Uncalibrated';
   };
 
@@ -115,19 +107,9 @@ export function Stations() {
         need this for machines you actually want to compare.
       </p>
 
+      {/* The built-in barbells aren't listed: nothing about them is editable,
+          and they show up where they're used, in the picker. */}
       <div className="gym-manage">
-        {/* Barbells are exact by construction, so they're always here and fixed. */}
-        {BUILTIN_STATIONS.map((s) => (
-          <div key={s.id} className="station-row">
-            <div className="station-info">
-              <span className="station-name">
-                {s.name}
-                <span className="unit-chip">{s.unit}</span>
-              </span>
-              <span className="muted small">{summary(s)}</span>
-            </div>
-          </div>
-        ))}
         {data.stations.map((s) => (
           <div key={s.id} className="station-row">
             <div className="station-info">
