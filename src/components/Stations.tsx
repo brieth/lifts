@@ -333,9 +333,10 @@ function CalibrationForm({
         <div className="station-section">
           <h3 className="station-guide-title">How to measure</h3>
           <ol className="station-guide">
-            <li>Clip a hanging scale inline between the cable and the attachment, using a rated
-              carabiner at each end rather than an open hook.</li>
-            <li>Tare it so the attachment&apos;s own weight reads zero.</li>
+            <li>Zero the scale with nothing hanging on it. Zeroing it once the attachment is on
+              subtracts that weight from every reading.</li>
+            <li>Clip it inline between the cable and the attachment, using a rated carabiner at each
+              end rather than an open hook.</li>
             <li>Set the stack to a low number, pull steadily until the plates just lift, and read the
               locked value. Don&apos;t jerk it.</li>
             <li>Repeat at two more settings, spread out. Three points reveal whether the machine is
