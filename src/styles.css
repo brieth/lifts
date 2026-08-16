@@ -842,8 +842,9 @@ body {
   opacity: 0;
   cursor: pointer;
 }
+/* Its own line, but still flex so the chip keeps the gap and centering. */
 .history-exercise .station-pick {
-  display: block;
+  display: flex;
   width: fit-content;
 }
 .station-row {
