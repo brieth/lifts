@@ -210,7 +210,7 @@ export function overallSeries(sessions: Session[], exerciseIds: ID[]): ExerciseP
  * Total work for a session. Per-limb exercises (single-arm rows, crossover flys,
  * etc.) log one limb's load, so they're doubled here to reflect the real work
  * both limbs did. This is an aggregate, so it follows the same true-work rule as
- * the Overall index; per-set entry and per-exercise charts stay in raw numbers.
+ * the Upper Body index; per-set entry and per-exercise charts stay in raw numbers.
  */
 export function sessionVolume(session: Session): number {
   let total = 0;

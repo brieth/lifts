@@ -4,10 +4,11 @@
  * rows, behind-the-back moves, oblique work). Their real per-set work is double
  * what you enter.
  *
- * This factor is applied ONLY to the aggregate "Overall" index, so that a
- * per-limb movement and a two-limb movement (bar curl, pulldown, press) get
- * equal say. Per-exercise charts and the weekly set counts are deliberately NOT
- * affected — those stay in the single-side numbers you actually log.
+ * This factor is applied ONLY to aggregates (the Upper Body index and session
+ * volume), so that a per-limb movement and a two-limb movement (bar curl,
+ * pulldown, press) get equal say. Per-exercise charts and the weekly set counts
+ * are deliberately NOT affected, since those stay in the single-side numbers you
+ * actually log.
  */
 const PER_LIMB = new Set<string>([
   // each hand on its own stack, both arms at once

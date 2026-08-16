@@ -1,14 +1,15 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../store';
 import { exerciseHistory, overallSeries, rollingMean } from '../lib/stats';
-import { isCurrentExercise, OVERALL_EXERCISE_IDS } from '../seed';
+import { isCurrentExercise, UPPER_BODY_EXERCISE_IDS } from '../seed';
 import { LineChart } from './LineChart';
 import { WeeklyMuscles } from './WeeklyMuscles';
 
 export type Metric = 'best1RM' | 'volume';
 
-// Sentinel id for the aggregate "Overall" series (a whole-body strength/volume index).
-const OVERALL = '__overall__';
+// Sentinel id for the aggregate series: one strength/volume index summed across
+// every chest, back, delt, bicep, and tricep lift.
+const UPPER_BODY = '__upper_body__';
 
 /**
  * Estimated 1RM at which a lift correlates with visibly muscular development.
@@ -53,20 +54,19 @@ export function ProgressView({
     return [...ids].sort((a, b) => exerciseName(a).localeCompare(exerciseName(b)));
   }, [data.sessions, exerciseName]);
 
-  // Overall is the default; individual exercises follow it in the dropdown.
-  const options = [OVERALL, ...tracked];
-  const current = selected ?? OVERALL;
+  // The aggregate is the default; individual exercises follow it in the dropdown.
+  const options = [UPPER_BODY, ...tracked];
+  const current = selected ?? UPPER_BODY;
   // The chart needs finished-session history; the weekly muscle panel below
   // works off the active session too, so it always renders (even mid-first-workout).
   const hasHistory = tracked.length > 0;
 
   // Everything below runs on force-normalized sessions, so a lift tracks as one
-  // continuous series no matter which machine it was performed on. Overall
-  // covers chest, back, delts, and arms; see OVERALL_EXERCISE_IDS for why legs
-  // and abs sit out.
+  // continuous series no matter which machine it was performed on. See
+  // UPPER_BODY_EXERCISE_IDS for why legs and abs sit out of the aggregate.
   const history =
-    current === OVERALL
-      ? overallSeries(forceSessions, [...OVERALL_EXERCISE_IDS])
+    current === UPPER_BODY
+      ? overallSeries(forceSessions, [...UPPER_BODY_EXERCISE_IDS])
       : exerciseHistory(forceSessions, current);
   const values = history.map((p) => p[metric]);
   const labels = history.map((p) => new Date(p.date).toLocaleDateString());
@@ -85,7 +85,7 @@ export function ProgressView({
           <select className="select" value={current} onChange={(e) => setSelected(e.target.value)}>
             {options.map((id) => (
               <option key={id} value={id}>
-                {id === OVERALL ? 'Overall' : exerciseName(id)}
+                {id === UPPER_BODY ? 'Upper Body' : exerciseName(id)}
               </option>
             ))}
           </select>

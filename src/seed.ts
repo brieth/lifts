@@ -180,8 +180,8 @@ export function isCurrentExercise(id: string): boolean {
 }
 
 /**
- * The subset that feeds the Overall index: the chest, back, delt, bicep, and
- * tricep lifts. Legs and abs sit out.
+ * The subset that feeds the Upper Body index: the chest, back, delt, bicep, and
+ * tricep lifts.
  *
  * Legs are out because leg machines are levers and cams with no inline clip
  * point, so they can't be force-calibrated the way a cable stack can. Their
@@ -191,13 +191,13 @@ export function isCurrentExercise(id: string): boolean {
  * sum on scale alone.
  *
  * Abs are out because the ab slot is an accessory menu, not a driver of the
- * development the index is meant to track. Excluding both leaves Overall
- * measuring one clean thing.
+ * development the index is meant to track. They're core rather than upper body,
+ * so removing them is what makes the name exact.
  *
  * Per-exercise charts are unaffected; legs and abs still chart individually and
  * still count toward volume, weekly sets, and every other total.
  */
-export const OVERALL_EXERCISE_IDS: ReadonlySet<string> = new Set(
+export const UPPER_BODY_EXERCISE_IDS: ReadonlySet<string> = new Set(
   [...CURRENT_EXERCISE_IDS].filter(
     (id) => !LEG_OPTION_IDS.includes(id) && !AB_OPTION_IDS.includes(id),
   ),
