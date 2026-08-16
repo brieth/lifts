@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../store';
-import type { Emphasis, LoggedExercise, SetEntry } from '../types';
+import type { Emphasis, LoggedExercise, SetEntry, Station } from '../types';
 import {
   bestEstimated1RM,
   bestExercisePoint,
@@ -10,8 +10,8 @@ import {
   weightForReps,
 } from '../lib/stats';
 import { defaultOneRMFor, EMPHASES, emphasisLabel, repsFor } from '../lib/reps';
-import { sessionsForExercise } from '../lib/equipment';
 import { useBackToClose } from '../lib/useBackToClose';
+import { findStation, fromForce, toForce } from '../lib/stations';
 import { AB_OPTION_IDS } from '../seed';
 import { SvBadge } from './SvBadge';
 import { NumField } from './NumField';
@@ -23,7 +23,6 @@ export function WorkoutView() {
     return (
       <div className="view">
         <h1>Start a workout</h1>
-        <GymBar />
         <div className="start-list">
           {data.routines.map((r) => (
             <div key={r.id} className="start-card">
@@ -50,32 +49,6 @@ export function WorkoutView() {
   return <ActiveSession />;
 }
 
-function GymBar() {
-  const { data, setCurrentGym, addGym } = useStore();
-  function add() {
-    const name = prompt('New gym name')?.trim();
-    if (name) addGym(name);
-  }
-  return (
-    <div className="gym-bar">
-      <span className="gym-label">Gym</span>
-      <div className="gym-options">
-        {data.gyms.map((g) => (
-          <button
-            key={g.id}
-            className={g.id === data.currentGymId ? 'gym-chip active' : 'gym-chip'}
-            onClick={() => setCurrentGym(g.id)}
-          >
-            {g.name}
-          </button>
-        ))}
-        <button className="gym-chip add" onClick={add}>
-          + Add
-        </button>
-      </div>
-    </div>
-  );
-}
 
 /**
  * Per-set placeholders: start at the base value (suggested weight / target reps),
@@ -131,12 +104,12 @@ function round5(n: number): number {
 }
 
 function ActiveSession() {
-  const { data, exerciseName, updateActive, finishSession, cancelSession } = useStore();
+  const { data, forceSessions, exerciseName, updateActive, finishSession, cancelSession, setActiveStation } =
+    useStore();
   const [historyFor, setHistoryFor] = useState<string | null>(null);
   useBackToClose(historyFor !== null, () => setHistoryFor(null));
   const session = data.activeSession!;
   const emphasis: Emphasis = session.emphasis ?? 'medium';
-  const gymName = data.gyms.find((g) => g.id === session.gymId)?.name ?? null;
 
   function setSetValue(exIdx: number, setIdx: number, patch: Partial<SetEntry>) {
     updateActive((s) => {
@@ -229,7 +202,6 @@ function ActiveSession() {
         <div>
           <h1>{session.name}</h1>
           <p className="muted subtitle session-meta">
-            {gymName && <span className="range-chip">{gymName}</span>}
             <span className="range-chip">{emphasisLabel(emphasis)} reps</span>
           </p>
         </div>
@@ -241,13 +213,16 @@ function ActiveSession() {
       <div className="exercise-list">
         {session.exercises.map((ex, exIdx) => {
           const targetReps = repsFor(ex.exerciseId, emphasis);
-          // Cable/machine history is restricted to the current gym; free weights global.
-          const hist = sessionsForExercise(data.sessions, ex.exerciseId, data.currentGymId);
-          // Use the most recent est. 1RM, or a category default 1RM with no history.
-          // Either way, derive the weight for the target reps via inverse-Epley.
+          const station = findStation(data.stations, ex.stationId);
+          // History is normalized to real force, so every past session counts
+          // regardless of which machine it was performed on.
           const base1RM =
-            recentEstimated1RM(hist, ex.exerciseId) ?? defaultOneRMFor(ex.exerciseId);
-          const suggestedWeight = round5(weightForReps(base1RM, targetReps));
+            recentEstimated1RM(forceSessions, ex.exerciseId) ?? defaultOneRMFor(ex.exerciseId);
+          // Inverse-Epley gives the force for the target reps; converting back
+          // through this station's calibration gives the number to set on it.
+          const suggestedWeight = round5(
+            fromForce(weightForReps(base1RM, targetReps), station),
+          );
           const options = ex.options
             ?.map((id) => ({ id, name: exerciseName(id) }))
             .sort((a, b) => a.name.localeCompare(b.name));
@@ -261,10 +236,13 @@ function ActiveSession() {
               name={exerciseName(ex.exerciseId)}
               targetReps={targetReps}
               suggestedWeight={suggestedWeight}
-              mean={meanExercisePoint(hist, ex.exerciseId)}
-              best={bestExercisePoint(hist, ex.exerciseId)}
+              mean={meanExercisePoint(forceSessions, ex.exerciseId)}
+              best={bestExercisePoint(forceSessions, ex.exerciseId)}
               options={options}
               menuLabel={menuLabel}
+              station={station}
+              stations={data.stations}
+              onSelectStation={(id) => setActiveStation(exIdx, id)}
               onSelect={(id) => changeExercise(exIdx, id)}
               onShowHistory={() => setHistoryFor(ex.exerciseId)}
               onChange={(setIdx, patch) => setSetValue(exIdx, setIdx, patch)}
@@ -299,8 +277,9 @@ function ExerciseHistoryModal({
   name: string;
   onClose: () => void;
 }) {
-  const { data } = useStore();
-  const rows = sessionsForExercise(data.sessions, exerciseId, data.currentGymId)
+  // Normalized to real force so sessions from different machines line up.
+  const { forceSessions } = useStore();
+  const rows = forceSessions
     .map((s) => {
       const logged = s.exercises.find((e) => e.exerciseId === exerciseId);
       const sets = logged?.sets.filter((st) => st.done && st.weight > 0 && st.reps > 0) ?? [];
@@ -377,6 +356,9 @@ function ExerciseCard({
   best,
   options,
   menuLabel,
+  station,
+  stations,
+  onSelectStation,
   onSelect,
   onShowHistory,
   onChange,
@@ -391,6 +373,9 @@ function ExerciseCard({
   best: { volume: number; best1RM: number } | null;
   options?: { id: string; name: string }[];
   menuLabel?: string;
+  station?: Station;
+  stations: Station[];
+  onSelectStation: (id: string | undefined) => void;
   onSelect: (id: string) => void;
   onShowHistory: () => void;
   onChange: (setIdx: number, patch: Partial<SetEntry>) => void;
@@ -399,10 +384,14 @@ function ExerciseCard({
 }) {
   const phWeights = weightPlaceholders(ex.sets, suggestedWeight);
   const phReps = repPlaceholders(ex.sets, targetReps);
-  const volLogged = loggedVolume(ex.sets);
-  const volPlanned = plannedVolume(ex.sets, phWeights, phReps);
-  const strLogged = bestEstimated1RM(ex.sets, true);
-  const strPlanned = plannedStrength(ex.sets, phWeights, phReps);
+  // Sets are entered in this machine's stack numbers; the stats compare against
+  // history in real force, so convert before computing them.
+  const forceSets = ex.sets.map((s) => ({ ...s, weight: toForce(s.weight, station) }));
+  const forcePh = phWeights.map((w) => toForce(w, station));
+  const volLogged = loggedVolume(forceSets);
+  const volPlanned = plannedVolume(forceSets, forcePh, phReps);
+  const strLogged = bestEstimated1RM(forceSets, true);
+  const strPlanned = plannedStrength(forceSets, forcePh, phReps);
 
   // Checking a set fills blanks from the placeholders (marked auto so they
   // light up as "used"); unchecking reverts those auto-filled values back to
@@ -521,9 +510,25 @@ function ExerciseCard({
           </button>
         </div>
       ))}
-      <button className="btn ghost small addset" onClick={onAddSet}>
-        + Add set
-      </button>
+      <div className="set-footer">
+        <button className="btn ghost small addset" onClick={onAddSet}>
+          + Add set
+        </button>
+        {stations.length > 0 && (
+          <select
+            className="station-select"
+            value={station?.id ?? ''}
+            onChange={(e) => onSelectStation(e.target.value || undefined)}
+          >
+            <option value="">No station</option>
+            {stations.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+        )}
+      </div>
         </>
       )}
     </div>

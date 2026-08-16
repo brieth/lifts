@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../store';
 import { exerciseHistory, overallSeries, rollingMean } from '../lib/stats';
-import { sessionsForExercise } from '../lib/equipment';
 import { CURRENT_EXERCISE_IDS, isCurrentExercise } from '../seed';
 import { LineChart } from './LineChart';
 import { WeeklyMuscles } from './WeeklyMuscles';
@@ -43,7 +42,7 @@ export function ProgressView({
   selected: string | null;
   setSelected: (s: string | null) => void;
 }) {
-  const { data, exerciseName, setCurrentGym } = useStore();
+  const { data, forceSessions, exerciseName } = useStore();
   const [showGoal, setShowGoal] = useState(false);
 
   // exercises that both have logged data and still exist in the routine, alphabetical
@@ -61,13 +60,12 @@ export function ProgressView({
   // works off the active session too, so it always renders (even mid-first-workout).
   const hasHistory = tracked.length > 0;
 
+  // Everything below runs on force-normalized sessions, so a lift tracks as one
+  // continuous series no matter which machine it was performed on.
   const history =
     current === OVERALL
-      ? overallSeries(data.sessions, [...CURRENT_EXERCISE_IDS], data.currentGymId)
-      : exerciseHistory(
-          sessionsForExercise(data.sessions, current, data.currentGymId),
-          current,
-        );
+      ? overallSeries(forceSessions, [...CURRENT_EXERCISE_IDS])
+      : exerciseHistory(forceSessions, current);
   const values = history.map((p) => p[metric]);
   const labels = history.map((p) => new Date(p.date).toLocaleDateString());
   // Rolling mean over the trailing window: a gettable "floor" reference that
@@ -79,23 +77,6 @@ export function ProgressView({
   return (
     <div className="view">
       <h1>Progress</h1>
-
-      {data.gyms.length > 1 && (
-        <div className="gym-bar">
-          <span className="gym-label">Gym</span>
-          <div className="gym-options">
-            {data.gyms.map((g) => (
-              <button
-                key={g.id}
-                className={g.id === data.currentGymId ? 'gym-chip active' : 'gym-chip'}
-                onClick={() => setCurrentGym(g.id)}
-              >
-                {g.name}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
 
       {hasHistory ? (
         <>

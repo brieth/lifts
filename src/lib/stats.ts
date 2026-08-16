@@ -1,5 +1,4 @@
 import type { Session, ID } from '../types';
-import { sessionsForExercise } from './equipment';
 import { limbFactor } from './laterality';
 import { isCurrentExercise } from '../seed';
 
@@ -166,8 +165,7 @@ export function bestEstimated1RM(
 /**
  * Whole-body index. At each workout date, sum across `exerciseIds` of each
  * exercise's most-recent best-1RM and most-recent session volume as of that
- * date. Each exercise is looked up in its own gym scope (cables/machines are
- * gym-relative, free weights global).
+ * date. Expects force-normalized sessions, so machines don't need scoping.
  *
  * An exercise's value is back-filled to dates BEFORE its first performance,
  * using that first value. This keeps the basket constant over time, so adding
@@ -175,15 +173,11 @@ export function bestEstimated1RM(
  * step. The only thing that moves the line is a real change in some exercise's
  * most-recent number, i.e. actual progress.
  */
-export function overallSeries(
-  sessions: Session[],
-  exerciseIds: ID[],
-  currentGymId: string | null,
-): ExercisePoint[] {
+export function overallSeries(sessions: Session[], exerciseIds: ID[]): ExercisePoint[] {
   const perEx = exerciseIds
     .map((id) => ({
       factor: limbFactor(id), // per-limb movements count double in the aggregate
-      history: exerciseHistory(sessionsForExercise(sessions, id, currentGymId), id),
+      history: exerciseHistory(sessions, id),
     }))
     .filter((e) => e.history.length > 0);
 

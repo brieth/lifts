@@ -3,13 +3,14 @@ import type {
   AppData,
   Emphasis,
   Exercise,
-  Gym,
   LoggedExercise,
   Routine,
   Session,
   SetEntry,
+  Station,
 } from './types';
 import { AB_OPTION_IDS, LEG_OPTION_IDS, SEED } from './seed';
+import { normalizeSessions } from './lib/stations';
 
 const STORAGE_KEY = 'lifts.data.v1';
 
@@ -17,16 +18,13 @@ function uid(): string {
   return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
 }
 
-const DEFAULT_GYM: Gym = { id: 'gym-default', name: 'My Gym' };
-
 function load(): AppData {
   const fresh: AppData = {
     exercises: SEED.exercises,
     routines: SEED.routines,
     sessions: [],
     activeSession: null,
-    gyms: [DEFAULT_GYM],
-    currentGymId: DEFAULT_GYM.id,
+    stations: [],
   };
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -38,12 +36,9 @@ function load(): AppData {
     for (const ex of stored.exercises ?? []) {
       if (!exercises.some((e) => e.id === ex.id)) exercises.push(ex);
     }
-    const gyms = stored.gyms?.length ? stored.gyms : [DEFAULT_GYM];
-    const currentGymId = stored.currentGymId ?? gyms[0].id;
-    // Backfill a gym on any pre-existing sessions so gym-dependent history works.
-    const sessions = (stored.sessions ?? []).map((s) =>
-      s.gymId ? s : { ...s, gymId: currentGymId },
-    );
+    // Anything logged before stations existed carries no station, which means
+    // its weights are taken as already normalized. Nothing to migrate.
+    const sessions = stored.sessions ?? [];
     // Refresh menu slot options in an in-progress workout to the current lists,
     // keyed by menu type, and append the ab menu if the session predates it.
     let activeSession = stored.activeSession ?? null;
@@ -71,8 +66,7 @@ function load(): AppData {
       routines: SEED.routines,
       sessions,
       activeSession,
-      gyms,
-      currentGymId,
+      stations: stored.stations ?? [],
     };
   } catch {
     return fresh;
@@ -81,6 +75,12 @@ function load(): AppData {
 
 interface Store {
   data: AppData;
+  /**
+   * The same sessions with every weight converted to real force via each
+   * exercise's station calibration. All analytics read this so numbers from
+   * different machines are comparable; display and editing use data.sessions.
+   */
+  forceSessions: Session[];
   exerciseName: (id: string) => string;
   startSession: (routine: Routine, emphasis?: Emphasis) => void;
   cancelSession: () => void;
@@ -98,10 +98,11 @@ interface Store {
   ) => void;
   deleteSessionSet: (sessionId: string, exIdx: number, setIdx: number) => void;
   upsertExercise: (name: string, id?: string) => Exercise;
-  addGym: (name: string) => Gym;
-  setCurrentGym: (id: string) => void;
-  renameGym: (id: string, name: string) => void;
-  deleteGym: (id: string) => void;
+  /** Sets which machine an exercise in the active session was performed on. */
+  setActiveStation: (exIdx: number, stationId: string | undefined) => void;
+  addStation: (station: Omit<Station, 'id'>) => Station;
+  updateStation: (id: string, patch: Partial<Omit<Station, 'id'>>) => void;
+  deleteStation: (id: string) => void;
   resetAll: () => void;
   exportData: () => string;
   importData: (json: string) => boolean;
@@ -125,6 +126,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  // Weights converted to real force via each exercise's station calibration.
+  const forceSessions = useMemo(
+    () => normalizeSessions(data.sessions, data.stations),
+    [data.sessions, data.stations],
+  );
+
   const store = useMemo<Store>(() => {
     const exerciseName = (id: string) =>
       data.exercises.find((e) => e.id === id)?.name ?? id;
@@ -135,27 +142,39 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
     return {
       data,
+      forceSessions,
       exerciseName,
 
       startSession(routine, emphasis) {
-        const exercises: LoggedExercise[] = routine.exercises.map((re) => ({
-          // Menu slots (e.g. the leg slot) start with no selection — pick each time.
-          exerciseId: re.options ? '' : re.exerciseId,
-          options: re.options,
-          sets: blankSets(re.targetSets),
-        }));
-        setData((d) => ({
-          ...d,
-          activeSession: {
-            id: uid(),
-            routineId: routine.id,
-            name: routine.name,
-            date: new Date().toISOString(),
-            emphasis,
-            gymId: d.currentGymId ?? undefined,
-            exercises,
-          },
-        }));
+        setData((d) => {
+          // Default each slot to whichever station it was last performed on, so
+          // the common case (same machine every time) needs no interaction.
+          const lastStation = (exerciseId: string): string | undefined => {
+            for (const s of d.sessions) {
+              const hit = s.exercises.find((e) => e.exerciseId === exerciseId);
+              if (hit) return hit.stationId;
+            }
+            return undefined;
+          };
+          const exercises: LoggedExercise[] = routine.exercises.map((re) => ({
+            // Menu slots (e.g. the leg slot) start with no selection — pick each time.
+            exerciseId: re.options ? '' : re.exerciseId,
+            options: re.options,
+            stationId: re.options ? undefined : lastStation(re.exerciseId),
+            sets: blankSets(re.targetSets),
+          }));
+          return {
+            ...d,
+            activeSession: {
+              id: uid(),
+              routineId: routine.id,
+              name: routine.name,
+              date: new Date().toISOString(),
+              emphasis,
+              exercises,
+            },
+          };
+        });
       },
 
       cancelSession() {
@@ -277,29 +296,50 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         return ex;
       },
 
-      addGym(name) {
-        const gym: Gym = { id: uid(), name: name.trim() || 'Gym' };
-        setData((d) => ({ ...d, gyms: [...d.gyms, gym], currentGymId: gym.id }));
-        return gym;
+      setActiveStation(exIdx, stationId) {
+        setData((d) =>
+          d.activeSession
+            ? {
+                ...d,
+                activeSession: {
+                  ...d.activeSession,
+                  exercises: d.activeSession.exercises.map((e, i) =>
+                    i === exIdx ? { ...e, stationId } : e,
+                  ),
+                },
+              }
+            : d,
+        );
       },
 
-      setCurrentGym(id) {
-        setData((d) => ({ ...d, currentGymId: id }));
+      addStation(station) {
+        const s: Station = { ...station, id: uid(), name: station.name.trim() || 'Station' };
+        setData((d) => ({ ...d, stations: [...d.stations, s] }));
+        return s;
       },
 
-      renameGym(id, name) {
+      updateStation(id, patch) {
         setData((d) => ({
           ...d,
-          gyms: d.gyms.map((g) => (g.id === id ? { ...g, name: name.trim() || g.name } : g)),
+          stations: d.stations.map((s) => (s.id === id ? { ...s, ...patch } : s)),
         }));
       },
 
-      deleteGym(id) {
+      deleteStation(id) {
         setData((d) => {
-          if (d.gyms.length <= 1) return d; // keep at least one gym
-          const gyms = d.gyms.filter((g) => g.id !== id);
-          const currentGymId = d.currentGymId === id ? gyms[0].id : d.currentGymId;
-          return { ...d, gyms, currentGymId };
+          // Sets logged there fall back to being treated as already normalized.
+          const strip = (s: Session) => ({
+            ...s,
+            exercises: s.exercises.map((e) =>
+              e.stationId === id ? { ...e, stationId: undefined } : e,
+            ),
+          });
+          return {
+            ...d,
+            stations: d.stations.filter((s) => s.id !== id),
+            sessions: d.sessions.map(strip),
+            activeSession: d.activeSession ? strip(d.activeSession) : null,
+          };
         });
       },
 
@@ -309,8 +349,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           routines: SEED.routines,
           sessions: [],
           activeSession: null,
-          gyms: [DEFAULT_GYM],
-          currentGymId: DEFAULT_GYM.id,
+          stations: [],
         });
       },
 
@@ -325,14 +364,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           if (!incoming || !Array.isArray(incoming.sessions) || !Array.isArray(incoming.exercises)) {
             return false;
           }
-          const gyms = incoming.gyms?.length ? incoming.gyms : [DEFAULT_GYM];
           setData({
             exercises: incoming.exercises,
             routines: Array.isArray(incoming.routines) ? incoming.routines : SEED.routines,
             sessions: incoming.sessions,
             activeSession: null,
-            gyms,
-            currentGymId: incoming.currentGymId ?? gyms[0].id,
+            stations: incoming.stations ?? [],
           });
           return true;
         } catch {
@@ -340,7 +377,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         }
       },
     };
-  }, [data]);
+  }, [data, forceSessions]);
 
   return <Ctx.Provider value={store}>{children}</Ctx.Provider>;
 }

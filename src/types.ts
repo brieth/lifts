@@ -35,6 +35,8 @@ export interface LoggedExercise {
   superset?: string;
   /** If set, this slot is a menu: ids the user can swap to during the session. */
   options?: ID[];
+  /** Which machine this was performed on. Undefined = the unspecified station. */
+  stationId?: ID;
   sets: SetEntry[];
 }
 
@@ -44,13 +46,29 @@ export interface Session {
   name: string;
   date: string;        // ISO timestamp
   emphasis?: Emphasis; // rep emphasis chosen for this session
-  gymId?: ID;          // gym the session was performed at
   exercises: LoggedExercise[];
 }
 
-export interface Gym {
+/**
+ * A specific machine, identified however you like ("Planet Fitness, cable by
+ * the water fountain"). Cable stacks and machines differ in pulley ratio and
+ * carriage weight, so the number on the stack is not the force at the handle.
+ *
+ * Calibrating a station means measuring that relationship:
+ *   force = slope * stackWeight + offset
+ *
+ * Logged weights stay exactly as you set them on the machine. The calibration
+ * converts them to real force for every metric, so history stays comparable no
+ * matter which station you used.
+ */
+export interface Station {
   id: ID;
   name: string;
+  slope: number;
+  /** Pounds, from the carriage and cable that get lifted at any setting. */
+  offset: number;
+  /** The (stack, measured force) pairs the calibration was fitted from. */
+  samples?: { stack: number; force: number }[];
 }
 
 /** Rep emphasis for the session; maps to a per-exercise rep target. */
@@ -61,6 +79,5 @@ export interface AppData {
   routines: Routine[];
   sessions: Session[];
   activeSession: Session | null;
-  gyms: Gym[];
-  currentGymId: ID | null;
+  stations: Station[];
 }
