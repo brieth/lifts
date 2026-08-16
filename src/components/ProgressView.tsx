@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../store';
 import { exerciseHistory, overallSeries, rollingMean } from '../lib/stats';
-import { CURRENT_EXERCISE_IDS, isCurrentExercise } from '../seed';
+import { isCurrentExercise, OVERALL_EXERCISE_IDS } from '../seed';
 import { LineChart } from './LineChart';
 import { WeeklyMuscles } from './WeeklyMuscles';
 
@@ -61,10 +61,11 @@ export function ProgressView({
   const hasHistory = tracked.length > 0;
 
   // Everything below runs on force-normalized sessions, so a lift tracks as one
-  // continuous series no matter which machine it was performed on.
+  // continuous series no matter which machine it was performed on. Overall is
+  // upper body only; see OVERALL_EXERCISE_IDS for why legs and abs sit out.
   const history =
     current === OVERALL
-      ? overallSeries(forceSessions, [...CURRENT_EXERCISE_IDS])
+      ? overallSeries(forceSessions, [...OVERALL_EXERCISE_IDS])
       : exerciseHistory(forceSessions, current);
   const values = history.map((p) => p[metric]);
   const labels = history.map((p) => new Date(p.date).toLocaleDateString());

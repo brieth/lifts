@@ -178,3 +178,26 @@ export const CURRENT_EXERCISE_IDS: ReadonlySet<string> = new Set(
 export function isCurrentExercise(id: string): boolean {
   return CURRENT_EXERCISE_IDS.has(id);
 }
+
+/**
+ * The subset that feeds the Overall index: upper body only.
+ *
+ * Legs are out because leg machines are levers and cams with no inline clip
+ * point, so they can't be force-calibrated the way a cable stack can. Their
+ * stack numbers are arbitrary machine units, and mixing those into an index
+ * built on normalized pounds makes the total mean nothing. Leg press also
+ * carries load an order of magnitude above a lateral raise, so it dominates the
+ * sum on scale alone.
+ *
+ * Abs are out because the ab slot is an accessory menu, not a driver of the
+ * development the index is meant to track. Excluding both leaves Overall
+ * measuring one clean thing.
+ *
+ * Per-exercise charts are unaffected; legs and abs still chart individually and
+ * still count toward volume, weekly sets, and every other total.
+ */
+export const OVERALL_EXERCISE_IDS: ReadonlySet<string> = new Set(
+  [...CURRENT_EXERCISE_IDS].filter(
+    (id) => !LEG_OPTION_IDS.includes(id) && !AB_OPTION_IDS.includes(id),
+  ),
+);
