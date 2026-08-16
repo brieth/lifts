@@ -12,6 +12,7 @@ import {
 } from '../lib/stats';
 import { defaultOneRMFor, EMPHASES, emphasisLabel, repsFor } from '../lib/reps';
 import { useBackToClose } from '../lib/useBackToClose';
+import { useToday } from '../lib/useToday';
 import { conversionFor, findStation, fromForce, stationsFor, toForce } from '../lib/stations';
 import { AB_OPTION_IDS } from '../seed';
 import { SvBadge } from './SvBadge';
@@ -116,6 +117,8 @@ function ActiveSession() {
     useStore();
   const [historyFor, setHistoryFor] = useState<string | null>(null);
   useBackToClose(historyFor !== null, () => setHistoryFor(null));
+  // The session is stamped on finish, so the chip shows the day it would log as.
+  const today = useToday();
   const session = data.activeSession!;
   const emphasis: Emphasis = session.emphasis ?? 'medium';
 
@@ -210,6 +213,13 @@ function ActiveSession() {
         <div>
           <h1>{session.name}</h1>
           <p className="muted subtitle session-meta">
+            <span className="range-chip">
+              {today.toLocaleDateString(undefined, {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+              })}
+            </span>
             <span className="range-chip">{emphasisLabel(emphasis)} reps</span>
           </p>
         </div>
