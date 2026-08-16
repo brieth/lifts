@@ -699,7 +699,12 @@ body {
   opacity: 0;
   cursor: pointer;
 }
+/* Flex column so the name/station gap comes from one explicit margin rather
+   than collapsing adjacent ones, matching the workout card exactly. */
 .history-exercise {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   margin-bottom: 10px;
 }
 .history-exercise-name {
@@ -716,7 +721,7 @@ body {
   background: transparent;
   border: none;
   padding: 0 18px 0 0;
-  margin: 0 0 4px;
+  margin: 0;
   cursor: pointer;
   /* Full width so the arrow pins to the right edge, consistent across rows.
      Sizing to content would place it after the longest option instead. */
@@ -749,6 +754,7 @@ body {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  margin-top: 5px;
 }
 .history-set {
   background: var(--surface-2);
@@ -830,7 +836,6 @@ body {
 .history-exercise .station-pick {
   display: block;
   width: fit-content;
-  margin-bottom: 5px;
 }
 .station-row {
   display: flex;
