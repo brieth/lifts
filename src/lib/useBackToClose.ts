@@ -4,12 +4,31 @@ import { useEffect, useRef } from 'react';
 const overlays: { close: () => void }[] = [];
 
 /**
- * Popstate events we caused ourselves by calling history.back() in a cleanup.
+ * Number of history.back() calls we made ourselves and haven't seen land yet.
  * A programmatic close has to drop the entry it pushed, but the resulting
- * popstate is indistinguishable from a real back gesture, so it gets counted
- * here and swallowed rather than closing whatever sits underneath.
+ * popstate is indistinguishable from a real back gesture, so overlays stand
+ * down while this is above zero rather than treating it as a gesture.
  */
-let selfInflicted = 0;
+let closing = 0;
+
+/**
+ * Drop the history entry an overlay pushed, absorbing the popstate it causes.
+ *
+ * The listener that clears the flag has to be its own, not an overlay's: when
+ * the last overlay closes there are no overlay listeners left to run, and a
+ * flag cleared by one of those would stay stuck and swallow the next real back
+ * gesture. Registering it here also puts it last, so any still-open overlay
+ * sees the flag and stands down before this clears it.
+ */
+function popSelf(): void {
+  closing++;
+  const absorb = () => {
+    window.removeEventListener('popstate', absorb);
+    closing--;
+  };
+  window.addEventListener('popstate', absorb);
+  history.back();
+}
 
 /**
  * Makes the Android back gesture (and browser back) close an overlay rather
@@ -37,10 +56,7 @@ export function useBackToClose(open: boolean, close: () => void): void {
     overlays.push(entry);
     history.pushState({ overlay: true }, '');
     const onPop = () => {
-      if (selfInflicted > 0) {
-        selfInflicted--;
-        return;
-      }
+      if (closing > 0) return;
       // Every open overlay hears this, so only the topmost acts on it.
       if (overlays[overlays.length - 1] !== entry) return;
       poppedByBack = true;
@@ -51,10 +67,7 @@ export function useBackToClose(open: boolean, close: () => void): void {
       window.removeEventListener('popstate', onPop);
       const i = overlays.indexOf(entry);
       if (i >= 0) overlays.splice(i, 1);
-      if (!poppedByBack) {
-        selfInflicted++;
-        history.back();
-      }
+      if (!poppedByBack) popSelf();
     };
   }, [open]);
 }
