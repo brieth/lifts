@@ -46,10 +46,9 @@ export function StationPicker({
 }) {
   if (stations.length === 0) return null;
   const current = stations.find((s) => s.id === value);
-  // A native option is plain text, so it can't carry the unit chip. Stations
-  // that share a name (the two barbells) spell the unit out instead.
-  const optionLabel = (s: Station) =>
-    stations.filter((o) => o.name === s.name).length > 1 ? `${s.name} (${s.unit})` : s.name;
+  // A native option is plain text, so it can't carry the unit chip and spells
+  // the unit out instead. This is also what tells the two barbells apart.
+  const optionLabel = (s: Station) => `${s.name} (${s.unit})`;
   return (
     <span className={current ? 'station-pick' : 'station-pick none'}>
       <span className="station-pick-name">{current?.name ?? 'No station'}</span>
@@ -97,7 +96,6 @@ export function Stations() {
     const latest = latestCalibration(s);
     if (latest) return equation(latest, s.unit);
     return s.unit === 'kg' ? 'Uncalibrated, converted as kilos' : 'Uncalibrated';
-
   };
 
   // Re-read the station being edited from the store so calibration edits show
