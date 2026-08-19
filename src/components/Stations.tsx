@@ -304,6 +304,8 @@ function CalibrationForm({
     .filter((s) => s.stack > 0 && s.force > 0);
   const fit = fitCalibration(parsed);
   const err = fit ? fitError(parsed, fit) : 0;
+  const lo = parsed.length ? Math.min(...parsed.map((s) => s.stack)) : 0;
+  const hi = parsed.length ? Math.max(...parsed.map((s) => s.stack)) : 0;
 
   // What this measurement replaces, so an unexpected shift is visible.
   const previous = calibrationAt(
@@ -380,8 +382,15 @@ function CalibrationForm({
               {parsed.length < 3
                 ? 'Two points fit a line exactly, so this assumes the machine is linear rather than checking it. Add a third.'
                 : err < 3
-                  ? `Points sit within ${err.toFixed(1)}% of the line, so the machine is linear and this holds beyond the range you measured.`
-                  : `Points deviate up to ${err.toFixed(1)}% from the line. That's more curve than expected. Re-check your readings, and don't trust it far outside the range you measured.`}
+                  ? `Points sit within ${err.toFixed(1)}% of the line, so the machine is linear across ${lo} to ${hi}.`
+                  : `Points deviate up to ${err.toFixed(1)}% from the line. That's more curve than expected, so re-check your readings.`}
+            </p>
+            {/* Collinear points say nothing about how far the line can be
+                trusted past them. A short span is a weak lever: the further you
+                predict beyond it, the more a small misread is multiplied. */}
+            <p className="muted small">
+              Anything above {hi} is extrapolated, and a small misread there is magnified. Put your
+              highest sample near the weight you actually train at.
             </p>
             {drift != null && Math.abs(drift) >= 1 && (
               <p className="muted small">
