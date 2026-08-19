@@ -1540,21 +1540,3 @@ body {
   color: var(--accent);
   font-weight: 600;
 }
-
-/* Opt-in to rounding a fitted slope to a clean pulley ratio. */
-.snap-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  margin-top: 8px;
-  font-size: 13px;
-  color: var(--muted);
-  cursor: pointer;
-}
-.snap-row input {
-  flex-shrink: 0;
-  margin: 2px 0 0;
-  accent-color: var(--accent);
-  width: 16px;
-  height: 16px;
-}

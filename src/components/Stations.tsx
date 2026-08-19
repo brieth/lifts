@@ -1,12 +1,6 @@
 import { useState } from 'react';
 import { useStore, todayISODate } from '../store';
-import {
-  calibrationAt,
-  fitCalibration,
-  fitError,
-  latestCalibration,
-  snapCandidate,
-} from '../lib/stations';
+import { calibrationAt, fitCalibration, fitError, latestCalibration, snapFit } from '../lib/stations';
 import { useBackToClose } from '../lib/useBackToClose';
 import type { Calibration, Station, WeightUnit } from '../types';
 
@@ -308,25 +302,13 @@ function CalibrationForm({
   const parsed = samples
     .map((s) => ({ stack: Number(s.stack), force: Number(s.force) }))
     .filter((s) => s.stack > 0 && s.force > 0);
-  const measured = fitCalibration(parsed);
-  const err = measured ? fitError(parsed, measured) : 0;
+  const raw = fitCalibration(parsed);
+  const err = raw ? fitError(parsed, raw) : 0;
   const lo = parsed.length ? Math.min(...parsed.map((s) => s.stack)) : 0;
   const hi = parsed.length ? Math.max(...parsed.map((s) => s.stack)) : 0;
-
-  // Offered only when a clean pulley ratio sits inside the interval on the
-  // fitted slope, i.e. when the measurements can't tell the two apart.
-  const clean = snapCandidate(parsed);
-  const [snapped, setSnapped] = useState(calibration?.snapped ?? false);
-  const fit = snapped && clean ? { slope: clean.slope, offset: clean.offset } : measured;
-  // What rounding costs, at the far end of the range where the lines diverge most.
-  const snapCost =
-    clean && measured
-      ? Math.max(
-          ...[lo, hi].map((x) =>
-            Math.abs(clean.slope * x + clean.offset - (measured.slope * x + measured.offset)),
-          ),
-        )
-      : 0;
+  // Slopes near a clean pulley ratio are rounded to it automatically; the
+  // decimals belong to the scale reading, not the machine.
+  const fit = snapFit(parsed);
 
   // What this measurement replaces, so an unexpected shift is visible.
   const previous = calibrationAt(
@@ -436,20 +418,11 @@ function CalibrationForm({
                 {calDate(previous!.date)} calibration. Sessions before this date keep using that one.
               </p>
             )}
-            {clean && (
-              <label className="snap-row">
-                <input
-                  type="checkbox"
-                  checked={snapped}
-                  onChange={(e) => setSnapped(e.target.checked)}
-                />
-                <span>
-                  Round to {clean.label}. Your samples can&apos;t tell this machine apart from that
-                  ratio, so the decimals are scatter rather than measurement. Costs up to{' '}
-                  {snapCost.toFixed(1)} lb across the range you measured, and the readings stay on
-                  record either way.
-                </span>
-              </label>
+            {fit.snapped && (
+              <p className="muted small">
+                Rounded to {fit.label} from a measured {fit.measured.toFixed(3)}. Your samples are
+                kept as recorded.
+              </p>
             )}
           </div>
         ) : (
@@ -466,7 +439,7 @@ function CalibrationForm({
               date,
               slope: fit.slope,
               offset: fit.offset,
-              snapped: snapped && !!clean,
+              snapped: fit.snapped,
               samples: parsed,
             })
           }

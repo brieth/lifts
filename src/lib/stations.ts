@@ -147,16 +147,10 @@ export function fitCalibration(
   return { slope, offset: my - slope * mx };
 }
 
-/** Two-tailed 95% t values by degrees of freedom, flattening out into z. */
-const T95: Record<number, number> = {
-  1: 12.706, 2: 4.303, 3: 3.182, 4: 2.776, 5: 2.571,
-  6: 2.447, 7: 2.365, 8: 2.306, 9: 2.262, 10: 2.228,
-};
-
 /**
  * Slopes a real machine can actually have. A pulley arrangement gives a whole
  * number mechanical advantage, so the stack-to-handle ratio lands on one of
- * these; anything between them is measurement error or friction.
+ * these; anything between them is friction, plate tolerance, or read error.
  */
 const CLEAN_SLOPES: { slope: number; label: string }[] = [
   { slope: 0.25, label: '4:1' },
@@ -167,39 +161,50 @@ const CLEAN_SLOPES: { slope: number; label: string }[] = [
 ];
 
 /**
- * A clean pulley ratio the measurements can't rule out.
+ * How far a fitted slope may sit from a clean ratio and still be treated as
+ * that ratio. Friction and plate tolerance together account for a few percent,
+ * so 10% takes in every honest case while leaving the ratios, which are a
+ * factor of two apart at the closest, unambiguous.
+ */
+const SNAP_TOLERANCE = 0.1;
+
+/**
+ * The line to actually apply, with the slope rounded to a clean pulley ratio
+ * when it is near one.
  *
- * Reporting a slope to three decimals implies precision the samples may not
- * support. When a clean ratio falls inside the 95% interval on the fitted
- * slope, the honest reading is that the machine is that ratio and the decimals
- * are scatter, so rounding to it discards nothing. When no clean ratio fits,
- * the departure is real and the measurement should stand.
+ * A fitted slope carries the scatter of a hand-held scale reading in its
+ * decimals, and a machine's real ratio is one of a few discrete values, so
+ * those decimals describe the measurement rather than the machine. Rounding
+ * drops them. A slope further than the tolerance from every clean ratio is not
+ * a rounding question, so it is kept as measured.
  *
  * The offset is refit with the slope held at the clean value, because the two
  * trade off: keeping the free-fit offset alongside a changed slope would tilt
  * the line away from the very points it was fitted to.
  *
- * Needs three samples. Two leave no degrees of freedom, so there is no interval
- * and nothing to test against.
+ * The samples are stored regardless, so the raw reading survives the rounding
+ * and stays available as the baseline for a future recalibration.
  */
-export function snapCandidate(
+export function snapFit(
   samples: { stack: number; force: number }[],
-): { slope: number; offset: number; label: string } | null {
+): { slope: number; offset: number; snapped: boolean; label?: string; measured: number } | null {
   const pts = samples.filter((s) => s.stack > 0 && s.force > 0);
   const fit = fitCalibration(pts);
-  if (!fit || pts.length < 3) return null;
+  if (!fit) return null;
+  const hit = CLEAN_SLOPES.find(
+    (c) => Math.abs(c.slope - fit.slope) / c.slope <= SNAP_TOLERANCE,
+  );
+  if (!hit) return { ...fit, snapped: false, measured: fit.slope };
   const n = pts.length;
   const mx = pts.reduce((a, p) => a + p.stack, 0) / n;
   const my = pts.reduce((a, p) => a + p.force, 0) / n;
-  const sxx = pts.reduce((a, p) => a + (p.stack - mx) ** 2, 0);
-  if (sxx === 0) return null;
-  const resid = pts.reduce((a, p) => a + (p.force - (fit.slope * p.stack + fit.offset)) ** 2, 0);
-  const df = n - 2;
-  const se = Math.sqrt(resid / df) / Math.sqrt(sxx);
-  const margin = (T95[df] ?? 1.96) * se;
-  const hit = CLEAN_SLOPES.find((c) => Math.abs(c.slope - fit.slope) <= margin);
-  if (!hit) return null;
-  return { slope: hit.slope, offset: my - hit.slope * mx, label: hit.label };
+  return {
+    slope: hit.slope,
+    offset: my - hit.slope * mx,
+    snapped: true,
+    label: hit.label,
+    measured: fit.slope,
+  };
 }
 
 /**

@@ -11,7 +11,7 @@ import type {
   Station,
 } from './types';
 import { AB_OPTION_IDS, LEG_OPTION_IDS, SEED } from './seed';
-import { BUILTIN_STATIONS, normalizeSessions } from './lib/stations';
+import { BUILTIN_STATIONS, normalizeSessions, snapFit } from './lib/stations';
 
 const STORAGE_KEY = 'lifts.data.v1';
 
@@ -46,7 +46,23 @@ function migrateStation(raw: unknown): Station {
           },
         ]
       : [];
-  return { id: s.id!, name: s.name ?? 'Station', unit: s.unit ?? 'lb', calibrations };
+  return {
+    id: s.id!,
+    name: s.name ?? 'Station',
+    unit: s.unit ?? 'lb',
+    // Rounding to a clean pulley ratio is a property of how a fit is read, not
+    // of when it was entered, so it applies to everything already on record.
+    // Derived from the stored samples, so nothing measured is lost.
+    calibrations: calibrations.map(applySnap),
+  };
+}
+
+/** Re-derive a calibration's line from its samples under the current rule. */
+function applySnap(cal: Calibration): Calibration {
+  if (!cal.samples?.length) return cal;
+  const fit = snapFit(cal.samples);
+  if (!fit) return cal;
+  return { ...cal, slope: fit.slope, offset: fit.offset, snapped: fit.snapped };
 }
 
 function load(): AppData {
