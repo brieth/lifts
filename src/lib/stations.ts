@@ -147,6 +147,61 @@ export function fitCalibration(
   return { slope, offset: my - slope * mx };
 }
 
+/** Two-tailed 95% t values by degrees of freedom, flattening out into z. */
+const T95: Record<number, number> = {
+  1: 12.706, 2: 4.303, 3: 3.182, 4: 2.776, 5: 2.571,
+  6: 2.447, 7: 2.365, 8: 2.306, 9: 2.262, 10: 2.228,
+};
+
+/**
+ * Slopes a real machine can actually have. A pulley arrangement gives a whole
+ * number mechanical advantage, so the stack-to-handle ratio lands on one of
+ * these; anything between them is measurement error or friction.
+ */
+const CLEAN_SLOPES: { slope: number; label: string }[] = [
+  { slope: 0.25, label: '4:1' },
+  { slope: 1 / 3, label: '3:1' },
+  { slope: 0.5, label: '2:1' },
+  { slope: 1, label: '1:1' },
+  { slope: 2, label: '1:2' },
+];
+
+/**
+ * A clean pulley ratio the measurements can't rule out.
+ *
+ * Reporting a slope to three decimals implies precision the samples may not
+ * support. When a clean ratio falls inside the 95% interval on the fitted
+ * slope, the honest reading is that the machine is that ratio and the decimals
+ * are scatter, so rounding to it discards nothing. When no clean ratio fits,
+ * the departure is real and the measurement should stand.
+ *
+ * The offset is refit with the slope held at the clean value, because the two
+ * trade off: keeping the free-fit offset alongside a changed slope would tilt
+ * the line away from the very points it was fitted to.
+ *
+ * Needs three samples. Two leave no degrees of freedom, so there is no interval
+ * and nothing to test against.
+ */
+export function snapCandidate(
+  samples: { stack: number; force: number }[],
+): { slope: number; offset: number; label: string } | null {
+  const pts = samples.filter((s) => s.stack > 0 && s.force > 0);
+  const fit = fitCalibration(pts);
+  if (!fit || pts.length < 3) return null;
+  const n = pts.length;
+  const mx = pts.reduce((a, p) => a + p.stack, 0) / n;
+  const my = pts.reduce((a, p) => a + p.force, 0) / n;
+  const sxx = pts.reduce((a, p) => a + (p.stack - mx) ** 2, 0);
+  if (sxx === 0) return null;
+  const resid = pts.reduce((a, p) => a + (p.force - (fit.slope * p.stack + fit.offset)) ** 2, 0);
+  const df = n - 2;
+  const se = Math.sqrt(resid / df) / Math.sqrt(sxx);
+  const margin = (T95[df] ?? 1.96) * se;
+  const hit = CLEAN_SLOPES.find((c) => Math.abs(c.slope - fit.slope) <= margin);
+  if (!hit) return null;
+  return { slope: hit.slope, offset: my - hit.slope * mx, label: hit.label };
+}
+
 /**
  * How far the samples sit off the fitted line, as a percentage of the largest
  * measured force. Small means the machine is linear and the fit can be trusted

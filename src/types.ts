@@ -68,6 +68,12 @@ export interface Calibration {
   date: string;
   slope: number;
   offset: number;
+  /**
+   * True when the slope was rounded to a clean pulley ratio the samples
+   * couldn't rule out, rather than taken straight off the fit. The samples are
+   * still what was measured, so the raw record survives the rounding.
+   */
+  snapped?: boolean;
   /** The (stack, measured force) pairs this was fitted from. */
   samples?: { stack: number; force: number }[];
 }
