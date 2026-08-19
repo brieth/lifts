@@ -350,6 +350,7 @@ function CalibrationForm({
           <div className="station-sample head">
             <span>Stack ({station.unit})</span>
             <span>Measured lb</span>
+            <span />
           </div>
           {samples.map((s, i) => (
             <div key={i} className="station-sample">
@@ -371,9 +372,25 @@ function CalibrationForm({
                   setSamples((v) => v.map((x, j) => (j === i ? { ...x, force: e.target.value } : x)))
                 }
               />
+              <button
+                className="set-remove"
+                aria-label="Remove measurement"
+                disabled={samples.length <= 2}
+                onClick={() => setSamples((v) => v.filter((_, j) => j !== i))}
+              >
+                ×
+              </button>
             </div>
           ))}
         </div>
+        {/* More points both widen the range the fit is verified across and
+            average out the wiggle in any one reading. */}
+        <button
+          className="btn ghost small addset"
+          onClick={() => setSamples((v) => [...v, { stack: '', force: '' }])}
+        >
+          + Add measurement
+        </button>
 
         {fit ? (
           <div className="station-fit">

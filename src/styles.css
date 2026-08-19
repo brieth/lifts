@@ -959,7 +959,9 @@ body {
 }
 .station-sample {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  /* third column holds the remove button; the header leaves it empty */
+  grid-template-columns: 1fr 1fr 22px;
+  align-items: center;
   gap: 8px;
   margin-bottom: 6px;
 }
