@@ -12,14 +12,66 @@ import {
 import { LineChart } from './LineChart';
 import { useBackToClose } from '../lib/useBackToClose';
 
-type Metric = 'weight' | 'leanBodyMass' | 'bodyFatMass' | 'bodyFatPct';
+type Metric =
+  | 'weight'
+  | 'leanBodyMass'
+  | 'bodyFatMass'
+  | 'bodyFatPct'
+  | 'arms'
+  | 'trunk'
+  | 'legs';
 
-const METRICS: { id: Metric; label: string; unit: string }[] = [
-  { id: 'weight', label: 'Weight', unit: 'lb' },
-  { id: 'leanBodyMass', label: 'Lean', unit: 'lb' },
-  { id: 'bodyFatMass', label: 'Fat', unit: 'lb' },
-  { id: 'bodyFatPct', label: 'Body Fat', unit: '%' },
+interface MetricDef {
+  id: Metric;
+  label: string;
+  unit: string;
+  value: (r: BodyReading) => number | null;
+  /**
+   * Segmental series are only comparable within one machine. Different units
+   * run different frequencies, which shifts the limb-by-limb figures far more
+   * than the gross ones, so these plot only scans from the latest device.
+   */
+  segmental?: boolean;
+}
+
+/** Whole-body series. */
+const METRICS: MetricDef[] = [
+  { id: 'weight', label: 'Weight', unit: 'lb', value: (r) => r.weight },
+  { id: 'leanBodyMass', label: 'Lean', unit: 'lb', value: (r) => r.leanBodyMass },
+  { id: 'bodyFatMass', label: 'Fat', unit: 'lb', value: (r) => r.bodyFatMass },
+  { id: 'bodyFatPct', label: 'Body Fat', unit: '%', value: (r) => r.bodyFatPct },
 ];
+
+/**
+ * Per-region series. Left and right are summed: they track within about 1% of
+ * each other, so splitting them would draw two near-identical lines and halve
+ * the scale of the movement being read.
+ */
+const REGION_METRICS: MetricDef[] = [
+  {
+    id: 'arms',
+    label: 'Arms',
+    unit: 'lb',
+    segmental: true,
+    value: (r) => (r.segmentalLean ? r.segmentalLean.rightArm + r.segmentalLean.leftArm : null),
+  },
+  {
+    id: 'trunk',
+    label: 'Trunk',
+    unit: 'lb',
+    segmental: true,
+    value: (r) => r.segmentalLean?.trunk ?? null,
+  },
+  {
+    id: 'legs',
+    label: 'Legs',
+    unit: 'lb',
+    segmental: true,
+    value: (r) => (r.segmentalLean ? r.segmentalLean.rightLeg + r.segmentalLean.leftLeg : null),
+  },
+];
+
+const ALL_METRICS = [...METRICS, ...REGION_METRICS];
 
 /** Which way is progress, so deltas can be colored honestly. */
 type Dir = 'up' | 'down' | 'neutral';
@@ -165,30 +217,61 @@ function InsightBlock({ insight }: { insight: Insight }) {
   );
 }
 
-function SegmentTable({ title, seg, unit }: { title: string; seg: Segments; unit: string }) {
-  const rows: [string, number][] = [
-    ['Right arm', seg.rightArm],
-    ['Left arm', seg.leftArm],
-    ['Trunk', seg.trunk],
-    ['Right leg', seg.rightLeg],
-    ['Left leg', seg.leftLeg],
-  ];
-  const max = Math.max(...rows.map(([, v]) => v));
+const SEG_KEYS: [keyof Segments, string][] = [
+  ['rightArm', 'Right arm'],
+  ['leftArm', 'Left arm'],
+  ['trunk', 'Trunk'],
+  ['rightLeg', 'Right leg'],
+  ['leftLeg', 'Left leg'],
+];
+
+/**
+ * Per-region breakdown, with the change since the previous scan.
+ *
+ * The change is shown as a percentage rather than in pounds because the bar
+ * already carries absolute size. The trunk is 65 lb against an arm's 8, so it
+ * gains the most pounds almost by definition; the percentage is what reveals
+ * which regions actually grew fastest.
+ *
+ * Suppressed when the two scans came from different machines, since the
+ * segmental figures aren't comparable across devices even when the gross ones
+ * are.
+ */
+function SegmentTable({
+  title,
+  seg,
+  prev,
+  unit,
+}: {
+  title: string;
+  seg: Segments;
+  prev?: Segments;
+  unit: string;
+}) {
+  const max = Math.max(...SEG_KEYS.map(([k]) => seg[k]));
   return (
     <div className="seg-block">
       <h2 className="section">{title}</h2>
-      {rows.map(([name, v]) => (
-        <div key={name} className="seg-row">
-          <span className="seg-name">{name}</span>
-          <div className="seg-track">
-            <div className="seg-fill" style={{ width: `${(v / max) * 100}%` }} />
+      {SEG_KEYS.map(([key, name]) => {
+        const v = seg[key];
+        const was = prev?.[key];
+        const pct = was ? ((v - was) / was) * 100 : null;
+        return (
+          <div key={name} className="seg-row">
+            <span className="seg-name">{name}</span>
+            <div className="seg-track">
+              <div className="seg-fill" style={{ width: `${(v / max) * 100}%` }} />
+            </div>
+            <span className={pct == null ? 'seg-delta' : `seg-delta ${pct >= 0 ? 'up' : 'down'}`}>
+              {pct == null ? '' : `${pct >= 0 ? '+' : ''}${pct.toFixed(1)}%`}
+            </span>
+            <strong className="seg-val">
+              {num(v)}
+              <small>{unit}</small>
+            </strong>
           </div>
-          <strong className="seg-val">
-            {num(v)}
-            <small>{unit}</small>
-          </strong>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -213,9 +296,14 @@ export function BodyView() {
   const prev = readings.length > 1 ? readings[readings.length - 2] : null;
   const d = (f: (r: BodyReading) => number) => (prev ? f(latest) - f(prev) : null);
 
-  const values = readings.map((r) => r[metric]);
-  const labels = readings.map((r) => fmtDate(r.date));
-  const active = METRICS.find((m) => m.id === metric)!;
+  const active = ALL_METRICS.find((m) => m.id === metric)!;
+  // A segmental series drops scans from other machines rather than drawing a
+  // step that only reflects a change of device.
+  const plotted = (
+    active.segmental ? readings.filter((r) => r.source === latest.source) : readings
+  ).filter((r) => active.value(r) != null);
+  const values = plotted.map((r) => active.value(r)!);
+  const labels = plotted.map((r) => fmtDate(r.date));
   // Only lean mass gets a target. Fat mass and body fat depend on whether you're
   // cutting, and a bare weight target says nothing about what the weight is.
   const goal = metric === 'leanBodyMass' ? LEAN_GOAL : undefined;
@@ -251,6 +339,17 @@ export function BodyView() {
           </button>
         ))}
       </div>
+      <div className="metric-toggle region-toggle">
+        {REGION_METRICS.map((m) => (
+          <button
+            key={m.id}
+            className={m.id === metric ? 'active' : ''}
+            onClick={() => setMetric(m.id)}
+          >
+            {m.label}
+          </button>
+        ))}
+      </div>
 
       <div className="chart-wrap">
         <LineChart values={values} labels={labels} goal={showGoal ? goal : undefined} />
@@ -272,14 +371,21 @@ export function BodyView() {
               {num(values[values.length - 1])} {active.unit}
             </strong>
           </span>
+          {/* Counts what the chart is actually drawing, which for a segmental
+              series excludes scans from other machines. */}
           <span className="cs-n">
-            {readings.length} scan{readings.length === 1 ? '' : 's'}
+            {plotted.length} scan{plotted.length === 1 ? '' : 's'}
           </span>
         </div>
       </div>
 
       {latest.segmentalLean && (
-        <SegmentTable title="Segmental lean" seg={latest.segmentalLean} unit="lb" />
+        <SegmentTable
+          title="Segmental lean"
+          seg={latest.segmentalLean}
+          prev={prev?.source === latest.source ? prev.segmentalLean : undefined}
+          unit="lb"
+        />
       )}
 
       {latest.insight && (

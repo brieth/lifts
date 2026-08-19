@@ -1066,7 +1066,9 @@ body {
 }
 .seg-row {
   display: grid;
-  grid-template-columns: 72px 1fr 62px;
+  /* name | bar | change | value. The change column is always present, even
+     when empty, so rows stay aligned when there's no prior scan. */
+  grid-template-columns: 72px 1fr 46px 56px;
   align-items: center;
   gap: 10px;
   margin-bottom: 8px;
@@ -1153,7 +1155,13 @@ body {
 .metric-toggle {
   display: flex;
   gap: 6px;
-  margin-top: 12px;
+  /* matches .chart-wrap's top margin so the row sits evenly between the block
+     above it and the chart below */
+  margin-top: 16px;
+}
+/* A second toggle row belongs to the first, so it sits closer to it. */
+.region-toggle {
+  margin-top: 6px;
 }
 .metric-toggle button {
   flex: 1;
@@ -1539,4 +1547,17 @@ body {
 .cal-cell.today:not(.done) {
   color: var(--accent);
   font-weight: 600;
+}
+
+/* Change since the previous scan, per body region. */
+.seg-delta {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.seg-delta.up {
+  color: var(--accent);
+}
+.seg-delta.down {
+  color: var(--danger);
 }
