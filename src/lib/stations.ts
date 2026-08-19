@@ -169,6 +169,25 @@ const CLEAN_SLOPES: { slope: number; label: string }[] = [
 const SNAP_TOLERANCE = 0.1;
 
 /**
+ * Offsets are rounded to this, in pounds.
+ *
+ * Plates move in 5 lb steps, so a correction finer than that cannot change what
+ * you set on the machine or what you read off a chart. Carrying it anyway
+ * invites reading a difference into two numbers that differ only by how the
+ * scale wobbled. A carriage heavy enough to matter still survives the rounding.
+ */
+const OFFSET_STEP = 5;
+
+function roundOffset(offset: number): number {
+  return Math.round(offset / OFFSET_STEP) * OFFSET_STEP;
+}
+
+/** True when a station applies no correction at all: the stack number is the force. */
+export function isIdentity(conv: { slope: number; offset: number }): boolean {
+  return conv.slope === 1 && conv.offset === 0;
+}
+
+/**
  * The line to actually apply, with the slope rounded to a clean pulley ratio
  * when it is near one.
  *
@@ -180,30 +199,30 @@ const SNAP_TOLERANCE = 0.1;
  *
  * The offset is refit with the slope held at the clean value, because the two
  * trade off: keeping the free-fit offset alongside a changed slope would tilt
- * the line away from the very points it was fitted to.
+ * the line away from the very points it was fitted to. It is then rounded to
+ * the nearest plate step, since a finer correction cannot change a decision.
  *
  * The samples are stored regardless, so the raw reading survives the rounding
  * and stays available as the baseline for a future recalibration.
  */
 export function snapFit(
   samples: { stack: number; force: number }[],
-): { slope: number; offset: number; snapped: boolean; label?: string; measured: number } | null {
+): { slope: number; offset: number; snapped: boolean; label?: string } | null {
   const pts = samples.filter((s) => s.stack > 0 && s.force > 0);
   const fit = fitCalibration(pts);
   if (!fit) return null;
   const hit = CLEAN_SLOPES.find(
     (c) => Math.abs(c.slope - fit.slope) / c.slope <= SNAP_TOLERANCE,
   );
-  if (!hit) return { ...fit, snapped: false, measured: fit.slope };
+  if (!hit) return { slope: fit.slope, offset: roundOffset(fit.offset), snapped: false };
   const n = pts.length;
   const mx = pts.reduce((a, p) => a + p.stack, 0) / n;
   const my = pts.reduce((a, p) => a + p.force, 0) / n;
   return {
     slope: hit.slope,
-    offset: my - hit.slope * mx,
+    offset: roundOffset(my - hit.slope * mx),
     snapped: true,
     label: hit.label,
-    measured: fit.slope,
   };
 }
 

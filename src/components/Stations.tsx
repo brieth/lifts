@@ -1,6 +1,13 @@
 import { useState } from 'react';
 import { useStore, todayISODate } from '../store';
-import { calibrationAt, fitCalibration, fitError, latestCalibration, snapFit } from '../lib/stations';
+import {
+  calibrationAt,
+  fitCalibration,
+  fitError,
+  isIdentity,
+  latestCalibration,
+  snapFit,
+} from '../lib/stations';
 import { useBackToClose } from '../lib/useBackToClose';
 import type { Calibration, Station, WeightUnit } from '../types';
 
@@ -17,9 +24,11 @@ function calDate(date: string): string {
 
 /** Force is always pounds; the stack is only annotated when it isn't. */
 function equation(cal: { slope: number; offset: number }, unit: WeightUnit): string {
-  const sign = cal.offset >= 0 ? ' + ' : ' − ';
+  if (unit === 'lb' && isIdentity(cal)) return 'No correction, the stack number is the force';
   const stack = unit === 'lb' ? 'stack' : `stack(${unit})`;
-  return `force = ${cal.slope.toFixed(3)} × ${stack}${sign}${Math.abs(cal.offset).toFixed(1)} lb`;
+  if (cal.offset === 0) return `force = ${cal.slope} × ${stack}`;
+  const sign = cal.offset >= 0 ? ' + ' : ' − ';
+  return `force = ${cal.slope} × ${stack}${sign}${Math.abs(cal.offset)} lb`;
 }
 
 /**
@@ -90,6 +99,7 @@ export function Stations() {
     const latest = latestCalibration(s);
     if (latest) return `${equation(latest, s.unit)} · ${calDate(latest.date)}`;
     return s.unit === 'kg' ? 'Uncalibrated, converted as kilos' : 'Uncalibrated';
+
   };
 
   // Re-read the station being edited from the store so calibration edits show
@@ -402,15 +412,8 @@ function CalibrationForm({
               {parsed.length < 3
                 ? 'Two points fit a line exactly, so this assumes the machine is linear rather than checking it. Add a third.'
                 : err < 3
-                  ? `Points sit within ${err.toFixed(1)}% of the line, so the machine is linear across ${lo} to ${hi}.`
-                  : `Points deviate up to ${err.toFixed(1)}% from the line. That's more curve than expected, so re-check your readings.`}
-            </p>
-            {/* Collinear points say nothing about how far the line can be
-                trusted past them. A short span is a weak lever: the further you
-                predict beyond it, the more a small misread is multiplied. */}
-            <p className="muted small">
-              Anything above {hi} is extrapolated, and a small misread there is magnified. Put your
-              highest sample near the weight you actually train at.
+                  ? `Linear across ${lo} to ${hi}. Measure near your working weight so the line isn't stretched far past your samples.`
+                  : `Points deviate up to ${err.toFixed(1)}% from the line, which is more curve than expected. Re-check your readings.`}
             </p>
             {drift != null && Math.abs(drift) >= 1 && (
               <p className="muted small">
@@ -420,8 +423,8 @@ function CalibrationForm({
             )}
             {fit.snapped && (
               <p className="muted small">
-                Rounded to {fit.label} from a measured {fit.measured.toFixed(3)}. Your samples are
-                kept as recorded.
+                Rounded to {fit.label}, with the offset to the nearest 5 lb. Anything finer is scale
+                wobble rather than machine. Your readings are kept as recorded.
               </p>
             )}
           </div>
