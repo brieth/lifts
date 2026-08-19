@@ -178,8 +178,21 @@ const SNAP_TOLERANCE = 0.1;
  */
 const OFFSET_STEP = 5;
 
+/**
+ * Slopes that hit no clean ratio are rounded to this instead. A machine can
+ * genuinely sit between ratios, through friction or odd plate labelling, so the
+ * value is kept rather than dragged onto a ratio it isn't. It still doesn't
+ * warrant three decimals, which describe the scale reading rather than the
+ * machine.
+ */
+const SLOPE_STEP = 0.05;
+
+function roundTo(value: number, step: number): number {
+  return Math.round(value / step) * step;
+}
+
 function roundOffset(offset: number): number {
-  return Math.round(offset / OFFSET_STEP) * OFFSET_STEP;
+  return roundTo(offset, OFFSET_STEP);
 }
 
 
@@ -210,15 +223,17 @@ export function snapFit(
   const hit = CLEAN_SLOPES.find(
     (c) => Math.abs(c.slope - fit.slope) / c.slope <= SNAP_TOLERANCE,
   );
-  if (!hit) return { slope: fit.slope, offset: roundOffset(fit.offset), snapped: false };
+  // Whether the slope came from a clean ratio or from rounding, the offset is
+  // refit with it held fixed so the line still sits on the points.
+  const slope = hit ? hit.slope : Number(roundTo(fit.slope, SLOPE_STEP).toFixed(2));
   const n = pts.length;
   const mx = pts.reduce((a, p) => a + p.stack, 0) / n;
   const my = pts.reduce((a, p) => a + p.force, 0) / n;
   return {
-    slope: hit.slope,
-    offset: roundOffset(my - hit.slope * mx),
-    snapped: true,
-    label: hit.label,
+    slope,
+    offset: roundOffset(my - slope * mx),
+    snapped: !!hit,
+    label: hit?.label,
   };
 }
 

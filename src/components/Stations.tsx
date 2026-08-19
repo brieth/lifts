@@ -15,11 +15,18 @@ function calDate(date: string): string {
   });
 }
 
-/** Force is always pounds; the stack is only annotated when it isn't. */
+/**
+ * Force is always pounds; the stack is only annotated when it isn't.
+ *
+ * Slopes are rounded for display because a clean ratio need not be a clean
+ * decimal: 3:1 is stored exactly as a third and would otherwise print every
+ * digit of it.
+ */
 function equation(cal: { slope: number; offset: number }, unit: WeightUnit): string {
   const stack = unit === 'lb' ? 'stack' : `stack(${unit})`;
   const sign = cal.offset >= 0 ? ' + ' : ' − ';
-  return `force = ${cal.slope} × ${stack}${sign}${Math.abs(cal.offset)} lb`;
+  const slope = Number(cal.slope.toFixed(3));
+  return `force = ${slope} × ${stack}${sign}${Math.abs(cal.offset)} lb`;
 }
 
 /**
