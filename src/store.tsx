@@ -180,8 +180,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  // Built-ins first, then your own alphabetically, so a picker's order is
+  // predictable rather than reflecting the order stations happened to be added.
   const allStations = useMemo(
-    () => [...BUILTIN_STATIONS, ...data.stations],
+    () => [
+      ...BUILTIN_STATIONS,
+      ...[...data.stations].sort((a, b) => a.name.localeCompare(b.name)),
+    ],
     [data.stations],
   );
 

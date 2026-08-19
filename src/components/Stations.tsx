@@ -103,6 +103,8 @@ export function Stations() {
   const active =
     editing && editing !== 'new' ? data.stations.find((s) => s.id === editing.id) ?? null : null;
 
+  const stations = [...data.stations].sort((a, b) => a.name.localeCompare(b.name));
+
   return (
     <>
       <h2 className="section">Stations</h2>
@@ -116,7 +118,7 @@ export function Stations() {
       {/* The built-in barbells aren't listed: nothing about them is editable,
           and they show up where they're used, in the picker. */}
       <div className="gym-manage">
-        {data.stations.map((s) => (
+        {stations.map((s) => (
           <div key={s.id} className="station-row">
             <div className="station-info">
               <span className="station-name">
