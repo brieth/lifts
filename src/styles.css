@@ -489,7 +489,8 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--muted);
-  margin-bottom: 6px;
+  /* same as the gap between rows, so the header reads as part of the table */
+  margin-bottom: 8px;
 }
 .set-header span {
   text-align: center;
@@ -918,10 +919,12 @@ body {
   gap: 14px;
   overflow-y: auto;
 }
-.station-modal > *,
-.station-modal p,
-.station-modal h3,
-.station-modal ol {
+/* Two classes, so this outranks the single-class rules further down the file
+   that would otherwise reinstate a margin and stack it onto the gap. */
+.modal.station-modal > *,
+.modal.station-modal p,
+.modal.station-modal h3,
+.modal.station-modal ol {
   margin: 0;
 }
 .station-modal .modal-head {
@@ -932,9 +935,10 @@ body {
   flex-direction: column;
   gap: 8px;
 }
-/* The flex gap already spaces these; .btn.block's own top margin would double it. */
+/* The flex gap already spaces these; a button's own top margin would double it. */
 .station-modal .btn.block,
-.station-section .btn.block {
+.station-section .btn.block,
+.station-modal .addset {
   margin-top: 0;
 }
 .station-guide-title {
@@ -954,7 +958,12 @@ body {
 .station-guide li {
   margin-bottom: 6px;
 }
+/* Rows are spaced by the container's gap, so none carries its own margin that
+   would stack onto the modal gap below the block. */
 .station-samples {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   margin-bottom: 14px;
 }
 .station-sample {
@@ -963,7 +972,6 @@ body {
   grid-template-columns: 1fr 1fr 22px;
   align-items: center;
   gap: 8px;
-  margin-bottom: 6px;
 }
 .station-sample.head {
   font-size: 11px;
@@ -1143,7 +1151,9 @@ body {
 /* ---------- progress ---------- */
 .select {
   width: 100%;
-  margin-top: 16px;
+  /* 14 plus the h1's own 2px bottom margin lands on the 16 every other view
+     puts between its title and the first block. */
+  margin-top: 14px;
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: 10px;
