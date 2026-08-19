@@ -1,13 +1,6 @@
 import { useState } from 'react';
 import { useStore, todayISODate } from '../store';
-import {
-  calibrationAt,
-  fitCalibration,
-  fitError,
-  isIdentity,
-  latestCalibration,
-  snapFit,
-} from '../lib/stations';
+import { calibrationAt, fitCalibration, fitError, latestCalibration, snapFit } from '../lib/stations';
 import { useBackToClose } from '../lib/useBackToClose';
 import type { Calibration, Station, WeightUnit } from '../types';
 
@@ -24,9 +17,7 @@ function calDate(date: string): string {
 
 /** Force is always pounds; the stack is only annotated when it isn't. */
 function equation(cal: { slope: number; offset: number }, unit: WeightUnit): string {
-  if (unit === 'lb' && isIdentity(cal)) return 'No correction, the stack number is the force';
   const stack = unit === 'lb' ? 'stack' : `stack(${unit})`;
-  if (cal.offset === 0) return `force = ${cal.slope} × ${stack}`;
   const sign = cal.offset >= 0 ? ' + ' : ' − ';
   return `force = ${cal.slope} × ${stack}${sign}${Math.abs(cal.offset)} lb`;
 }
@@ -97,7 +88,7 @@ export function Stations() {
   /** What the muted second line under a station's name says. */
   const summary = (s: Station): string => {
     const latest = latestCalibration(s);
-    if (latest) return `${equation(latest, s.unit)} · ${calDate(latest.date)}`;
+    if (latest) return equation(latest, s.unit);
     return s.unit === 'kg' ? 'Uncalibrated, converted as kilos' : 'Uncalibrated';
 
   };

@@ -182,10 +182,6 @@ function roundOffset(offset: number): number {
   return Math.round(offset / OFFSET_STEP) * OFFSET_STEP;
 }
 
-/** True when a station applies no correction at all: the stack number is the force. */
-export function isIdentity(conv: { slope: number; offset: number }): boolean {
-  return conv.slope === 1 && conv.offset === 0;
-}
 
 /**
  * The line to actually apply, with the slope rounded to a clean pulley ratio
